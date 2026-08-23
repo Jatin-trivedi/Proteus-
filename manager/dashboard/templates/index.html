@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Agent Status Overview</h2>
+<div id="agent-list" class="row"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/v1/agent/list')
+        .then(r => r.json())
+        .then(agents => {
+            const container = document.getElementById('agent-list');
+            agents.forEach(agent => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                const statusClass = agent.status === 'online' ? 'success' : 'secondary';
+                col.innerHTML = `
+                    <div class="card mb-3">
+                        <div class="card-header">Agent ${agent.agent_id}</div>
+                        <div class="card-body">
+                            <p><strong>OS:</strong> ${agent.os}</p>
+                            <p><strong>IP:</strong> ${agent.ip}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-${statusClass}">${agent.status}</span></p>
+                            <p><strong>Last Seen:</strong> ${new Date(agent.last_seen).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        });
+});
+</script>
+{% endblock %}

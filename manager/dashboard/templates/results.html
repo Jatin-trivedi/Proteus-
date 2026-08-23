@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Forensic Results</h2>
+<table class="table table-striped" id="results-table">
+    <thead>
+        <tr><th>Result ID</th><th>Agent</th><th>Script</th><th>Submitted</th><th>Action</th></tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/v1/result/list')
+        .then(r => r.json())
+        .then(results => {
+            const tbody = document.querySelector('#results-table tbody');
+            results.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.result_id}</td>
+                    <td>${r.agent_id}</td>
+                    <td>${r.script_id}</td>
+                    <td>${new Date(r.submitted_at).toLocaleString()}</td>
+                    <td><a href="/api/v1/result/view?result_id=${r.result_id}" target="_blank">View</a></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+});
+</script>
+{% endblock %}

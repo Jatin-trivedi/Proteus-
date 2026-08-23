@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Deploy JOCKY Script</h2>
+<form id="deploy-form">
+    <div class="mb-3">
+        <label for="scriptName" class="form-label">Script Name</label>
+        <input type="text" class="form-control" id="scriptName" value="MyScan">
+    </div>
+    <div class="mb-3">
+        <label for="agentIds" class="form-label">Target Agent IDs (comma separated)</label>
+        <input type="text" class="form-control" id="agentIds" placeholder="agent-001,agent-002">
+    </div>
+    <div class="mb-3">
+        <label for="jockyCode" class="form-label">JOCKY Source Code</label>
+        <textarea class="form-control" id="jockyCode" rows="8">agent scan_registry {
+    let hive = "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
+    let results = collect_registry(hive)
+    return results
+}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Deploy</button>
+</form>
+<div id="deploy-result" class="mt-3"></div>
+
+<script>
+document.getElementById('deploy-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('scriptName').value;
+    const agentIds = document.getElementById('agentIds').value.split(',').map(s => s.trim());
+    const code = document.getElementById('jockyCode').value;
+
+    fetch('/api/v1/script/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, agent_ids: agentIds, code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('deploy-result').innerHTML = `<div class="alert alert-success">Deployed! Script ID: ${data.script_id}, Deploy IDs: ${data.deploy_ids.join(', ')}</div>`;
+    })
+    .catch(err => {
+        document.getElementById('deploy-result').innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
+    });
+});
+</script>
+{% endblock %}

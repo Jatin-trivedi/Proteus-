@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Real‑time Agent Activity</h2>
+<canvas id="activityChart" width="400" height="200"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dummy chart – you can replace with WebSocket updates
+const ctx = document.getElementById('activityChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Now', '30s ago', '60s ago'],
+        datasets: [{
+            label: 'Online Agents',
+            data: [2, 1, 2],
+            borderColor: 'green',
+            fill: false
+        }]
+    },
+    options: { responsive: true }
+});
+// You can poll /api/v1/agent/list every few seconds and update
+</script>
+{% endblock %}
