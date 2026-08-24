@@ -1,0 +1,4 @@
+agent hello_world {
+    let message = "Hello from JOCKY!"
+    return message
+}
