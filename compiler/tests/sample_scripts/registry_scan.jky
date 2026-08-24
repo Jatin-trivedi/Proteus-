@@ -1,0 +1,7 @@
+agent scan_registry {
+    let hive = "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
+    let results = collect_registry(hive)
+    let info = get_system_info()
+    let procs = get_processes()
+    return pack(results, info, procs)
+}

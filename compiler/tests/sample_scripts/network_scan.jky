@@ -1,0 +1,5 @@
+agent scan_network {
+    let interfaces = get_network_interfaces()
+    let packets = capture_packets("eth0")
+    return network_results(interfaces, packets)
+}
