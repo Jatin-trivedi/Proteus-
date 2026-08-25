@@ -1,0 +1,8 @@
+pefile==2023.2.7
+cryptography==41.0.7
+pycryptodome==3.19.0
+capstone==5.0.1
+pytest==7.4.3
+astor==0.8.1
+psutil==5.9.6
+wmi==1.5.1  # Windows only

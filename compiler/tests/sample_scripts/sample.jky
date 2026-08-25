@@ -1,0 +1,36 @@
+# Sample JOCKY Forensics Script
+import os
+import sys
+
+func collect_system_info():
+    var hostname = os.getenv('COMPUTERNAME')
+    var username = os.getenv('USERNAME')
+    var path = os.getenv('PATH')
+    
+    var info = {
+        'hostname': hostname,
+        'username': username,
+        'path': path
+    }
+    return info
+
+func collect_processes():
+    var processes = []
+    for proc in os.listdir('/proc' if os.name == 'posix' else 'C:/'):
+        if proc.isdigit():
+            processes.append(proc)
+    return processes[:10]
+
+func main():
+    var info = collect_system_info()
+    var procs = collect_processes()
+    
+    var result = {
+        'system': info,
+        'processes': procs
+    }
+    print json.dumps(result)
+    return result
+
+if __name__ == '__main__':
+    main()
