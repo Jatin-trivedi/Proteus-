@@ -6,7 +6,6 @@ from api.script_routes import script_bp
 from api.result_routes import result_bp
 
 def create_app():
-    # Tell Flask where to find templates and static files
     app = Flask(__name__, 
                 template_folder='dashboard/templates',
                 static_folder='dashboard/static')
@@ -36,8 +35,9 @@ def create_app():
 
     return app
 
+app = create_app()
+
 if __name__ == "__main__":
-    app = create_app()
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=5000, debug=True)
