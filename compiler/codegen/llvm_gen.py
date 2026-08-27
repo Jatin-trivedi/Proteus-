@@ -609,3 +609,15 @@ int main() {{
 def compile_to_llvm(ast: Program, output_file: str = None) -> str:
     generator = LLVMCodeGenerator()
     return generator.generate(ast, output_file)
+
+# ... (your existing LLVMCodeGenerator class and all other code remains unchanged) ...
+
+# Add this function at the very end of llvm_gen.py
+
+def generate_llvm_ir(ast: Program) -> str:
+    """
+    Generate LLVM IR as a string without writing to disk or compiling to native.
+    Useful for debugging or when you want to handle the IR yourself.
+    """
+    generator = LLVMCodeGenerator()
+    return generator.generate(ast, output_file=None)
