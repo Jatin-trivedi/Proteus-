@@ -2,7 +2,9 @@ pefile==2023.2.7
 cryptography==41.0.7
 pycryptodome==3.19.0
 capstone==5.0.1
-pytest==7.4.3
+fastapi==0.100.0
+colorama==0.4.6
+tqdm==4.66.1
+pyelftools==0.30
+macholib==1.16.3
 astor==0.8.1
-psutil==5.9.6
-wmi==1.5.1  # Windows only

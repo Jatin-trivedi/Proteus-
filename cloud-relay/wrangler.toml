@@ -1,0 +1,8 @@
+# cloud-relay/wrangler.toml
+name = "jocky-relay"
+main = "worker.js"
+compatibility_date = "2025-04-01"
+
+[vars]
+C2_HOST = "c2-api.jocky.internal"
+BACKEND_URL = "http://localhost:8080"   # Update with your C2 server IP/domain
