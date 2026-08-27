@@ -1,0 +1,9 @@
+struct Person {
+    name,
+    age
+}
+
+agent struct_test {
+    let p = Person { name: "John", age: 30 }
+    return p.name
+}

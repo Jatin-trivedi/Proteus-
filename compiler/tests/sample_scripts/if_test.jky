@@ -1,0 +1,8 @@
+agent if_test {
+    let x = 10
+    if (x > 5) {
+        return "x is greater than 5"
+    } else {
+        return "x is not greater than 5"
+    }
+}

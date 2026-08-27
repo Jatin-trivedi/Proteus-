@@ -1,4 +1,3 @@
-import re
 from .tokens import Token, TokenType
 
 class Lexer:
@@ -9,7 +8,6 @@ class Lexer:
         self.column = 1
         self.tokens = []
         
-        # Keywords mapping
         self.keywords = {
             'agent': TokenType.AGENT,
             'let': TokenType.LET,
@@ -19,17 +17,21 @@ class Lexer:
             'while': TokenType.WHILE,
             'for': TokenType.FOR,
             'in': TokenType.IN,
+            'to': TokenType.TO,
             'true': TokenType.TRUE,
             'false': TokenType.FALSE,
             'null': TokenType.NULL,
+            'function': TokenType.FUNCTION,
+            'struct': TokenType.STRUCT,      # <-- ADDED
         }
         
-        # Single character tokens
         self.single_char = {
             '(': TokenType.LPAREN,
             ')': TokenType.RPAREN,
             '{': TokenType.LBRACE,
             '}': TokenType.RBRACE,
+            '[': TokenType.LBRACKET,
+            ']': TokenType.RBRACKET,
             ';': TokenType.SEMICOLON,
             ',': TokenType.COMMA,
             '.': TokenType.DOT,
@@ -47,7 +49,6 @@ class Lexer:
         while self.position < len(self.source):
             char = self.source[self.position]
             
-            # Skip whitespace
             if char.isspace():
                 if char == '\n':
                     self.line += 1
@@ -57,28 +58,23 @@ class Lexer:
                 self.position += 1
                 continue
             
-            # Skip comments
             if char == '#':
                 while self.position < len(self.source) and self.source[self.position] != '\n':
                     self.position += 1
                 continue
             
-            # String literals
             if char == '"':
                 self._read_string()
                 continue
             
-            # Numbers
             if char.isdigit():
                 self._read_number()
                 continue
             
-            # Identifiers and keywords
             if char.isalpha() or char == '_':
                 self._read_identifier()
                 continue
             
-            # Two-character operators
             if char == '=' and self._peek() == '=':
                 self.tokens.append(Token(TokenType.EQUALS, '==', self.line, self.column))
                 self.position += 2
@@ -91,14 +87,12 @@ class Lexer:
                 self.column += 2
                 continue
             
-            # Single character tokens
             if char in self.single_char:
                 self.tokens.append(Token(self.single_char[char], char, self.line, self.column))
                 self.position += 1
                 self.column += 1
                 continue
             
-            # Unknown character
             raise SyntaxError(f"Unknown character '{char}' at line {self.line}, column {self.column}")
         
         self.tokens.append(Token(TokenType.EOF, 'EOF', self.line, self.column))
@@ -107,7 +101,7 @@ class Lexer:
     def _read_string(self):
         start_line = self.line
         start_col = self.column
-        self.position += 1  # Skip opening quote
+        self.position += 1
         self.column += 1
         value = ''
         
@@ -150,7 +144,6 @@ class Lexer:
             self.position += 1
             self.column += 1
         
-        # Check if it's a keyword
         token_type = self.keywords.get(value, TokenType.IDENTIFIER)
         self.tokens.append(Token(token_type, value, start_line, start_col))
     

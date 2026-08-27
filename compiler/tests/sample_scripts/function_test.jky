@@ -1,0 +1,8 @@
+function add(a, b) {
+    return a + b
+}
+
+agent func_test {
+    let result = add(10, 20)
+    return result
+}

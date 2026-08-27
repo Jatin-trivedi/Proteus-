@@ -1,0 +1,5 @@
+agent array_test {
+    let arr = [10, 20, 30, 40, 50]
+    let first = arr[0]
+    return first
+}

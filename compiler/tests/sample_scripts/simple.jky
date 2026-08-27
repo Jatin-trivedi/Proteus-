@@ -1,0 +1,3 @@
+agent simple {
+    return "Hello from simple!"
+}

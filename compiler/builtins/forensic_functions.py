@@ -1,23 +1,22 @@
 """
-Forensic function implementations.
-These will be linked to the final executable.
+REAL Forensic Functions - Python Implementations
+These are used when compiling to Python (for testing)
 """
 
 import platform
 import subprocess
 import json
+import os
+import sys
 
 def collect_registry(hive: str) -> str:
-    """Collect Windows registry keys"""
     if platform.system() == "Windows":
         try:
             import winreg
-            # Parse hive path
             parts = hive.split("\\")
             hive_name = parts[0]
             key_path = "\\".join(parts[1:])
             
-            # Map hive names
             hives = {
                 "HKLM": winreg.HKEY_LOCAL_MACHINE,
                 "HKCU": winreg.HKEY_CURRENT_USER,
@@ -28,7 +27,6 @@ def collect_registry(hive: str) -> str:
             if hive_name not in hives:
                 return json.dumps({"error": f"Unknown hive: {hive_name}"})
             
-            # Open key and read values
             key = winreg.OpenKey(hives[hive_name], key_path)
             values = {}
             index = 0
@@ -42,14 +40,12 @@ def collect_registry(hive: str) -> str:
             
             winreg.CloseKey(key)
             return json.dumps(values)
-            
         except Exception as e:
             return json.dumps({"error": str(e)})
     else:
         return json.dumps({"error": "Registry collection only supported on Windows"})
 
 def get_processes() -> str:
-    """Get list of running processes"""
     try:
         import psutil
         processes = []
@@ -68,7 +64,6 @@ def get_processes() -> str:
         return json.dumps({"error": "psutil not installed"})
 
 def get_system_info() -> str:
-    """Get system information"""
     info = {
         'system': platform.system(),
         'node': platform.node(),
@@ -81,7 +76,6 @@ def get_system_info() -> str:
     return json.dumps(info)
 
 def scan_network() -> str:
-    """Scan network interfaces"""
     if platform.system() == "Windows":
         try:
             result = subprocess.run(['ipconfig', '/all'], capture_output=True, text=True)
@@ -95,17 +89,11 @@ def scan_network() -> str:
         except Exception as e:
             return json.dumps({'error': str(e)})
 
-def capture_packets(interface: str) -> str:
-    """Capture network packets (stub - requires pcap)"""
-    return json.dumps({
-        'interface': interface,
-        'status': 'not_implemented',
-        'message': 'Packet capture requires WinPcap/Npcap or libpcap'
-    })
-
 def pack(*args) -> str:
-    """Pack multiple values into a single JSON result"""
     return json.dumps({
         'results': args,
         'count': len(args)
     })
+
+def print_msg(msg: str) -> None:
+    print(msg)

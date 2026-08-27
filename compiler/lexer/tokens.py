@@ -1,7 +1,6 @@
 from enum import Enum, auto
 
 class TokenType(Enum):
-    # Keywords
     AGENT = auto()
     LET = auto()
     RETURN = auto()
@@ -10,37 +9,38 @@ class TokenType(Enum):
     WHILE = auto()
     FOR = auto()
     IN = auto()
+    TO = auto()
     TRUE = auto()
     FALSE = auto()
     NULL = auto()
+    FUNCTION = auto()
+    STRUCT = auto()          # <-- ADDED
     
-    # Identifiers & Literals
     IDENTIFIER = auto()
     STRING = auto()
     NUMBER = auto()
     
-    # Operators
-    ASSIGN = auto()      # =
-    EQUALS = auto()      # ==
-    NOT_EQUALS = auto()  # !=
-    LESS_THAN = auto()   # <
-    GREATER_THAN = auto() # >
+    ASSIGN = auto()
+    EQUALS = auto()
+    NOT_EQUALS = auto()
+    LESS_THAN = auto()
+    GREATER_THAN = auto()
     PLUS = auto()
     MINUS = auto()
     MULTIPLY = auto()
     DIVIDE = auto()
     
-    # Delimiters
-    LPAREN = auto()      # (
-    RPAREN = auto()      # )
-    LBRACE = auto()      # {
-    RBRACE = auto()      # }
-    SEMICOLON = auto()   # ;
-    COMMA = auto()       # ,
-    DOT = auto()         # .
-    COLON = auto()       # :
+    LPAREN = auto()
+    RPAREN = auto()
+    LBRACE = auto()
+    RBRACE = auto()
+    LBRACKET = auto()
+    RBRACKET = auto()
+    SEMICOLON = auto()
+    COMMA = auto()
+    DOT = auto()
+    COLON = auto()
     
-    # Special
     EOF = auto()
     COMMENT = auto()
 

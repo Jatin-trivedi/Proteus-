@@ -35,7 +35,6 @@ class CompilerCache:
         print(f"✅ Cached for key: {key[:16]}...")
     
     def clear(self):
-        """Clear all cache"""
         import shutil
         shutil.rmtree(self.cache_dir)
         os.makedirs(self.cache_dir, exist_ok=True)
