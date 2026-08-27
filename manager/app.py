@@ -1,9 +1,13 @@
 from flask import Flask, render_template
 from config import Config
 from models import db
+from flask_migrate import Migrate
 from api.agent_routes import agent_bp
 from api.script_routes import script_bp
 from api.result_routes import result_bp
+
+# Initialize Migrate after db
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__, 
@@ -11,8 +15,11 @@ def create_app():
                 static_folder='dashboard/static')
     app.config.from_object(Config)
 
+    # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db)   # <-- This enables 'flask db' commands
 
+    # Register blueprints
     app.register_blueprint(agent_bp, url_prefix="/api/v1/agent")
     app.register_blueprint(script_bp, url_prefix="/api/v1/script")
     app.register_blueprint(result_bp, url_prefix="/api/v1/result")
@@ -35,9 +42,12 @@ def create_app():
 
     return app
 
+# Create application instance
 app = create_app()
 
 if __name__ == "__main__":
     with app.app_context():
+        # If using migrations, db.create_all() is optional; migrations handle schema
+        # But it's safe to keep for first-time setup (will create tables if missing)
         db.create_all()
     app.run(host="0.0.0.0", port=5000, debug=True)
