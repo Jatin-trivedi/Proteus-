@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime
 from models import db, Result, Deploy
+import uuid
 import io
 import json
 
@@ -9,6 +10,8 @@ result_bp = Blueprint("result", __name__, url_prefix='/api/v1/result')
 @result_bp.route("/submit", methods=["POST"])
 def submit():
     data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid JSON'}), 400
     agent_id = data.get("agent_id")
     script_id = data.get("script_id")
     encrypted_data = data.get("data_enc")

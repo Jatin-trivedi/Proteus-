@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
+import uuid
 from models import db, Script, Deploy
 
 script_bp = Blueprint('script', __name__, url_prefix='/api/v1/script')
 
-@script_bp.route('/', methods=['POST'])
+@script_bp.route('/', methods=['POST'], strict_slashes=False)
 def create_script():
     data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid JSON'}), 400
     name = data.get('name')
     code = data.get('code')
     hash_before = data.get('hash_before')
@@ -50,6 +53,8 @@ def get_script(script_id):
 @script_bp.route('/<script_id>/hash', methods=['POST'])
 def update_script_hash(script_id):
     data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid JSON'}), 400
     agent_id = data.get('agent_id')
     hash_after = data.get('hash_after')
 

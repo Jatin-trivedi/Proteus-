@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from sqlalchemy import text
 from models import db
 from datetime import datetime
 import sys
@@ -20,7 +21,7 @@ def health_check():
     
     # Check database
     try:
-        db.session.execute("SELECT 1")
+        db.session.execute(text("SELECT 1"))
     except Exception as e:
         status["status"] = "unhealthy"
         status["services"]["database"] = str(e)

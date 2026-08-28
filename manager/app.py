@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from api.agent_routes import agent_bp
 from api.script_routes import script_bp
 from api.result_routes import result_bp
+from api.health_routes import health_bp
 
 # Initialize Migrate after db
 migrate = Migrate()
@@ -23,6 +24,7 @@ def create_app():
     app.register_blueprint(agent_bp, url_prefix="/api/v1/agent")
     app.register_blueprint(script_bp, url_prefix="/api/v1/script")
     app.register_blueprint(result_bp, url_prefix="/api/v1/result")
+    app.register_blueprint(health_bp)
 
     @app.route("/")
     def index():
