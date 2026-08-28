@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 import uuid
-from models import db, Script, Deploy, Agent   # added Agent import
+from models import db, Script, Deploy, Agent
 
 script_bp = Blueprint('script', __name__, url_prefix='/api/v1/script')
 
@@ -82,52 +82,72 @@ def update_script_hash(script_id):
     return jsonify({'status': 'ok', 'hash_after': hash_after})
 
 
-# ==================== NEW ENDPOINT ====================
+# ==================== UPDATED DEPLOY ENDPOINT ====================
 @script_bp.route('/deploy', methods=['POST'])
 def deploy_script():
     """
-    Deploy a script to an agent.
-    Expected JSON: { "agent_id": "...", "script_id": "..." }
+    Create a script and deploy it to one or more agents in one call.
+    Expected JSON:
+    {
+        "name": "MyScript",
+        "agent_ids": ["agent-001", "agent-002"],
+        "code": "agent my_script { ... }"
+    }
     """
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({'error': 'Invalid JSON'}), 400
 
-    agent_id = data.get('agent_id')
-    script_id = data.get('script_id')
+    name = data.get('name')
+    agent_ids = data.get('agent_ids')
+    code = data.get('code')
 
-    if not agent_id or not script_id:
-        return jsonify({'error': 'agent_id and script_id required'}), 400
+    if not name or not agent_ids or not code:
+        return jsonify({'error': 'name, agent_ids, and code required'}), 400
 
-    agent = Agent.query.get(agent_id)
-    if not agent:
-        return jsonify({'error': 'Agent not found'}), 404
+    if not isinstance(agent_ids, list):
+        return jsonify({'error': 'agent_ids must be a list'}), 400
 
-    script = Script.query.get(script_id)
-    if not script:
-        return jsonify({'error': 'Script not found'}), 404
-
-    existing = Deploy.query.filter_by(
-        agent_id=agent_id,
-        script_id=script_id,
-        status='pending'
-    ).first()
-    if existing:
-        return jsonify({'error': 'Deployment already pending'}), 400
-
-    deploy = Deploy(
-        deploy_id=str(uuid.uuid4()),
-        agent_id=agent_id,
-        script_id=script_id,
-        status='pending'
+    # 1. Create the script
+    script = Script(
+        script_id=str(uuid.uuid4()),
+        name=name,
+        code=code,
+        created_at=datetime.utcnow()
     )
-    db.session.add(deploy)
+    db.session.add(script)
+    db.session.commit()
+
+    # 2. Deploy to each agent
+    deploy_ids = []
+    for agent_id in agent_ids:
+        agent = Agent.query.get(agent_id)
+        if not agent:
+            # Optionally skip or return error; for now we skip non‑existent agents
+            continue
+
+        # Check if there's already a pending deployment for this agent/script
+        existing = Deploy.query.filter_by(
+            agent_id=agent_id,
+            script_id=script.script_id,
+            status='pending'
+        ).first()
+        if existing:
+            # If already pending, reuse its ID? For now, skip.
+            continue
+
+        deploy = Deploy(
+            deploy_id=str(uuid.uuid4()),
+            agent_id=agent_id,
+            script_id=script.script_id,
+            status='pending'
+        )
+        db.session.add(deploy)
+        deploy_ids.append(deploy.deploy_id)
+
     db.session.commit()
 
     return jsonify({
-        'deploy_id': deploy.deploy_id,
-        'agent_id': deploy.agent_id,
-        'script_id': deploy.script_id,
-        'status': deploy.status,
-        'deployed_at': deploy.deployed_at.isoformat()
+        'script_id': script.script_id,
+        'deploy_ids': deploy_ids
     }), 201
