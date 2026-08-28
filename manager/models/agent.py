@@ -6,6 +6,7 @@ class Agent(db.Model):
     __tablename__ = "agents"
 
     agent_id = db.Column(db.String(64), primary_key=True)
+    hostname = db.Column(db.String(100), nullable=True)   # <-- ADD THIS
     os = db.Column(db.String(32), nullable=False)
     ip = db.Column(db.String(45), nullable=False)
     arch = db.Column(db.String(16), nullable=False)
@@ -13,8 +14,9 @@ class Agent(db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     token = db.Column(db.String(256), unique=True)
 
-    def __init__(self, agent_id, os, ip, arch):
+    def __init__(self, agent_id, hostname, os, ip, arch):
         self.agent_id = agent_id
+        self.hostname = hostname          # <-- ACCEPT IT
         self.os = os
         self.ip = ip
         self.arch = arch
