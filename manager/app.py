@@ -47,7 +47,7 @@ app = create_app()
 
 if __name__ == "__main__":
     with app.app_context():
-        # If using migrations, db.create_all() is optional; migrations handle schema
-        # But it's safe to keep for first-time setup (will create tables if missing)
+        # This will create all tables if they don't exist
         db.create_all()
+        print("✅ Database tables created/verified.")
     app.run(host="0.0.0.0", port=5000, debug=True)
