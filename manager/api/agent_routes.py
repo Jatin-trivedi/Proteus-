@@ -24,10 +24,8 @@ def register_agent():
     if not agent_id:
         return jsonify({'error': 'agent_id required'}), 400
 
-    # Check if agent already exists
     agent = Agent.query.get(agent_id)
     if not agent:
-        # Create new agent
         agent = Agent(
             agent_id=agent_id,
             hostname=hostname,
@@ -37,7 +35,6 @@ def register_agent():
         )
         db.session.add(agent)
     else:
-        # Update existing agent's info (if provided)
         agent.hostname = hostname or agent.hostname
         agent.os = os_type or agent.os
         agent.ip = ip or agent.ip
@@ -65,12 +62,10 @@ def heartbeat():
     if not agent:
         return jsonify({'error': 'Agent not found'}), 404
 
-    # Update heartbeat timestamp and status
     agent.last_seen = datetime.utcnow()
     agent.status = 'online'
     db.session.commit()
 
-    # Check for any pending deployments for this agent
     pending = Deploy.query.filter_by(
         agent_id=agent_id,
         status='pending'
@@ -87,7 +82,6 @@ def heartbeat():
                 'code': script.code,
                 'hash_before': script.hash_before
             }
-            # Mark as in_progress so it's not returned again
             pending.status = 'in_progress'
             db.session.commit()
 
@@ -110,3 +104,19 @@ def get_agent_status(agent_id):
         'status': agent.status,
         'last_seen': agent.last_seen.isoformat() if agent.last_seen else None
     }), 200
+
+
+# ==================== NEW ENDPOINT ====================
+@agent_bp.route('/list', methods=['GET'])
+def list_agents():
+    """List all registered agents."""
+    agents = Agent.query.all()
+    return jsonify([{
+        'agent_id': a.agent_id,
+        'hostname': a.hostname,
+        'os': a.os,
+        'ip': a.ip,
+        'arch': a.arch,
+        'status': a.status,
+        'last_seen': a.last_seen.isoformat() if a.last_seen else None
+    } for a in agents]), 200

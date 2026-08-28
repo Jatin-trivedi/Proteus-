@@ -7,11 +7,13 @@ import json
 
 result_bp = Blueprint("result", __name__, url_prefix='/api/v1/result')
 
+
 @result_bp.route("/submit", methods=["POST"])
 def submit():
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({'error': 'Invalid JSON'}), 400
+
     agent_id = data.get("agent_id")
     script_id = data.get("script_id")
     encrypted_data = data.get("data_enc")
@@ -29,7 +31,6 @@ def submit():
     db.session.add(result)
     db.session.commit()
 
-    # Update the deployment
     deploy = Deploy.query.filter_by(
         agent_id=agent_id,
         script_id=script_id
@@ -92,3 +93,25 @@ def export():
             as_attachment=True,
             download_name=f"result_{result_id}.json"
         )
+
+
+# ==================== NEW ENDPOINT ====================
+@result_bp.route("/list", methods=["GET"])
+def list_results():
+    """
+    List all results (optionally filter by agent_id).
+    Query param: ?agent_id=...
+    """
+    agent_id = request.args.get("agent_id")
+    query = Result.query
+    if agent_id:
+        query = query.filter_by(agent_id=agent_id)
+    results = query.order_by(Result.submitted_at.desc()).all()
+
+    return jsonify([{
+        "result_id": r.result_id,
+        "agent_id": r.agent_id,
+        "script_id": r.script_id,
+        "submitted_at": r.submitted_at.isoformat(),
+        "data_encrypted": r.data_encrypted[:50] + "..." if r.data_encrypted and len(r.data_encrypted) > 50 else r.data_encrypted
+    } for r in results]), 200
