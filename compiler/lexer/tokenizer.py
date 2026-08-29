@@ -22,7 +22,8 @@ class Lexer:
             'false': TokenType.FALSE,
             'null': TokenType.NULL,
             'function': TokenType.FUNCTION,
-            'struct': TokenType.STRUCT,      # <-- ADDED
+            'struct': TokenType.STRUCT,
+            'print': TokenType.PRINT, 
         }
         
         self.single_char = {
@@ -97,7 +98,11 @@ class Lexer:
         
         self.tokens.append(Token(TokenType.EOF, 'EOF', self.line, self.column))
         return self.tokens
-    
+
+    # ==========================================
+    # Correct indentation: These are class methods!
+    # ==========================================
+
     def _read_string(self):
         start_line = self.line
         start_col = self.column
@@ -112,6 +117,24 @@ class Lexer:
                 self.column += 1
                 self.tokens.append(Token(TokenType.STRING, value, start_line, start_col))
                 return
+            if char == '\\':
+                # Handle escape sequences like \n and \t
+                next_char = self.source[self.position + 1] if self.position + 1 < len(self.source) else ''
+                if next_char == 'n':
+                    value += '\n'
+                    self.position += 2
+                    self.column += 2
+                    continue
+                elif next_char == 't':
+                    value += '\t'
+                    self.position += 2
+                    self.column += 2
+                    continue
+                else:
+                    value += next_char
+                    self.position += 2
+                    self.column += 2
+                    continue
             if char == '\n':
                 self.line += 1
                 self.column = 1

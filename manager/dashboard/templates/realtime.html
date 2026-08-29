@@ -4,21 +4,35 @@
 <canvas id="activityChart" width="400" height="200"></canvas>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Dummy chart – you can replace with WebSocket updates
-const ctx = document.getElementById('activityChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['Now', '30s ago', '60s ago'],
-        datasets: [{
-            label: 'Online Agents',
-            data: [2, 1, 2],
-            borderColor: 'green',
-            fill: false
-        }]
-    },
-    options: { responsive: true }
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Online', 'Offline'],
+            datasets: [{
+                data: [0, 0],
+                backgroundColor: ['#28a745', '#6c757d']
+            }]
+        },
+        options: { responsive: true }
+    });
+
+    function updateChart() {
+        fetch('/api/v1/agent/list')
+            .then(r => r.json())
+            .then(agents => {
+                const online = agents.filter(a => a.status === 'online').length;
+                const offline = agents.length - online;
+                chart.data.datasets[0].data = [online, offline];
+                chart.update();
+            })
+            .catch(err => console.error('Chart update error:', err));
+    }
+
+    updateChart();
+    setInterval(updateChart, 5000); // auto‑update every 5 seconds
 });
-// You can poll /api/v1/agent/list every few seconds and update
 </script>
 {% endblock %}

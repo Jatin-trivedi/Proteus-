@@ -4,28 +4,48 @@
 <div id="agent-list" class="row"></div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/v1/agent/list')
-        .then(r => r.json())
-        .then(agents => {
-            const container = document.getElementById('agent-list');
-            agents.forEach(agent => {
-                const col = document.createElement('div');
-                col.className = 'col-md-4';
-                const statusClass = agent.status === 'online' ? 'success' : 'secondary';
-                col.innerHTML = `
-                    <div class="card mb-3">
-                        <div class="card-header">Agent ${agent.agent_id}</div>
-                        <div class="card-body">
-                            <p><strong>OS:</strong> ${agent.os}</p>
-                            <p><strong>IP:</strong> ${agent.ip}</p>
-                            <p><strong>Status:</strong> <span class="badge bg-${statusClass}">${agent.status}</span></p>
-                            <p><strong>Last Seen:</strong> ${new Date(agent.last_seen).toLocaleString()}</p>
+    function loadAgents() {
+        fetch('/api/v1/agent/list')
+            .then(r => {
+                if (!r.ok) throw new Error('Failed to fetch agents');
+                return r.json();
+            })
+            .then(agents => {
+                const container = document.getElementById('agent-list');
+                container.innerHTML = ''; // Clear old cards
+                if (agents.length === 0) {
+                    container.innerHTML = '<div class="alert alert-info">No agents registered yet.</div>';
+                    return;
+                }
+                agents.forEach(agent => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4';
+                    const statusClass = agent.status === 'online' ? 'success' : 'secondary';
+                    const lastSeen = agent.last_seen ? new Date(agent.last_seen).toLocaleString() : 'Never';
+                    col.innerHTML = `
+                        <div class="card mb-3">
+                            <div class="card-header">Agent ${agent.agent_id}</div>
+                            <div class="card-body">
+                                <p><strong>Hostname:</strong> ${agent.hostname || 'N/A'}</p>
+                                <p><strong>OS:</strong> ${agent.os}</p>
+                                <p><strong>IP:</strong> ${agent.ip}</p>
+                                <p><strong>Arch:</strong> ${agent.arch}</p>
+                                <p><strong>Status:</strong> <span class="badge bg-${statusClass}">${agent.status}</span></p>
+                                <p><strong>Last Seen:</strong> ${lastSeen}</p>
+                            </div>
                         </div>
-                    </div>
-                `;
-                container.appendChild(col);
+                    `;
+                    container.appendChild(col);
+                });
+            })
+            .catch(err => {
+                document.getElementById('agent-list').innerHTML = `<div class="alert alert-danger">Error loading agents: ${err.message}</div>`;
             });
-        });
+    }
+
+    loadAgents();
+    // Refresh every 10 seconds
+    setInterval(loadAgents, 10000);
 });
 </script>
 {% endblock %}

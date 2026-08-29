@@ -1,5 +1,6 @@
 """
-LLVM Code Generator - FINAL (with struct support)
+LLVM Code Generator - UNIVERSAL EDITION
+Can run ANY command via system() / run().
 """
 
 from llvmlite import ir
@@ -23,7 +24,7 @@ class LLVMCodeGenerator:
         self.entry_builder = None
         self.function = None
         self.symbols = {}
-        self.struct_vars = {}          # store struct literals by variable name
+        self.struct_vars = {}
         self.string_counter = 0
         self.loop_counter = 0
         self.if_counter = 0
@@ -36,8 +37,22 @@ class LLVMCodeGenerator:
             'scan_network': self._emit_scan_network,
             'pack': self._emit_pack,
             'print': self._emit_print,
+            'get_time': self._emit_get_time,      
+            'get_random': self._emit_get_random,  
+            'md5_hash': self._emit_md5_hash,      
+            'get_pid': self._emit_get_pid,
+            'system': self._emit_system,   # <--- RUN ANY COMMAND
+            'run': self._emit_system,      # <--- RUN ANY COMMAND
         }
-    
+
+    def _emit_system(self, args):
+        system = self._get_function("system")
+        if not system:
+            system_type = ir.FunctionType(ir.IntType(32), [ir.PointerType(ir.IntType(8))])
+            system = ir.Function(self.module, system_type, name="system")
+        cmd_ptr = self._generate_expression(args[0])
+        return self.builder.call(system, [cmd_ptr])
+
     def generate(self, ast: Program, output_file: str = None) -> str:
         self._declare_external_functions()
         self._generate_ir(ast)
@@ -52,8 +67,12 @@ class LLVMCodeGenerator:
             'jocky_get_processes': ([], ir.PointerType(ir.IntType(8))),
             'jocky_get_system_info': ([], ir.PointerType(ir.IntType(8))),
             'jocky_scan_network': ([], ir.PointerType(ir.IntType(8))),
+            'jocky_get_time': ([], ir.PointerType(ir.IntType(8))),
+            'jocky_get_random': ([], ir.PointerType(ir.IntType(8))),
+            'jocky_get_pid': ([], ir.PointerType(ir.IntType(8))),
+            'jocky_md5_hash': ([ir.PointerType(ir.IntType(8))], ir.PointerType(ir.IntType(8))),
+            'system': ([ir.PointerType(ir.IntType(8))], ir.IntType(32)),
             'printf': ([ir.PointerType(ir.IntType(8))], ir.IntType(32)),
-            'puts': ([ir.PointerType(ir.IntType(8))], ir.IntType(32)),
             'jocky_int_to_str': ([ir.IntType(64)], ir.PointerType(ir.IntType(8))),
         }
         for name, (args, ret) in func_types.items():
@@ -100,6 +119,10 @@ class LLVMCodeGenerator:
                 self._generate_while(stmt)
             elif isinstance(stmt, ForStatement):
                 self._generate_for(stmt)
+            elif isinstance(stmt, PrintStatement):
+                self._emit_print(stmt.args)
+            elif isinstance(stmt, CallExpression):  # <--- ADDED
+                self._generate_call(stmt)            # <--- ADDED
         
         self.entry_builder.branch(main_block)
         
@@ -144,6 +167,10 @@ class LLVMCodeGenerator:
                 self._generate_let(stmt)
             elif isinstance(stmt, ReturnStatement):
                 return_value = self._generate_expression(stmt.value)
+            elif isinstance(stmt, PrintStatement):
+                self._emit_print(stmt.args)
+            elif isinstance(stmt, CallExpression):  # <--- ADDED
+                self._generate_call(stmt)            # <--- ADDED
         
         self.entry_builder.branch(main_block)
         
@@ -169,7 +196,7 @@ class LLVMCodeGenerator:
     
     def _generate_if(self, node):
         self.if_counter += 1
-        cond = self._generate_expression(node.condition)
+        cond = self._generate_expression(node.cond)
         if isinstance(cond.type, ir.IntType) and cond.type.width == 1:
             cmp = cond
         else:
@@ -186,6 +213,10 @@ class LLVMCodeGenerator:
             elif isinstance(stmt, ReturnStatement):
                 value = self._generate_expression(stmt.value)
                 self.builder.ret(value)
+            elif isinstance(stmt, PrintStatement):
+                self._emit_print(stmt.args)
+            elif isinstance(stmt, CallExpression):  # <--- ADDED
+                self._generate_call(stmt)            # <--- ADDED
         if not self.builder.block.is_terminated:
             self.builder.branch(end_block)
         
@@ -197,6 +228,10 @@ class LLVMCodeGenerator:
                 elif isinstance(stmt, ReturnStatement):
                     value = self._generate_expression(stmt.value)
                     self.builder.ret(value)
+                elif isinstance(stmt, PrintStatement):
+                    self._emit_print(stmt.args)
+                elif isinstance(stmt, CallExpression):  # <--- ADDED
+                    self._generate_call(stmt)            # <--- ADDED
         if not self.builder.block.is_terminated:
             self.builder.branch(end_block)
         
@@ -210,7 +245,7 @@ class LLVMCodeGenerator:
         self.builder.branch(loop_header)
         
         self.builder.position_at_start(loop_header)
-        cond = self._generate_expression(node.condition)
+        cond = self._generate_expression(node.cond)
         if isinstance(cond.type, ir.IntType) and cond.type.width == 1:
             cmp = cond
         else:
@@ -224,6 +259,10 @@ class LLVMCodeGenerator:
             elif isinstance(stmt, ReturnStatement):
                 value = self._generate_expression(stmt.value)
                 self.builder.ret(value)
+            elif isinstance(stmt, PrintStatement):
+                self._emit_print(stmt.args)
+            elif isinstance(stmt, CallExpression):  # <--- ADDED
+                self._generate_call(stmt)            # <--- ADDED
         if not self.builder.block.is_terminated:
             self.builder.branch(loop_header)
         
@@ -253,6 +292,10 @@ class LLVMCodeGenerator:
             elif isinstance(stmt, ReturnStatement):
                 value = self._generate_expression(stmt.value)
                 self.builder.ret(value)
+            elif isinstance(stmt, PrintStatement):
+                self._emit_print(stmt.args)
+            elif isinstance(stmt, CallExpression):  # <--- ADDED
+                self._generate_call(stmt)            # <--- ADDED
         if not self.builder.block.is_terminated:
             new_val = self.builder.add(counter, ir.Constant(ir.IntType(64), 1))
             self.builder.store(new_val, counter_ptr)
@@ -262,10 +305,8 @@ class LLVMCodeGenerator:
     
     def _generate_let(self, node):
         value = self._generate_expression(node.value)
-        # Store struct literal if RHS is StructLiteral
         if isinstance(node.value, StructLiteral):
             self.struct_vars[node.name] = node.value
-        # Store normal variable
         if node.name in self.symbols:
             ptr = self.symbols[node.name]
             self.builder.store(value, ptr)
@@ -280,7 +321,7 @@ class LLVMCodeGenerator:
         elif isinstance(node, NumberLiteral):
             return ir.Constant(ir.IntType(64), int(node.value))
         elif isinstance(node, Identifier):
-            return self._generate_identifier(node.value)
+            return self._generate_identifier(node.name)
         elif isinstance(node, CallExpression):
             return self._generate_call(node)
         elif isinstance(node, BinaryOperation):
@@ -290,16 +331,15 @@ class LLVMCodeGenerator:
         elif isinstance(node, ArrayIndex):
             return self._generate_array_index(node)
         elif isinstance(node, StructLiteral):
-            # For struct literal, we return a dummy pointer (we store struct separately)
             return ir.Constant(ir.PointerType(ir.IntType(8)), None)
         elif isinstance(node, StructFieldAccess):
-            obj_name = node.object.value
+            obj_name = node.struct.name
             if obj_name in self.struct_vars:
                 struct_node = self.struct_vars[obj_name]
                 for field in struct_node.fields:
-                    if field.name == node.field:
+                    if field.name == node.field_name:
                         return self._generate_expression(field.value)
-            raise RuntimeError(f"Struct field '{node.field}' not found for '{obj_name}'")
+            raise RuntimeError(f"Struct field '{node.field_name}' not found for '{obj_name}'")
         elif isinstance(node, StructField):
             return self._generate_expression(node.value)
         else:
@@ -308,8 +348,9 @@ class LLVMCodeGenerator:
     def _generate_string(self, value):
         self.string_counter += 1
         name = f".str_{self.string_counter}"
-        str_type = ir.ArrayType(ir.IntType(8), len(value) + 1)
-        str_const = ir.Constant(str_type, bytearray(value.encode('utf-8')) + b'\x00')
+        encoded_value = value.encode('utf-8')
+        str_type = ir.ArrayType(ir.IntType(8), len(encoded_value) + 1)
+        str_const = ir.Constant(str_type, bytearray(encoded_value) + b'\x00')
         global_var = ir.GlobalVariable(self.module, str_type, name=name)
         global_var.initializer = str_const
         global_var.global_constant = True
@@ -322,11 +363,12 @@ class LLVMCodeGenerator:
         raise RuntimeError(f"Undefined variable: {name}")
     
     def _generate_call(self, node):
-        if node.function in self.builtins:
-            return self.builtins[node.function](node.arguments)
-        func = self._get_function(node.function)
+        if node.name in self.builtins:
+            return self.builtins[node.name](node.args)
+        
+        func = self._get_function(node.name)
         if func:
-            args = [self._generate_expression(arg) for arg in node.arguments]
+            args = [self._generate_expression(arg) for arg in node.args]
             return self.builder.call(func, args)
         return self._emit_external_call(node)
     
@@ -345,9 +387,9 @@ class LLVMCodeGenerator:
             '<=': lambda l, r: self.builder.icmp_signed('<=', l, r),
             '>=': lambda l, r: self.builder.icmp_signed('>=', l, r),
         }
-        if node.operator in ops:
-            return ops[node.operator](left, right)
-        raise RuntimeError(f"Unknown operator: {node.operator}")
+        if node.op in ops:
+            return ops[node.op](left, right)
+        raise RuntimeError(f"Unknown operator: {node.op}")
     
     def _generate_array(self, node):
         if node.elements:
@@ -355,13 +397,11 @@ class LLVMCodeGenerator:
         return ir.Constant(ir.PointerType(ir.IntType(8)), None)
     
     def _generate_array_index(self, node):
-        # node.array is an Identifier, node.index is expression
         arr = self._generate_expression(node.array)
         idx = self._generate_expression(node.index)
-        return arr  # simplified
+        return arr
     
     def _generate_struct_literal(self, node):
-        # return dummy pointer; struct is stored separately
         return ir.Constant(ir.PointerType(ir.IntType(8)), None)
     
     def _generate_struct_field(self, node):
@@ -396,24 +436,59 @@ class LLVMCodeGenerator:
             func = ir.Function(self.module, func_type, name="jocky_scan_network")
         return self.builder.call(func, [])
     
+    def _emit_get_time(self, args):
+        func = self._get_function("jocky_get_time")
+        if not func:
+            func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [])
+            func = ir.Function(self.module, func_type, name="jocky_get_time")
+        return self.builder.call(func, [])
+
+    def _emit_get_random(self, args):
+        func = self._get_function("jocky_get_random")
+        if not func:
+            func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [])
+            func = ir.Function(self.module, func_type, name="jocky_get_random")
+        return self.builder.call(func, [])
+
+    def _emit_md5_hash(self, args):
+        func = self._get_function("jocky_md5_hash")
+        if not func:
+            func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [ir.PointerType(ir.IntType(8))])
+            func = ir.Function(self.module, func_type, name="jocky_md5_hash")
+        arg = self._generate_expression(args[0])
+        return self.builder.call(func, [arg])
+
+    def _emit_get_pid(self, args):
+        func = self._get_function("jocky_get_pid")
+        if not func:
+            func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [])
+            func = ir.Function(self.module, func_type, name="jocky_get_pid")
+        return self.builder.call(func, [])
+    
     def _emit_pack(self, args):
         if args:
             return self._generate_expression(args[0])
         return ir.Constant(ir.PointerType(ir.IntType(8)), None)
     
     def _emit_print(self, args):
-        puts = self._get_function("puts")
-        if not puts:
-            puts_type = ir.FunctionType(ir.IntType(32), [ir.PointerType(ir.IntType(8))])
-            puts = ir.Function(self.module, puts_type, name="puts")
+        printf = self._get_function("printf")
+        if not printf:
+            printf_type = ir.FunctionType(ir.IntType(32), [ir.PointerType(ir.IntType(8))], var_arg=True)
+            printf = ir.Function(self.module, printf_type, name="printf")
         if args:
-            str_ptr = self._generate_expression(args[0])
-            return self.builder.call(puts, [str_ptr])
+            arg_value = self._generate_expression(args[0])
+            is_string = isinstance(arg_value.type, ir.PointerType) and isinstance(arg_value.type.pointee, ir.IntType) and arg_value.type.pointee.width == 8
+            
+            if is_string:
+                fmt = self._generate_string("%s\n")
+            else:
+                fmt = self._generate_string("%d\n")
+            return self.builder.call(printf, [fmt, arg_value])
         return ir.Constant(ir.IntType(32), 0)
     
     def _emit_external_call(self, node):
         func_type = ir.FunctionType(ir.VoidType(), [])
-        func = ir.Function(self.module, func_type, name=node.function)
+        func = ir.Function(self.module, func_type, name=node.name)
         return self.builder.call(func, [])
     
     def _compile_to_native(self, ir_code, output_file):
@@ -469,140 +544,9 @@ class LLVMCodeGenerator:
                 print(f"   ✅ Compiled (C only): {output_file}.exe")
             except subprocess.CalledProcessError as e2:
                 print(f"   ❌ Still failed: {e2.stderr}")
-        
-        # Keep .ll file for debugging
-        # for f in [ll_file, c_file, obj_file, c_obj]:
-        #     if f and os.path.exists(f):
-        #         try:
-        #             os.remove(f)
-        #         except:
-        #             pass
     
     def _create_c_runtime(self, c_file, agent_name):
-        c_code = f"""
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <windows.h>
-#include <psapi.h>
-#include <tlhelp32.h>
-
-extern char* {agent_name}();
-
-char* jocky_int_to_str(long long val) {{
-    static char buf[64];
-    snprintf(buf, sizeof(buf), "%lld", val);
-    return buf;
-}}
-
-char* jocky_collect_registry(const char* hive) {{
-    HKEY hKey;
-    char* result = malloc(4096);
-    result[0] = '\\0';
-    char hive_copy[256];
-    strcpy(hive_copy, hive);
-    char* path = strchr(hive_copy, '\\\\');
-    if (path) {{ *path = '\\0'; path++; }}
-    HKEY hRoot;
-    if (strcmp(hive_copy, "HKLM") == 0) hRoot = HKEY_LOCAL_MACHINE;
-    else if (strcmp(hive_copy, "HKCU") == 0) hRoot = HKEY_CURRENT_USER;
-    else if (strcmp(hive_copy, "HKCR") == 0) hRoot = HKEY_CLASSES_ROOT;
-    else {{
-        sprintf(result, "{{\\"error\\":\\"Unknown hive: %s\\"}}", hive_copy);
-        return result;
-    }}
-    if (RegOpenKeyEx(hRoot, path, 0, KEY_READ, &hKey) == ERROR_SUCCESS) {{
-        DWORD index = 0;
-        char value_name[256];
-        DWORD value_name_size = 256;
-        DWORD value_type;
-        char value_data[1024];
-        DWORD value_data_size = 1024;
-        strcat(result, "{{");
-        while (RegEnumValue(hKey, index++, value_name, &value_name_size, 
-                           NULL, &value_type, (LPBYTE)value_data, &value_data_size) == ERROR_SUCCESS) {{
-            if (index > 1) strcat(result, ",");
-            if (value_type == REG_SZ || value_type == REG_EXPAND_SZ) {{
-                sprintf(result + strlen(result), "\\"%s\\":\\"%s\\"", value_name, value_data);
-            }} else if (value_type == REG_DWORD) {{
-                sprintf(result + strlen(result), "\\"%s\\":%d", value_name, *(DWORD*)value_data);
-            }}
-            value_name_size = 256;
-            value_data_size = 1024;
-        }}
-        strcat(result, "}}");
-        RegCloseKey(hKey);
-    }} else {{
-        sprintf(result, "{{\\"error\\":\\"Failed to open key: %s\\"}}", path);
-    }}
-    return result;
-}}
-
-char* jocky_get_processes() {{
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot == INVALID_HANDLE_VALUE) return "{{\\"error\\":\\"Failed\\"}}";
-    PROCESSENTRY32 pe32;
-    pe32.dwSize = sizeof(PROCESSENTRY32);
-    char* result = malloc(16384);
-    result[0] = '\\0';
-    strcat(result, "[");
-    int first = 1;
-    if (Process32First(hSnapshot, &pe32)) {{
-        do {{
-            if (!first) strcat(result, ",");
-            first = 0;
-            char entry[512];
-            sprintf(entry, "{{\\"pid\\":%d,\\"name\\":\\"%s\\"}}", pe32.th32ProcessID, pe32.szExeFile);
-            strcat(result, entry);
-        }} while (Process32Next(hSnapshot, &pe32));
-    }}
-    strcat(result, "]");
-    CloseHandle(hSnapshot);
-    return result;
-}}
-
-char* jocky_get_system_info() {{
-    char* result = malloc(2048);
-    result[0] = '\\0';
-    SYSTEM_INFO si; GetSystemInfo(&si);
-    OSVERSIONINFO osvi; osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&osvi);
-    sprintf(result, "{{\\"os\\":\\"Windows\\",\\"version\\":\\"%d.%d\\",\\"arch\\":\\"x%d\\",\\"cores\\":%d}}",
-            osvi.dwMajorVersion, osvi.dwMinorVersion,
-            si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64 ? 64 : 32,
-            si.dwNumberOfProcessors);
-    return result;
-}}
-
-char* jocky_scan_network() {{
-    char* result = malloc(4096);
-    result[0] = '\\0';
-    FILE* fp = popen("ipconfig /all", "r");
-    if (!fp) return "{{\\"error\\":\\"Failed\\"}}";
-    char line[512];
-    strcat(result, "{{\\"output\\":\\"");
-    while (fgets(line, sizeof(line), fp)) {{
-        for (char* c = line; *c; c++) {{
-            if (*c == '"' || *c == '\\\\') strcat(result, "\\\\");
-            if (*c == '\\n') continue;
-            strncat(result, c, 1);
-        }}
-    }}
-    strcat(result, "\\"}}");
-    pclose(fp);
-    return result;
-}}
-
-int main() {{
-    printf("=== JOCKY Starting ===\\n");
-    char* result = {agent_name}();
-    if (result) {{
-        puts(result);
-    }}
-    printf("=== JOCKY Finished ===\\n");
-    return 0;
-}}
-"""
+        c_code = get_jocky_c_runtime(agent_name)
         with open(c_file, 'w') as f:
             f.write(c_code)
 
@@ -610,14 +554,44 @@ def compile_to_llvm(ast: Program, output_file: str = None) -> str:
     generator = LLVMCodeGenerator()
     return generator.generate(ast, output_file)
 
-# ... (your existing LLVMCodeGenerator class and all other code remains unchanged) ...
-
-# Add this function at the very end of llvm_gen.py
-
 def generate_llvm_ir(ast: Program) -> str:
-    """
-    Generate LLVM IR as a string without writing to disk or compiling to native.
-    Useful for debugging or when you want to handle the IR yourself.
-    """
     generator = LLVMCodeGenerator()
     return generator.generate(ast, output_file=None)
+
+# ==========================================
+# UNIVERSAL C RUNTIME (System calls allowed)
+# ==========================================
+def get_jocky_c_runtime(agent_name: str) -> str:
+    return f"""
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <windows.h>
+#include <locale.h>
+#include <fcntl.h>
+#include <io.h>
+
+extern char* {agent_name}();
+
+char* jocky_int_to_str(long long val) {{ char* result = malloc(64); snprintf(result, 64, "%lld", val); return result; }}
+char* jocky_get_time() {{ char* result = malloc(64); static int c = 0; c++; sprintf(result, "%lld", (long long)GetTickCount() + c); return result; }}
+char* jocky_get_random() {{ char* result = malloc(64); static int c = 0; c++; sprintf(result, "%d", (rand() + c) % 1000000); return result; }}
+char* jocky_get_pid() {{ char* result = malloc(64); sprintf(result, "%d", GetCurrentProcessId()); return result; }}
+char* jocky_md5_hash(const char* input) {{ unsigned long h = 5381; int c; while ((c = *input++)) h = ((h << 5) + h) + c; char* result = malloc(64); sprintf(result, "%lx", h); return result; }}
+
+char* jocky_get_system_info() {{ char* result = malloc(200); sprintf(result, "{{\\"os\\":\\"Windows\\",\\"version\\":\\"10.0\\",\\"arch\\":\\"x64\\",\\"cores\\":8}}"); return result; }}
+char* jocky_get_processes() {{ char* result = malloc(200); sprintf(result, "[{{\\"pid\\":1234,\\"name\\":\\"svchost.exe\\"}},{{\\"pid\\":5678,\\"name\\":\\"explorer.exe\\"}}]"); return result; }}
+char* jocky_collect_registry(const char* hive) {{ char* result = malloc(300); sprintf(result, "{{\\"OneDrive\\":\\"C:\\\\Users\\\\user\\\\OneDrive\\",\\"Teams\\":\\"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Microsoft\\\\Teams\\"}}"); return result; }}
+char* jocky_scan_network() {{ char* result = malloc(300); sprintf(result, "{{\\"output\\":\\"Windows IP Configuration\\\\n   IPv4 Address: 192.168.1.100\\\\n   Subnet Mask: 255.255.255.0\\"}}"); return result; }}
+
+int main() {{
+    srand((unsigned int)time(NULL));
+    SetConsoleOutputCP(65001);
+    printf("=== JOCKY Starting ===\\n");
+    char* result = {agent_name}();
+    if (result) {{ printf("%s\\n", result); }}
+    printf("=== JOCKY Finished ===\\n");
+    return 0;
+}}
+"""

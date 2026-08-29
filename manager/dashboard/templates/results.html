@@ -8,24 +8,72 @@
     <tbody></tbody>
 </table>
 
+<!-- Result Detail Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Result Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="resultDetail" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/v1/result/list')
-        .then(r => r.json())
-        .then(results => {
-            const tbody = document.querySelector('#results-table tbody');
-            results.forEach(r => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${r.result_id}</td>
-                    <td>${r.agent_id}</td>
-                    <td>${r.script_id}</td>
-                    <td>${new Date(r.submitted_at).toLocaleString()}</td>
-                    <td><a href="/api/v1/result/view?result_id=${r.result_id}" target="_blank">View</a></td>
-                `;
-                tbody.appendChild(tr);
+    function loadResults() {
+        fetch('/api/v1/result/list')
+            .then(r => {
+                if (!r.ok) throw new Error('Failed to fetch results');
+                return r.json();
+            })
+            .then(results => {
+                const tbody = document.querySelector('#results-table tbody');
+                tbody.innerHTML = '';
+                if (results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No results submitted yet.</td></tr>';
+                    return;
+                }
+                results.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.result_id.substring(0, 8)}...</td>
+                        <td>${r.agent_id}</td>
+                        <td>${r.script_id.substring(0, 8)}...</td>
+                        <td>${new Date(r.submitted_at).toLocaleString()}</td>
+                        <td><button class="btn btn-sm btn-primary view-result" data-result-id="${r.result_id}">View</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                document.querySelector('#results-table tbody').innerHTML = `<tr><td colspan="5" class="text-danger">Error: ${err.message}</td></tr>`;
             });
-        });
+    }
+
+    // View result detail
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('view-result')) {
+            const resultId = e.target.dataset.resultId;
+            fetch(`/api/v1/result/view?result_id=${resultId}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('resultDetail').textContent = JSON.stringify(data, null, 2);
+                    new bootstrap.Modal(document.getElementById('resultModal')).show();
+                })
+                .catch(err => {
+                    alert('Error fetching result: ' + err.message);
+                });
+        }
+    });
+
+    loadResults();
+    // Refresh every 15 seconds
+    setInterval(loadResults, 15000);
 });
 </script>
 {% endblock %}

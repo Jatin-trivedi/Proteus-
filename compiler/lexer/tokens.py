@@ -1,7 +1,16 @@
 from enum import Enum, auto
 
 class TokenType(Enum):
+    # Literals & Identifiers
+    IDENTIFIER = auto()
+    NUMBER = auto()
+    STRING = auto()
+    PRINT = auto()
+
+    # Keywords
     AGENT = auto()
+    FUNCTION = auto()
+    STRUCT = auto()
     LET = auto()
     RETURN = auto()
     IF = auto()
@@ -13,23 +22,22 @@ class TokenType(Enum):
     TRUE = auto()
     FALSE = auto()
     NULL = auto()
-    FUNCTION = auto()
-    STRUCT = auto()          # <-- ADDED
-    
-    IDENTIFIER = auto()
-    STRING = auto()
-    NUMBER = auto()
-    
+
+    # Operators
     ASSIGN = auto()
-    EQUALS = auto()
-    NOT_EQUALS = auto()
-    LESS_THAN = auto()
-    GREATER_THAN = auto()
     PLUS = auto()
     MINUS = auto()
     MULTIPLY = auto()
     DIVIDE = auto()
-    
+    EQUALS = auto()
+    NOT_EQUALS = auto()
+    LESS_THAN = auto()
+    GREATER_THAN = auto()
+    DOT = auto()
+    COLON = auto()
+    COMMA = auto()
+
+    # Delimiters
     LPAREN = auto()
     RPAREN = auto()
     LBRACE = auto()
@@ -37,19 +45,16 @@ class TokenType(Enum):
     LBRACKET = auto()
     RBRACKET = auto()
     SEMICOLON = auto()
-    COMMA = auto()
-    DOT = auto()
-    COLON = auto()
-    
+
+    # End of File
     EOF = auto()
-    COMMENT = auto()
 
 class Token:
-    def __init__(self, type: TokenType, value: str, line: int, column: int):
+    def __init__(self, type: TokenType, value, line=None, column=None):
         self.type = type
         self.value = value
         self.line = line
         self.column = column
-    
+
     def __repr__(self):
-        return f"Token({self.type}, '{self.value}', line={self.line}, col={self.column})"
+        return f"Token({self.type.name}, {self.value!r})"
