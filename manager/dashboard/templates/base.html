@@ -3,43 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JOCKY Manager</title>
-    <!-- Bootstrap 5 -->
+    <title>{% block title %}JOCKY Manager · Enterprise Endpoint Defense{% endblock %}</title>
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Chart.js for real-time charts -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom styles -->
+    <!-- Custom Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Extra head content if needed -->
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🚀 JOCKY Manager</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/scripts">Scripts</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/results">Results</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/realtime">Real‑time</a></li>
+    <!-- Top Navigation (Abnormal Security Inspired) -->
+    <nav class="jocky-nav">
+        <div class="navbar-container">
+            <div class="d-flex align-items-center">
+                <a class="jocky-brand" href="/">
+                    <div class="jocky-brand-logo">⚡</div>
+                    <span class="jocky-brand-text">JOCKY</span>
+                </a>
+                <ul class="jocky-nav-links">
+                    <li class="jocky-nav-item">
+                        <a class="jocky-nav-link {% if request.path == '/' %}active{% endif %}" href="/">Dashboard</a>
+                    </li>
+                    <li class="jocky-nav-item">
+                        <a class="jocky-nav-link {% if request.path.startswith('/scripts') %}active{% endif %}" href="/scripts">Script Studio</a>
+                    </li>
+                    <li class="jocky-nav-item">
+                        <a class="jocky-nav-link {% if request.path.startswith('/results') %}active{% endif %}" href="/results">Forensics Log</a>
+                    </li>
+                    <li class="jocky-nav-item">
+                        <a class="jocky-nav-link {% if request.path.startswith('/realtime') %}active{% endif %}" href="/realtime">Telemetry</a>
+                    </li>
                 </ul>
+            </div>
+            <div class="nav-right-meta">
+                <div class="system-pill" id="system-status-pill">
+                    <div class="pulse-dot"></div>
+                    <span>C2 Engine Online</span>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <!-- Main Content Workspace -->
+    <main class="main-content">
         {% block content %}{% endblock %}
-    </div>
+    </main>
 
-    <!-- Bootstrap JS Bundle -->
+    <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Global dashboard JS -->
+    <!-- Dashboard Global JS -->
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-    <!-- Extra page-specific scripts -->
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template
 from config import Config
 from models import db
@@ -15,6 +16,9 @@ def create_app():
                 template_folder='dashboard/templates',
                 static_folder='dashboard/static')
     app.config.from_object(Config)
+
+    # Ensure instance folder and db folder exist
+    os.makedirs(os.path.join(app.instance_path, 'db'), exist_ok=True)
 
     # Initialize extensions
     db.init_app(app)
@@ -52,4 +56,5 @@ if __name__ == "__main__":
         # This will create all tables if they don't exist
         db.create_all()
         print("✅ Database tables created/verified.")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

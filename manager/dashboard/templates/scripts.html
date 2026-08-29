@@ -1,63 +1,279 @@
 {% extends "base.html" %}
+
+{% block title %}Script Studio · JOCKY Manager{% endblock %}
+
 {% block content %}
-<h2>Deploy JOCKY Script</h2>
-<form id="deploy-form">
-    <div class="mb-3">
-        <label for="scriptName" class="form-label">Script Name</label>
-        <input type="text" class="form-control" id="scriptName" value="MyScan" required>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="page-header-title mb-1">Polymorphic Script Studio</h1>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Author, obfuscate, and deploy JOCKY DSL scripts directly to active agent nodes.</p>
     </div>
-    <div class="mb-3">
-        <label for="agentIds" class="form-label">Target Agent IDs (comma separated)</label>
-        <input type="text" class="form-control" id="agentIds" placeholder="agent-001,agent-002" required>
-    </div>
-    <div class="mb-3">
-        <label for="jockyCode" class="form-label">JOCKY Source Code</label>
-        <textarea class="form-control" id="jockyCode" rows="8">agent scan_registry = {
+    <a href="/results" class="btn-jocky-secondary btn-jocky-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        View Forensics
+    </a>
+</div>
+
+<div class="workspace-wrapper">
+    <div class="workspace-top-bar"></div>
+    <div class="workspace-body">
+        
+        <div class="split-layout">
+            
+            <!-- Left Side: Configuration & Target Selectors -->
+            <div>
+                <h2 class="hero-title" style="font-size: 1.5rem;">Deployment Configuration</h2>
+                <p class="hero-description" style="font-size: 0.9rem; margin-bottom: 1.25rem;">
+                    Select target agent nodes and choose from standard forensic templates or create a custom payload.
+                </p>
+
+                <!-- Script Presets -->
+                <div class="mb-3">
+                    <label class="form-label-custom">Quick Presets</label>
+                    <div class="preset-pills">
+                        <span class="preset-chip active" onclick="applyPreset('registry')">Registry Scanner</span>
+                        <span class="preset-chip" onclick="applyPreset('process')">Process Hunter</span>
+                        <span class="preset-chip" onclick="applyPreset('sysinfo')">System Fingerprint</span>
+                        <span class="preset-chip" onclick="applyPreset('network')">Network Sockets</span>
+                    </div>
+                </div>
+
+                <form id="deploy-form">
+                    <div class="mb-3">
+                        <label for="scriptName" class="form-label-custom">Script Identifier</label>
+                        <input type="text" class="form-control-custom" id="scriptName" value="Registry_Autorun_Scan" required placeholder="e.g. Memory_Forensics_01">
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label for="agentIds" class="form-label-custom mb-0">Target Agent IDs</label>
+                            <span class="text-primary" style="font-size: 0.75rem; cursor: pointer; font-weight: 600;" onclick="selectAllAgents()">Select All Available</span>
+                        </div>
+                        <input type="text" class="form-control-custom" id="agentIds" placeholder="agent-001, test-agent-01" required>
+                        <div id="quick-agent-badges" class="d-flex flex-wrap gap-1 mt-2">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" id="btn-deploy" class="btn-jocky-primary" style="padding: 12px 20px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            Dispatch Payload to Agents
+                        </button>
+                    </div>
+                </form>
+
+                <div id="deploy-result" class="mt-3"></div>
+            </div>
+
+            <!-- Right Side: JOCKY Code Studio (IDE Style) -->
+            <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="section-subtitle mb-0">JOCKY DSL Source</h3>
+                    <span class="badge bg-dark" style="font-family: var(--font-mono); font-size: 0.75rem;">Polymorphic Ready</span>
+                </div>
+
+                <div class="code-editor-panel">
+                    <div class="code-editor-header">
+                        <div class="editor-window-controls">
+                            <span class="editor-dot editor-dot-red"></span>
+                            <span class="editor-dot editor-dot-yellow"></span>
+                            <span class="editor-dot editor-dot-green"></span>
+                        </div>
+                        <div class="editor-title" id="editor-filename">payload.jky · UTF-8</div>
+                        <div>
+                            <button type="button" class="btn-jocky-secondary btn-jocky-sm" style="padding: 2px 8px; font-size: 0.7rem; background: #1e293b; color: #cbd5e1; border-color: #334155;" onclick="copyCode()">Copy</button>
+                        </div>
+                    </div>
+                    <textarea class="code-textarea" id="jockyCode" spellcheck="false">agent scan_registry {
     let hive = "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
     let results = collect_registry(hive)
     return results
 }</textarea>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mt-2 text-muted" style="font-size: 0.75rem;">
+                    <span>Synthesizes AST & Bytecode upon dispatch</span>
+                    <span>AES-256 E2E Encryption</span>
+                </div>
+            </div>
+
+        </div>
+
     </div>
-    <button type="submit" class="btn btn-primary">Deploy</button>
-</form>
-<div id="deploy-result" class="mt-3"></div>
+</div>
 
 <script>
-document.getElementById('deploy-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('scriptName').value.trim();
-    const agentIds = document.getElementById('agentIds').value.split(',').map(s => s.trim()).filter(s => s);
-    const code = document.getElementById('jockyCode').value;
-
-    if (!name || agentIds.length === 0 || !code) {
-        document.getElementById('deploy-result').innerHTML = `<div class="alert alert-warning">Please fill all fields and provide at least one agent ID.</div>`;
-        return;
+const PRESETS = {
+    registry: {
+        name: "Registry_Autorun_Scan",
+        code: `agent scan_registry {
+    let hive = "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"
+    let results = collect_registry(hive)
+    return results
+}`
+    },
+    process: {
+        name: "Active_Process_Hunter",
+        code: `agent process_hunter {
+    let proc_list = list_running_processes()
+    let suspicious = filter_unsigned_binaries(proc_list)
+    return suspicious
+}`
+    },
+    sysinfo: {
+        name: "System_Fingerprint_Collect",
+        code: `agent system_fingerprint {
+    let os_info = get_platform_details()
+    let network_interfaces = get_active_adapters()
+    return {
+        "platform": os_info,
+        "interfaces": network_interfaces
     }
+}`
+    },
+    network: {
+        name: "Network_Socket_Enumerator",
+        code: `agent network_enum {
+    let listening_ports = list_open_sockets()
+    let active_connections = get_established_connections()
+    return {
+        "ports": listening_ports,
+        "connections": active_connections
+    }
+}`
+    }
+};
 
-    document.getElementById('deploy-result').innerHTML = `<div class="alert alert-info">Deploying...</div>`;
+function applyPreset(key) {
+    document.querySelectorAll('.preset-chip').forEach(chip => chip.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
 
-    fetch('/api/v1/script/deploy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, agent_ids: agentIds, code })
-    })
-    .then(r => {
-        if (!r.ok) {
-            return r.json().then(err => { throw new Error(err.error || 'Deployment failed'); });
+    const preset = PRESETS[key];
+    if (preset) {
+        document.getElementById('scriptName').value = preset.name;
+        document.getElementById('jockyCode').value = preset.code;
+        document.getElementById('editor-filename').textContent = `${preset.name.toLowerCase()}.jky · UTF-8`;
+    }
+}
+
+function copyCode() {
+    const code = document.getElementById('jockyCode').value;
+    copyToClipboard(code, event.target);
+    showToast('Payload code copied to clipboard', 'info');
+}
+
+let availableAgents = [];
+function fetchAvailableAgents() {
+    fetch('/api/v1/agent/list')
+        .then(r => r.json())
+        .then(agents => {
+            availableAgents = agents;
+            const container = document.getElementById('quick-agent-badges');
+            container.innerHTML = '';
+            
+            // Check URL query param for default agent_id
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryAgentId = urlParams.get('agent_id');
+            if (queryAgentId) {
+                document.getElementById('agentIds').value = queryAgentId;
+            } else if (agents.length > 0 && !document.getElementById('agentIds').value) {
+                document.getElementById('agentIds').value = agents[0].agent_id;
+            }
+
+            agents.forEach(a => {
+                const badge = document.createElement('span');
+                badge.className = 'badge';
+                badge.style.cssText = 'background: #e2e8f0; color: #334155; font-family: var(--font-mono); font-size: 0.72rem; cursor: pointer; padding: 4px 8px;';
+                badge.textContent = `+ ${a.agent_id}`;
+                badge.onclick = () => addAgentId(a.agent_id);
+                container.appendChild(badge);
+            });
+        })
+        .catch(err => console.error(err));
+}
+
+function addAgentId(id) {
+    const input = document.getElementById('agentIds');
+    const existing = input.value.split(',').map(s => s.trim()).filter(s => s);
+    if (!existing.includes(id)) {
+        existing.push(id);
+        input.value = existing.join(', ');
+    }
+}
+
+function selectAllAgents() {
+    if (availableAgents.length === 0) return;
+    document.getElementById('agentIds').value = availableAgents.map(a => a.agent_id).join(', ');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchAvailableAgents();
+
+    document.getElementById('deploy-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('scriptName').value.trim();
+        const agentIds = document.getElementById('agentIds').value.split(',').map(s => s.trim()).filter(s => s);
+        const code = document.getElementById('jockyCode').value;
+        const resultContainer = document.getElementById('deploy-result');
+        const submitBtn = document.getElementById('btn-deploy');
+
+        if (!name || agentIds.length === 0 || !code) {
+            resultContainer.innerHTML = `<div class="alert alert-warning" style="border-radius: 10px;">Please specify a script identifier, at least one target agent, and source code.</div>`;
+            return;
         }
-        return r.json();
-    })
-    .then(data => {
-        document.getElementById('deploy-result').innerHTML = `
-            <div class="alert alert-success">
-                ✅ Deployed!<br>
-                Script ID: ${data.script_id}<br>
-                Deploy IDs: ${data.deploy_ids.join(', ')}
-            </div>
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Dispatching Payload...
         `;
-    })
-    .catch(err => {
-        document.getElementById('deploy-result').innerHTML = `<div class="alert alert-danger">❌ Error: ${err.message}</div>`;
+        resultContainer.innerHTML = '';
+
+        fetch('/api/v1/script/deploy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, agent_ids: agentIds, code })
+        })
+        .then(r => {
+            if (!r.ok) {
+                return r.json().then(err => { throw new Error(err.error || 'Deployment failed'); });
+            }
+            return r.json();
+        })
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Dispatch Payload to Agents
+            `;
+            showToast('Payload dispatched successfully!', 'success');
+            resultContainer.innerHTML = `
+                <div class="alert alert-success" style="border-radius: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <strong style="font-size: 0.95rem;">⚡ Script Deployed Successfully</strong>
+                    </div>
+                    <div style="font-size: 0.825rem; font-family: var(--font-mono); color: #047857;">
+                        <div>Script ID: ${data.script_id}</div>
+                        <div>Deploy Queue: ${data.deploy_ids.join(', ')}</div>
+                    </div>
+                    <div class="mt-2">
+                        <a href="/results" class="btn btn-sm btn-outline-success" style="font-size: 0.75rem;">View Execution Results</a>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Dispatch Payload to Agents
+            `;
+            resultContainer.innerHTML = `
+                <div class="alert alert-danger" style="border-radius: 12px;">
+                    ❌ Dispatch Error: ${err.message}
+                </div>
+            `;
+        });
     });
 });
 </script>

@@ -1,11 +1,80 @@
 {% extends "base.html" %}
+
+{% block title %}Live Telemetry · JOCKY Manager{% endblock %}
+
 {% block content %}
-<h2>Real‑time Agent Activity</h2>
-<canvas id="activityChart" width="400" height="200"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+        <h1 class="page-header-title mb-1">Live Telemetry & Fleet Pulse</h1>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Real-time heartbeat monitoring and platform distribution analytics.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="system-pill" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;">
+            <span class="pulse-dot" style="background-color: #6366f1;"></span>
+            <span>Stream Active (5s)</span>
+        </div>
+    </div>
+</div>
+
+<div class="workspace-wrapper">
+    <div class="workspace-top-bar"></div>
+    <div class="workspace-body">
+        
+        <div class="split-layout">
+            
+            <!-- Left Chart: Online/Offline Distribution -->
+            <div>
+                <h3 class="section-subtitle">Endpoint Health Ratio</h3>
+                <div class="card p-3 mb-4" style="border-radius: 12px; border: 1px solid var(--border-light); background: #ffffff;">
+                    <div style="max-height: 240px; position: relative; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="healthDoughnut" style="max-height: 220px;"></canvas>
+                    </div>
+                    <div class="d-flex justify-content-center gap-4 mt-3 pt-2" style="border-top: 1px solid var(--border-subtle); font-size: 0.85rem;">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span>
+                            <span class="text-muted">Online: <strong id="chart-online-count" class="text-dark">0</strong></span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #94a3b8;"></span>
+                            <span class="text-muted">Offline: <strong id="chart-offline-count" class="text-dark">0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-metrics-grid">
+                    <div class="metric-pill-card">
+                        <span class="metric-pill-label">C2 Latency</span>
+                        <span class="metric-pill-value" style="color: var(--primary); font-size: 1.1rem;">< 15ms</span>
+                    </div>
+                    <div class="metric-pill-card">
+                        <span class="metric-pill-label">Channel Security</span>
+                        <span class="metric-pill-value" style="color: var(--status-online); font-size: 1.1rem;">E2E TLS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Agent Activity Stream -->
+            <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h3 class="section-subtitle mb-0">Live Heartbeat Stream</h3>
+                    <span class="text-muted" style="font-size: 0.75rem;">Auto-refreshing</span>
+                </div>
+
+                <div id="telemetry-feed" class="d-flex flex-direction-column gap-2" style="display: flex; flex-direction: column; gap: 10px; max-height: 440px; overflow-y: auto;">
+                    <div class="text-center py-4 text-muted" style="font-size: 0.875rem;">
+                        Connecting to telemetry stream...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('activityChart').getContext('2d');
+    const ctx = document.getElementById('healthDoughnut').getContext('2d');
 
     const chart = new Chart(ctx, {
         type: 'doughnut',
@@ -13,26 +82,72 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: ['Online', 'Offline'],
             datasets: [{
                 data: [0, 0],
-                backgroundColor: ['#28a745', '#6c757d']
+                backgroundColor: ['#10b981', '#94a3b8'],
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '72%',
+            plugins: {
+                legend: { display: false }
+            }
+        }
     });
 
-    function updateChart() {
+    function updateTelemetry() {
         fetch('/api/v1/agent/list')
             .then(r => r.json())
             .then(agents => {
                 const online = agents.filter(a => a.status === 'online').length;
                 const offline = agents.length - online;
+                
                 chart.data.datasets[0].data = [online, offline];
                 chart.update();
+
+                document.getElementById('chart-online-count').textContent = online;
+                document.getElementById('chart-offline-count').textContent = offline;
+
+                const feed = document.getElementById('telemetry-feed');
+                feed.innerHTML = '';
+
+                if (agents.length === 0) {
+                    feed.innerHTML = `<div class="p-3 text-center text-muted" style="border: 1px dashed var(--border-light); border-radius: 10px;">No agents active yet.</div>`;
+                    return;
+                }
+
+                agents.forEach(agent => {
+                    const isOnline = agent.status === 'online';
+                    const item = document.createElement('div');
+                    item.className = 'agent-node-card';
+                    item.style.padding = '12px 16px';
+                    item.innerHTML = `
+                        <div class="agent-icon-wrapper" style="width: 36px; height: 36px;">
+                            ${getOsIcon(agent.os)}
+                        </div>
+                        <div class="agent-card-content">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <strong style="font-size: 0.9rem;">${agent.hostname || 'Unknown'} <span class="text-muted" style="font-weight: normal; font-size: 0.8rem;">(${agent.agent_id})</span></strong>
+                                <span class="${isOnline ? 'badge-status-online' : 'badge-status-offline'}" style="font-size: 0.68rem; padding: 2px 7px;">
+                                    ${agent.status}
+                                </span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 mt-1 text-muted" style="font-size: 0.78rem;">
+                                <span>IP: <code>${agent.ip}</code></span>
+                                <span>Heartbeat: <strong>${timeAgo(agent.last_seen)}</strong></span>
+                            </div>
+                        </div>
+                    `;
+                    feed.appendChild(item);
+                });
             })
-            .catch(err => console.error('Chart update error:', err));
+            .catch(err => console.error('Telemetry error:', err));
     }
 
-    updateChart();
-    setInterval(updateChart, 5000); // auto‑update every 5 seconds
+    updateTelemetry();
+    setInterval(updateTelemetry, 5000);
 });
 </script>
 {% endblock %}
