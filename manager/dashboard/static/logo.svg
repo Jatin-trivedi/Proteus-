@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Outer Cloud Contour & Smooth S-Curve Interior -->
+  <path d="M 115 285 
+           C 60 270 50 185 100 145 
+           C 95 95 155 70 205 95 
+           C 240 45 340 40 380 98 
+           C 455 92 485 175 455 245 
+           C 465 295 415 330 350 300 
+           C 275 260 240 135 185 190 
+           C 145 230 195 300 256 330" 
+        stroke="currentColor" 
+        stroke-width="26" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+
+  <path d="M 115 285 
+           C 155 300 210 305 256 330" 
+        stroke="currentColor" 
+        stroke-width="26" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+
+  <!-- Center Root (Lowest terminal) -->
+  <path d="M 256 330 L 256 425" 
+        stroke="currentColor" 
+        stroke-width="26" 
+        stroke-linecap="round" />
+  <circle cx="256" cy="442" r="18" fill="currentColor" />
+
+  <!-- Left Root -->
+  <path d="M 256 330 C 220 335 180 345 180 385 L 180 395" 
+        stroke="currentColor" 
+        stroke-width="26" 
+        stroke-linecap="round" />
+  <circle cx="180" cy="410" r="18" fill="currentColor" />
+
+  <!-- Right Root -->
+  <path d="M 256 330 C 292 335 332 345 332 385 L 332 395" 
+        stroke="currentColor" 
+        stroke-width="26" 
+        stroke-linecap="round" />
+  <circle cx="332" cy="410" r="18" fill="currentColor" />
+</svg>

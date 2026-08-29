@@ -1,9 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}JOCKY Manager · Enterprise Endpoint Defense{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
+    
+    <!-- Prevent Theme Flash (FOUC) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('jocky-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,12 +28,14 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Top Navigation (Abnormal Security Inspired) -->
+    <!-- Top Navigation (Abnormal Security Inspired with Logo & Dark Mode Toggle) -->
     <nav class="jocky-nav">
         <div class="navbar-container">
             <div class="d-flex align-items-center">
                 <a class="jocky-brand" href="/">
-                    <div class="jocky-brand-logo">⚡</div>
+                    <div class="jocky-brand-logo-container">
+                        <img src="{{ url_for('static', filename='logo.svg') }}" alt="JOCKY Logo" class="jocky-brand-logo-img">
+                    </div>
                     <span class="jocky-brand-text">JOCKY</span>
                 </a>
                 <ul class="jocky-nav-links">
@@ -41,6 +54,10 @@
                 </ul>
             </div>
             <div class="nav-right-meta">
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                </button>
                 <div class="system-pill" id="system-status-pill">
                     <div class="pulse-dot"></div>
                     <span>C2 Engine Online</span>

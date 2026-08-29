@@ -1,5 +1,5 @@
 /* ==========================================================================
-   JOCKY Enterprise Design System (Abnormal Style)
+   JOCKY Enterprise Design System with Complete Light / Dark Mode Support
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -8,12 +8,12 @@
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Color Palette */
+  /* Theme Defaults (Light Mode) */
   --bg-page: #f4f6f9;
   --bg-surface: #ffffff;
   --bg-surface-subtle: #f8fafc;
   --bg-dark-nav: #090d16;
-  --bg-dark-accent: #111827;
+  --bg-card-hover: #ffffff;
 
   /* Primary Accent & Gradients */
   --primary: #4f46e5;
@@ -24,13 +24,16 @@
   --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
   --accent-bar-gradient: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
 
-  /* Neutrals */
+  /* Neutrals (Light) */
   --text-main: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
   --border-light: #e2e8f0;
   --border-subtle: #edf2f7;
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --code-box-bg: #0f172a;
 
   /* Status Colors */
   --status-online: #10b981;
@@ -51,6 +54,37 @@
   --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
 }
 
+/* ==========================================================================
+   Dark Mode Theme Overrides
+   ========================================================================== */
+[data-theme="dark"] {
+  --bg-page: #080b11;
+  --bg-surface: #0f172a;
+  --bg-surface-subtle: #1e293b;
+  --bg-dark-nav: #05070c;
+  --bg-card-hover: #131d35;
+
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border-light: #1e293b;
+  --border-subtle: #172033;
+  --input-bg: #0b0f19;
+  --input-border: #334155;
+  --code-box-bg: #070a10;
+
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --primary-glow: rgba(99, 102, 241, 0.35);
+
+  --status-online-bg: rgba(16, 185, 129, 0.12);
+  --status-online-border: rgba(16, 185, 129, 0.3);
+  --status-offline-bg: rgba(100, 116, 139, 0.15);
+  --status-offline-border: rgba(100, 116, 139, 0.3);
+
+  --shadow-card: 0 4px 25px -2px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
 /* Base Document Styles */
 body {
   font-family: var(--font-main);
@@ -63,6 +97,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* Top Navigation (Abnormal Style) */
@@ -76,7 +111,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .jocky-nav .navbar-container {
@@ -91,7 +126,7 @@ body {
 .jocky-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #ffffff;
   text-decoration: none;
   font-size: 1.25rem;
@@ -100,18 +135,24 @@ body {
   padding-right: 2rem;
 }
 
-.jocky-brand-logo {
+.jocky-brand-logo-container {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: var(--accent-gradient);
-  border-radius: 8px;
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 18px;
-  box-shadow: 0 0 16px rgba(99, 102, 241, 0.5);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.6);
+  flex-shrink: 0;
+}
+
+.jocky-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .jocky-brand-text {
@@ -170,18 +211,39 @@ body {
   border-radius: 3px 3px 0 0;
 }
 
-/* Nav Right / System Badge */
+/* Nav Right / System Badge & Theme Switcher */
 .nav-right-meta {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
 .system-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.25);
   border-radius: 9999px;
@@ -231,7 +293,7 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Workspace Frame (Abnormal style purple top strip + white surface) */
+/* Workspace Frame (Abnormal style purple top strip + card surface) */
 .workspace-wrapper {
   position: relative;
   background: var(--bg-surface);
@@ -239,6 +301,7 @@ body {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .workspace-top-bar {
@@ -297,6 +360,7 @@ body {
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
+  transition: all 0.2s ease;
 }
 
 .metric-pill-label {
@@ -340,7 +404,7 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 18px;
-  background: #ffffff;
+  background: var(--bg-surface);
   border: 1px solid var(--border-light);
   border-radius: 14px;
   padding: 20px 22px;
@@ -352,17 +416,18 @@ body {
 
 .agent-node-card:hover {
   transform: translateY(-2px);
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+  background: var(--bg-card-hover);
+  border-color: #6366f1;
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
 }
 
 .agent-icon-wrapper {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  color: var(--primary);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #818cf8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,7 +444,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--primary);
+  color: #818cf8;
   margin-bottom: 4px;
   display: flex;
   align-items: center;
@@ -436,7 +501,7 @@ body {
   padding: 3px 9px;
   background: var(--status-online-bg);
   border: 1px solid var(--status-online-border);
-  color: #065f46;
+  color: #34d399;
   border-radius: 9999px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -451,7 +516,7 @@ body {
   padding: 3px 9px;
   background: var(--status-offline-bg);
   border: 1px solid var(--status-offline-border);
-  color: #475569;
+  color: var(--text-muted);
   border-radius: 9999px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -495,7 +560,7 @@ body {
 .btn-jocky-primary:hover {
   background: var(--primary-hover);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.5);
   transform: translateY(-1px);
 }
 
@@ -504,7 +569,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #ffffff;
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.9rem;
@@ -519,7 +584,7 @@ body {
 .btn-jocky-secondary:hover {
   background: var(--bg-surface-subtle);
   color: var(--text-main);
-  border-color: #cbd5e1;
+  border-color: #6366f1;
 }
 
 .btn-jocky-sm {
@@ -528,12 +593,7 @@ body {
   border-radius: 8px;
 }
 
-/* Studio & Forms */
-.form-card {
-  background: var(--bg-surface);
-  border-radius: 14px;
-}
-
+/* Forms */
 .form-label-custom {
   font-size: 0.85rem;
   font-weight: 700;
@@ -546,9 +606,9 @@ body {
   width: 100%;
   padding: 10px 14px;
   font-size: 0.9rem;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--input-border);
   border-radius: 10px;
-  background-color: #ffffff;
+  background-color: var(--input-bg);
   color: var(--text-main);
   transition: all 0.2s ease;
   font-family: inherit;
@@ -564,14 +624,14 @@ body {
 /* Code Editor Window */
 .code-editor-panel {
   border: 1px solid #1e293b;
-  background: #0f172a;
+  background: var(--code-box-bg);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
 
 .code-editor-header {
-  background: #090d16;
+  background: #05070c;
   border-bottom: 1px solid #1e293b;
   padding: 10px 16px;
   display: flex;
@@ -603,7 +663,7 @@ body {
 
 .code-textarea {
   width: 100%;
-  background: #0f172a;
+  background: var(--code-box-bg);
   color: #e2e8f0;
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -621,7 +681,7 @@ body {
   border: 1px solid var(--border-light);
   border-radius: 12px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--bg-surface);
 }
 
 .jocky-table {
@@ -657,7 +717,7 @@ body {
 }
 
 .jocky-table tr:hover td {
-  background-color: #f8fafc;
+  background-color: var(--bg-surface-subtle);
 }
 
 /* Presets Pills */
@@ -683,7 +743,7 @@ body {
 .preset-chip:hover, .preset-chip.active {
   background: var(--primary-light);
   border-color: var(--primary);
-  color: var(--primary);
+  color: #818cf8;
 }
 
 /* Empty State */
@@ -698,7 +758,7 @@ body {
   margin: 0 auto 1rem auto;
   border-radius: 16px;
   background: var(--primary-light);
-  color: var(--primary);
+  color: #818cf8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -708,7 +768,7 @@ body {
 .modal-content-custom {
   border-radius: 16px;
   border: 1px solid var(--border-light);
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 

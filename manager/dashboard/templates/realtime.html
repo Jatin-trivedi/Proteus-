@@ -25,18 +25,18 @@
             <!-- Left Chart: Online/Offline Distribution -->
             <div>
                 <h3 class="section-subtitle">Endpoint Health Ratio</h3>
-                <div class="card p-3 mb-4" style="border-radius: 12px; border: 1px solid var(--border-light); background: #ffffff;">
+                <div class="p-3 mb-4" style="border-radius: 12px; border: 1px solid var(--border-light); background: var(--bg-surface-subtle);">
                     <div style="max-height: 240px; position: relative; display: flex; align-items: center; justify-content: center;">
                         <canvas id="healthDoughnut" style="max-height: 220px;"></canvas>
                     </div>
                     <div class="d-flex justify-content-center gap-4 mt-3 pt-2" style="border-top: 1px solid var(--border-subtle); font-size: 0.85rem;">
                         <div class="d-flex align-items-center gap-2">
                             <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span>
-                            <span class="text-muted">Online: <strong id="chart-online-count" class="text-dark">0</strong></span>
+                            <span class="text-muted">Online: <strong id="chart-online-count" style="color: var(--text-main);">0</strong></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #94a3b8;"></span>
-                            <span class="text-muted">Offline: <strong id="chart-offline-count" class="text-dark">0</strong></span>
+                            <span class="text-muted">Offline: <strong id="chart-offline-count" style="color: var(--text-main);">0</strong></span>
                         </div>
                     </div>
                 </div>
