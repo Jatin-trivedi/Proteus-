@@ -55,6 +55,6 @@ if __name__ == "__main__":
     with app.app_context():
         # This will create all tables if they don't exist
         db.create_all()
-        print("✅ Database tables created/verified.")
+        print("[OK] Database tables created/verified.")
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
