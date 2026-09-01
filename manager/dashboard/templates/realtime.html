@@ -5,8 +5,8 @@
 {% block content %}
 <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
-        <h1 class="page-header-title mb-1">Live Telemetry & Fleet Pulse</h1>
-        <p class="text-muted mb-0" style="font-size: 0.875rem;">Real-time heartbeat monitoring and platform distribution analytics.</p>
+        <h1 class="page-header-title mb-1">📊 Live Telemetry & Fleet Pulse</h1>
+        <p class="text-muted mb-0" style="font-size: 0.875rem;">Real-time heartbeat monitoring, platform distribution, and endpoint health analytics across your agent network.</p>
     </div>
     <div class="d-flex align-items-center gap-2">
         <div class="system-pill" style="background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.3); color: #818cf8;">
@@ -31,11 +31,11 @@
                     </div>
                     <div class="d-flex justify-content-center gap-4 mt-3 pt-2" style="border-top: 1px solid var(--border-subtle); font-size: 0.85rem;">
                         <div class="d-flex align-items-center gap-2">
-                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #10b981;"></span>
-                            <span class="text-muted">Online: <strong id="chart-online-count" style="color: var(--text-main);">0</strong></span>
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #22d3ee; box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);"></span>
+                            <span class="text-muted">Online: <strong id="chart-online-count" style="color: #22d3ee;">0</strong></span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #94a3b8;"></span>
+                            <span style="width: 10px; height: 10px; border-radius: 50%; background-color: #64748b;"></span>
                             <span class="text-muted">Offline: <strong id="chart-offline-count" style="color: var(--text-main);">0</strong></span>
                         </div>
                     </div>
@@ -82,9 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: ['Online', 'Offline'],
             datasets: [{
                 data: [0, 0],
-                backgroundColor: ['#10b981', '#94a3b8'],
-                borderWidth: 0,
-                hoverOffset: 4
+                backgroundColor: ['#22d3ee', '#64748b'],
+                borderWidth: 2,
+                borderColor: ['rgba(34, 211, 238, 0.3)', 'rgba(100, 116, 139, 0.2)'],
+                hoverOffset: 6,
+                hoverBorderColor: ['#06b6d4', '#475569']
             }]
         },
         options: {
@@ -93,6 +95,10 @@ document.addEventListener('DOMContentLoaded', function() {
             cutout: '72%',
             plugins: {
                 legend: { display: false }
+            },
+            animation: {
+                animateRotate: true,
+                animateScale: false
             }
         }
     });

@@ -3,88 +3,152 @@
 {% block title %}Fleet Dashboard · JOCKY Manager{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="page-header-title mb-0">Agent Fleet Overview</h1>
-    <div class="d-flex gap-2">
-        <button id="btn-refresh" class="btn-jocky-secondary btn-jocky-sm" onclick="loadAgents()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21h5v-5"></path></svg>
-            Refresh Fleet
-        </button>
-        <a href="/scripts" class="btn-jocky-primary btn-jocky-sm">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            Deploy Payload
-        </a>
+<div class="cyber-hero-shell">
+    <div class="hero-copy">
+        <div class="eyebrow">
+            <span class="eyebrow-dot"></span>
+            JOCKY DEFENSE FABRIC
+        </div>
+        <h1 class="hero-title-main">Threat intelligence command for the next era of cyber defense.</h1>
+        <p class="hero-description-full">
+            Coordinate polymorphic payload orchestration, decrypt telemetry in transit, and track every endpoint from a single command plane built for speed, visibility, and resilience.
+        </p>
+        <div class="hero-actions-row">
+            <a href="/scripts" class="btn-jocky-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path></svg>
+                Launch Script Studio
+            </a>
+            <a href="/results" class="btn-jocky-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Inspect Forensics Log
+            </a>
+        </div>
+        <div class="mini-stats-grid">
+            <div class="mini-stat-card">
+                <span class="mini-stat-value" id="metric-total">0</span>
+                <span class="mini-stat-label">Blocked Zero-Days</span>
+            </div>
+            <div class="mini-stat-card">
+                <span class="mini-stat-value online-text" id="metric-online">0</span>
+                <span class="mini-stat-label">Active Nodes</span>
+            </div>
+            <div class="mini-stat-card">
+                <span class="mini-stat-value" id="metric-offline">0</span>
+                <span class="mini-stat-label">Mitigated Threats</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-visual" aria-label="Threat intelligence visualization">
+        <div class="cyber-3d-scene">
+            <div class="orb orb-one" data-depth="0.2"></div>
+            <div class="orb orb-two" data-depth="0.35"></div>
+            <div class="orb orb-three" data-depth="0.45"></div>
+            <div class="ring ring-one" data-depth="0.5"></div>
+            <div class="ring ring-two" data-depth="0.7"></div>
+            <div class="scan-surface" data-depth="0.8"></div>
+            <div class="data-card data-card-main" data-depth="0.9">
+                <span class="d-card-label">Threat Feed</span>
+                <strong>94.8%</strong>
+                <small>signal confidence</small>
+            </div>
+            <div class="data-card data-card-side" data-depth="1.1">
+                <span class="d-card-label">Channel</span>
+                <strong>Secure</strong>
+                <small>encrypted</small>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Main Workspace Card (Abnormal Security Layout) -->
-<div class="workspace-wrapper">
-    <div class="workspace-top-bar"></div>
-    <div class="workspace-body">
-        <div class="split-layout">
-            
-            <!-- Left Column: Summary & Telemetry Metrics -->
-            <div class="hero-left-section">
-                <h2 class="hero-title">Fleet Command & Orchestration</h2>
-                <p class="hero-description">
-                    JOCKY framework is actively synchronizing connected agent nodes across your infrastructure. Polymorphic bytecode compilation, encrypted C2 heartbeat channels, and forensic data streams are operating normally.
-                </p>
-
-                <!-- Live Metrics Grid -->
-                <div class="hero-metrics-grid">
-                    <div class="metric-pill-card">
-                        <span class="metric-pill-label">Total Agents</span>
-                        <span class="metric-pill-value" id="metric-total">0</span>
-                    </div>
-                    <div class="metric-pill-card">
-                        <span class="metric-pill-label">Active Online</span>
-                        <span class="metric-pill-value" style="color: var(--status-online);" id="metric-online">0</span>
-                    </div>
-                    <div class="metric-pill-card">
-                        <span class="metric-pill-label">Offline / Standby</span>
-                        <span class="metric-pill-value" style="color: var(--text-muted);" id="metric-offline">0</span>
-                    </div>
-                    <div class="metric-pill-card">
-                        <span class="metric-pill-label">Security State</span>
-                        <span class="metric-pill-value" style="color: var(--primary); font-size: 1.1rem; padding-top: 4px;">SECURE</span>
-                    </div>
-                </div>
-
-                <div class="hero-actions">
-                    <a href="/scripts" class="btn-jocky-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path></svg>
-                        Launch Script Studio
-                    </a>
-                    <a href="/results" class="btn-jocky-secondary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Inspect Forensics Log
-                    </a>
-                </div>
+<div class="dashboard-grid">
+    <div class="dashboard-panel panel-wide">
+        <div class="panel-header">
+            <div>
+                <span class="panel-kicker">Fleet Overview</span>
+                <h3>Connected Fleet Nodes</h3>
             </div>
-
-            <!-- Right Column: Agent Stack List (Abnormal Card Style) -->
-            <div class="hero-right-section">
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h3 class="section-subtitle mb-0">Connected Fleet Nodes</h3>
-                    <span class="text-muted" style="font-size: 0.8rem;" id="last-updated-text">Updating live...</span>
+            <span class="panel-time" id="last-updated-text">Updating live...</span>
+        </div>
+        <div id="agent-list" class="agent-cards-stack">
+            <div class="empty-state">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-
-                <div id="agent-list" class="agent-cards-stack">
-                    <div class="empty-state">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted mt-2">Connecting to C2 manager...</p>
-                    </div>
-                </div>
+                <p class="text-muted mt-2">Connecting to C2 manager...</p>
             </div>
+        </div>
+    </div>
 
+    <div class="dashboard-panel panel-side">
+        <div class="panel-header compact">
+            <div>
+                <span class="panel-kicker">Capability Matrix</span>
+                <h3>Operational Layer</h3>
+            </div>
+        </div>
+        <div class="capability-stack">
+            <div class="capability-item active">
+                <span class="capability-name">Telemetry Sync</span>
+                <span class="capability-status">Stable</span>
+            </div>
+            <div class="capability-item">
+                <span class="capability-name">Polymorphic Build</span>
+                <span class="capability-status">Queued</span>
+            </div>
+            <div class="capability-item">
+                <span class="capability-name">Forensic Analysis</span>
+                <span class="capability-status">Live</span>
+            </div>
+            <div class="capability-item">
+                <span class="capability-name">Kernel Watch</span>
+                <span class="capability-status">Enabled</span>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const scene = document.querySelector('.cyber-3d-scene');
+    if (scene) {
+        const layers = scene.querySelectorAll('[data-depth]');
+        let ticking = false;
+
+        const applyTilt = (x, y) => {
+            const rx = ((y / window.innerHeight) - 0.5) * 18;
+            const ry = ((x / window.innerWidth) - 0.5) * -18;
+            scene.style.transform = `perspective(1200px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+
+            layers.forEach(layer => {
+                const depth = Number(layer.dataset.depth || 0.5);
+                const layerX = (x / window.innerWidth - 0.5) * 24 * depth;
+                const layerY = (y / window.innerHeight - 0.5) * 24 * depth;
+                layer.style.transform = `translate3d(${layerX}px, ${layerY}px, ${depth * 30}px)`;
+            });
+        };
+
+        const onPointerMove = (event) => {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    applyTilt(event.clientX, event.clientY);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
+        const resetTilt = () => {
+            scene.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
+            layers.forEach(layer => {
+                layer.style.transform = 'translate3d(0, 0, 0)';
+            });
+        };
+
+        scene.addEventListener('pointermove', onPointerMove);
+        scene.addEventListener('pointerleave', resetTilt);
+    }
+
     window.loadAgents = function() {
         fetch('/api/v1/agent/list')
             .then(r => {
@@ -98,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const metricOffline = document.getElementById('metric-offline');
                 const lastUpdatedText = document.getElementById('last-updated-text');
 
-                // Update Metrics
                 const total = agents.length;
                 const online = agents.filter(a => a.status === 'online').length;
                 const offline = total - online;
@@ -137,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${osIconSvg}
                         </div>
                         <div class="agent-card-content">
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="agent-card-top-row">
                                 <span class="agent-card-tag">${osTag}</span>
                                 <span class="${isOnline ? 'badge-status-online' : 'badge-status-offline'}">
                                     <span class="status-dot-sm ${isOnline ? 'dot-online' : 'dot-offline'}"></span>
