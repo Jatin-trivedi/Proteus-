@@ -4,77 +4,201 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}JOCKY Manager · Enterprise Endpoint Defense{% endblock %}</title>
-    <!-- Favicon -->
+    <meta name="description" content="JOCKY Manager — a next-generation C2 management interface for forensic analysis and script deployment.">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
-    
+
     <!-- Prevent Theme Flash (FOUC) -->
     <script>
         (function() {
             const savedTheme = localStorage.getItem('jocky-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'light') document.documentElement.classList.add('light');
         })();
     </script>
 
-    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <!-- Google Fonts: Space Grotesk · Inter · JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['"Space Grotesk"', 'sans-serif'],
+                        body: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        void: '#030712',
+                        'surface-glass': 'rgba(15,23,42,0.65)',
+                        'cyan-glow':     '#06b6d4',
+                        'crimson-alert': '#f43f5e',
+                        'amber-warn':    '#f59e0b',
+                        'emerald-safe':  '#10b981',
+                        soc: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            surface: 'rgba(255,255,255,0.04)',
+                            panel: 'rgba(255,255,255,0.06)',
+                            border: 'rgba(255,255,255,0.08)',
+                            'border-hi': 'rgba(255,255,255,0.14)',
+                        },
+                        crimson: { DEFAULT: '#f43f5e', dark: '#be123c', glow: 'rgba(244,63,94,0.25)' },
+                        amber:   { DEFAULT: '#f59e0b', dark: '#b45309', glow: 'rgba(245,158,11,0.25)' },
+                        emerald: { DEFAULT: '#10b981', dark: '#047857', glow: 'rgba(16,185,129,0.25)' },
+                        cyan:    { DEFAULT: '#06b6d4', dark: '#0e7490', glow: 'rgba(6,182,212,0.25)'  },
+                    },
+                    boxShadow: {
+                        'glow-emerald': '0 0 20px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.1)',
+                        'glow-cyan':    '0 0 20px rgba(6,182,212,0.3), 0 0 60px rgba(6,182,212,0.1)',
+                        'glow-crimson': '0 0 20px rgba(244,63,94,0.35), 0 0 60px rgba(244,63,94,0.1)',
+                        'card':         '0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset',
+                    },
+                    backgroundImage: {
+                        'grid-faint': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M40 0H0v40' stroke='rgba(255,255,255,0.035)' stroke-width='0.5'/%3E%3C/svg%3E\")",
+                        'grid-faint-light': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M40 0H0v40' fill='rgba(0,0,0,0.015)' stroke='rgba(0,0,0,0.04)' stroke-width='0.5'/%3E%3C/svg%3E\")",
+                    },
+                    animation: {
+                        'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
+                        'scan-line': 'scan-line 3s linear infinite',
+                    },
+                    keyframes: {
+                        'pulse-dot': {
+                            '0%,100%': { boxShadow: '0 0 0 0 rgba(16,185,129,0.7)' },
+                            '70%':     { boxShadow: '0 0 0 8px rgba(16,185,129,0)' },
+                        },
+                        'scan-line': {
+                            '0%':   { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100vh)' },
+                        },
+                    },
+                }
+            }
+        };
+    </script>
+
+    <!-- GSAP (Core + ScrollTrigger) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+    <!-- Three.js 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Custom Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <!-- Top Navigation (Abnormal Security Inspired with Logo & Dark Mode Toggle) -->
-    <nav class="jocky-nav">
-        <div class="navbar-container">
-            <div class="d-flex align-items-center">
-                <a class="jocky-brand" href="/">
-                    <div class="jocky-brand-logo-container">
-                        <img src="{{ url_for('static', filename='logo.svg') }}" alt="JOCKY Logo" class="jocky-brand-logo-img">
+<body class="bg-slate-50 dark:bg-void font-body text-slate-800 dark:text-slate-300 antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-emerald/30 selection:text-emerald">
+
+    <!-- 3D WebGL Background Canvas -->
+    <canvas id="bg-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
+
+    <!-- Fixed SVG Grid Texture (layered on top of canvas) -->
+    <div class="fixed inset-0 bg-grid-faint-light dark:bg-grid-faint pointer-events-none" style="z-index:0;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%, black 30%, transparent 100%);"></div>
+    <!-- Ambient Glow Orbs -->
+    <div class="fixed top-0 left-1/4 w-[600px] h-[400px] rounded-full pointer-events-none bg-emerald-500/10 dark:bg-emerald-500/5 blur-[100px]" style="z-index:0;"></div>
+    <div class="fixed top-1/2 right-0 w-[500px] h-[500px] rounded-full pointer-events-none bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px]" style="z-index:0;"></div>
+    <!-- Scan Line Overlay -->
+    <div id="scan-line-overlay" class="fixed inset-0 pointer-events-none" style="z-index:1;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(6,182,212,0.4),transparent);animation:scanLine 6s linear infinite;"></div>
+    </div>
+
+    <!-- ==================== NAVIGATION ==================== -->
+    <nav id="main-nav" class="sticky top-0 z-50 border-b border-slate-200 dark:border-soc-border bg-white/80 dark:bg-[#05050a]/85 backdrop-blur-xl">
+        <div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
+
+            <!-- Brand + Links -->
+            <div class="flex items-center gap-8">
+                <a href="/" class="flex items-center gap-3 group" aria-label="JOCKY Manager Home">
+                    <div class="w-8 h-8 rounded-lg border border-emerald/20 bg-emerald/10 flex items-center justify-center transition-all duration-300 group-hover:border-emerald/50 group-hover:shadow-glow-emerald">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" class="w-5 h-5 text-emerald">
+                          <path d="M 115 285 C 60 270 50 185 100 145 C 95 95 155 70 205 95 C 240 45 340 40 380 98 C 455 92 485 175 455 245 C 465 295 415 330 350 300 C 275 260 240 135 185 190 C 145 230 195 300 256 330" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+                          <path d="M 115 285 C 155 300 210 305 256 330" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+                          <path d="M 256 330 L 256 425" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                          <circle cx="256" cy="442" r="18" fill="currentColor" />
+                          <path d="M 256 330 C 220 335 180 345 180 385 L 180 395" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                          <circle cx="180" cy="410" r="18" fill="currentColor" />
+                          <path d="M 256 330 C 292 335 332 345 332 385 L 332 395" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                          <circle cx="332" cy="410" r="18" fill="currentColor" />
+                        </svg>
                     </div>
-                    <span class="jocky-brand-text">JOCKY</span>
+                    <span class="font-heading font-bold text-slate-900 dark:text-white tracking-tight text-lg">JOCKY</span>
                 </a>
-                <ul class="jocky-nav-links">
-                    <li class="jocky-nav-item">
-                        <a class="jocky-nav-link {% if request.path == '/' %}active{% endif %}" href="/">Dashboard</a>
+
+                <ul class="hidden md:flex items-center gap-1 list-none m-0 p-0" role="list">
+                    <li>
+                        <a href="/" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
+                            {% if request.path == '/' %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
+                            Dashboard
+                        </a>
                     </li>
-                    <li class="jocky-nav-item">
-                        <a class="jocky-nav-link {% if request.path.startswith('/scripts') %}active{% endif %}" href="/scripts">Script Studio</a>
+                    <li>
+                        <a href="/scripts" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
+                            {% if request.path.startswith('/scripts') %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
+                            Script Studio
+                        </a>
                     </li>
-                    <li class="jocky-nav-item">
-                        <a class="jocky-nav-link {% if request.path.startswith('/results') %}active{% endif %}" href="/results">Forensics Log</a>
+                    <li>
+                        <a href="/results" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
+                            {% if request.path.startswith('/results') %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
+                            Forensics Log
+                        </a>
                     </li>
-                    <li class="jocky-nav-item">
-                        <a class="jocky-nav-link {% if request.path.startswith('/realtime') %}active{% endif %}" href="/realtime">Telemetry</a>
+                    <li>
+                        <a href="/realtime" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
+                            {% if request.path.startswith('/realtime') %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
+                            Telemetry
+                        </a>
                     </li>
                 </ul>
             </div>
-            <div class="nav-right-meta">
-                <!-- Theme Toggle Button -->
-                <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+
+            <!-- Nav Right -->
+            <div class="flex items-center gap-4">
+                <!-- Theme Toggle -->
+                <button id="theme-toggle-btn"
+                    class="w-9 h-9 rounded-lg border border-slate-300 dark:border-soc-border bg-slate-100 dark:bg-soc-surface flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-soc-border-hi transition-all duration-200"
+                    onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                 </button>
-                <div class="system-pill" id="system-status-pill">
-                    <div class="pulse-dot"></div>
-                    <span>C2 Engine Online</span>
+
+                <!-- C2 Status Pill -->
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald/20 bg-emerald/5">
+                    <div class="w-2 h-2 rounded-full bg-emerald animate-pulse-dot"></div>
+                    <span class="font-mono text-xs font-semibold text-emerald tracking-wide">C2 Online</span>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content Workspace -->
-    <main class="main-content">
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main id="main-content" class="relative z-10 flex-1 w-full max-w-screen-xl mx-auto px-6 py-8">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Bootstrap 5 Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ==================== TOAST CONTAINER ==================== -->
+    <div id="jocky-toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
     <!-- Dashboard Global JS -->
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <!-- 3D Background Engine -->
+    <script src="{{ url_for('static', filename='three-bg.js') }}"></script>
+    <!-- Animations & Interactions -->
+    <script src="{{ url_for('static', filename='animations.js') }}"></script>
+
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

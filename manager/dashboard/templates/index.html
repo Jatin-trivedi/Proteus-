@@ -7,7 +7,79 @@
   <meta name="description" content="JOCKY is a next-generation proprietary programming language framework enabling deep forensic system analysis beyond conventional detection boundaries." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+        darkMode: ['selector', '[data-theme="dark"]'],
+        theme: {
+            extend: {
+                fontFamily: {
+                    heading: ['"Space Grotesk"', 'sans-serif'],
+                    body: ['"Inter"', 'sans-serif'],
+                    mono: ['"JetBrains Mono"', 'monospace'],
+                },
+                colors: {
+                    void: '#030712',
+                    'surface-glass': 'rgba(15,23,42,0.65)',
+                    'cyan-glow':     '#06b6d4',
+                    'crimson-alert': '#f43f5e',
+                    'amber-warn':    '#f59e0b',
+                    'emerald-safe':  '#10b981',
+                    soc: {
+                        50: '#f0f9ff',
+                        100: '#e0f2fe',
+                        200: '#bae6fd',
+                        surface: 'rgba(255,255,255,0.04)',
+                        panel: 'rgba(255,255,255,0.06)',
+                        border: 'rgba(255,255,255,0.08)',
+                        'border-hi': 'rgba(255,255,255,0.14)',
+                    },
+                    crimson: { DEFAULT: '#f43f5e', dark: '#be123c', glow: 'rgba(244,63,94,0.25)' },
+                    amber:   { DEFAULT: '#f59e0b', dark: '#b45309', glow: 'rgba(245,158,11,0.25)' },
+                    emerald: { DEFAULT: '#10b981', dark: '#047857', glow: 'rgba(16,185,129,0.25)' },
+                    cyan:    { DEFAULT: '#06b6d4', dark: '#0e7490', glow: 'rgba(6,182,212,0.25)'  },
+                },
+                boxShadow: {
+                    'glow-emerald': '0 0 20px rgba(16,185,129,0.3), 0 0 60px rgba(16,185,129,0.1)',
+                    'glow-cyan':    '0 0 20px rgba(6,182,212,0.3), 0 0 60px rgba(6,182,212,0.1)',
+                    'glow-crimson': '0 0 20px rgba(244,63,94,0.35), 0 0 60px rgba(244,63,94,0.1)',
+                    'card':         '0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.04) inset',
+                },
+                backgroundImage: {
+                    'grid-faint': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M40 0H0v40' stroke='rgba(255,255,255,0.035)' stroke-width='0.5'/%3E%3C/svg%3E\")",
+                    'grid-faint-light': "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M40 0H0v40' fill='rgba(0,0,0,0.015)' stroke='rgba(0,0,0,0.04)' stroke-width='0.5'/%3E%3C/svg%3E\")",
+                },
+                animation: {
+                    'pulse-dot': 'pulse-dot 2s ease-in-out infinite',
+                    'scan-line': 'scan-line 3s linear infinite',
+                },
+                keyframes: {
+                    'pulse-dot': {
+                        '0%,100%': { boxShadow: '0 0 0 0 rgba(16,185,129,0.7)' },
+                        '70%':     { boxShadow: '0 0 0 8px rgba(16,185,129,0)' },
+                    },
+                    'scan-line': {
+                        '0%':   { transform: 'translateY(-100%)' },
+                        '100%': { transform: 'translateY(100vh)' },
+                    },
+                },
+            }
+        }
+    };
+  </script>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Lenis Smooth Scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <!-- JOCKY SOC Design System -->
+  <link rel="stylesheet" href="/static/style.css">
   <style>
     /* ======= TOKEN SYSTEM ======= */
     :root {
@@ -47,7 +119,7 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth;font-size:16px}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:var(--text-base);line-height:1.6;color:var(--tp);background-color:var(--bg);background-image:var(--gradbg);background-attachment:fixed;transition:background-color var(--ds) var(--ease-s),color var(--ds) var(--ease-s);overflow-x:hidden}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:var(--text-base);line-height:1.6;color:var(--tp);background-color:transparent;background-attachment:fixed;transition:background-color var(--ds) var(--ease-s),color var(--ds) var(--ease-s);overflow-x:hidden}
     code,pre,.mono{font-family:'JetBrains Mono','Fira Code',monospace}
     a{color:var(--ap);text-decoration:none}
     :focus-visible{outline:2px solid var(--ap);outline-offset:3px;border-radius:var(--r-sm)}
@@ -241,47 +313,96 @@
     .foot-links{display:flex;gap:var(--sp6);list-style:none;flex-wrap:wrap}
     .foot-links a{font-size:var(--text-sm);color:var(--tm);text-decoration:none;transition:color var(--db)}
     .foot-links a:hover{color:var(--ap)}
+  <!-- Extra: Space Grotesk for headings -->
+  <style>
+    h1, h2, h3, h4, .hero-title, .stitle, .cap-title, .tp-title {
+      font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+    }
+    /* Scan line keyframe (if not already in style.css scope) */
+    @keyframes scanLine {
+      0%   { transform: translateY(-10px); }
+      100% { transform: translateY(100vh); }
+    }
   </style>
 </head>
-<body>
+<body class="bg-slate-50 dark:bg-void font-body text-slate-800 dark:text-slate-300 antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-emerald/30 selection:text-emerald">
 
-<canvas id="three-canvas" aria-hidden="true"></canvas>
+<!-- 3D WebGL Background Canvas -->
+<canvas id="bg-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
+
+<!-- Fixed SVG Grid Texture (layered on top of canvas) -->
+<div class="fixed inset-0 bg-grid-faint-light dark:bg-grid-faint pointer-events-none" style="z-index:0;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%, black 30%, transparent 100%);"></div>
+<!-- Ambient Glow Orbs -->
+<div class="fixed top-0 left-1/4 w-[600px] h-[400px] rounded-full pointer-events-none bg-emerald-500/10 dark:bg-emerald-500/5 blur-[100px]" style="z-index:0;"></div>
+<div class="fixed top-1/2 right-0 w-[500px] h-[500px] rounded-full pointer-events-none bg-cyan-500/10 dark:bg-cyan-500/5 blur-[100px]" style="z-index:0;"></div>
+<!-- Scan Line Overlay -->
+<div id="scan-line-overlay" class="fixed inset-0 pointer-events-none" style="z-index:1;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(6,182,212,0.4),transparent);animation:scanLine 6s linear infinite;"></div>
+</div>
+
+<!-- Legacy Three.js canvas (kept for existing particle JS below) -->
+<canvas id="three-canvas" aria-hidden="true" style="display:none;"></canvas>
 
 <!-- ===================== NAVIGATION ===================== -->
-<nav class="nav" role="navigation" aria-label="Main navigation">
-  <div class="nav-in">
-    <a href="#home" class="logo" aria-label="JOCKY Framework home">
-      <div class="logo-mark" aria-hidden="true">
-        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L3 6v8l7 4 7-4V6L10 2zm0 2.5l5 2.8v5.4L10 15.5l-5-2.8V7.3L10 4.5z"/></svg>
-      </div>
-      <span class="logo-txt">JOCKY<span class="logo-ver">v1.0</span></span>
-    </a>
-    <ul class="nav-links" role="list">
-      <li><a href="#home" class="nav-link">Home</a></li>
-      <li><a href="#problem" class="nav-link">Problem</a></li>
-      <li><a href="#capabilities" class="nav-link">Capabilities</a></li>
-      <li><a href="#architecture" class="nav-link">Architecture</a></li>
-      <li><a href="#scripts" class="nav-link">⚡ Scripts <span class="nav-badge">Studio</span></a></li>
-      <li><a href="#results" class="nav-link">🔍 Results <span class="nav-badge">Live</span></a></li>
-      <li><a href="#tech" class="nav-link">Docs</a></li>
-    </ul>
-    <div class="nav-r">
-      <a href="/scripts" class="btn btn-p" style="padding:6px 14px;font-size:0.75rem;" title="Open Dedicated Script Studio">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Script Studio
-      </a>
-      <a href="/results" class="btn btn-s" style="padding:6px 14px;font-size:0.75rem;" title="Open Dedicated Results Log">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
-        Results Log
-      </a>
-      <button id="tt" class="tt" role="switch" aria-checked="true" aria-label="Toggle dark/light theme">
-        <div class="tt-thumb">
-          <svg class="tt-icon i-moon" viewBox="0 0 24 24" fill="none" stroke="#0B0E14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <svg class="tt-icon i-sun" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+<nav id="main-nav" class="fixed top-0 w-full z-50 border-b border-slate-300/30 dark:border-soc-border bg-white/80 dark:bg-[#05050a]/85 backdrop-blur-xl">
+    <div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
+        
+        <!-- Brand + Links -->
+        <div class="flex items-center gap-8">
+            <a href="#home" class="flex items-center gap-3 group" aria-label="JOCKY Framework Home">
+                <div class="w-8 h-8 rounded-lg border border-emerald/20 bg-emerald/10 flex items-center justify-center transition-all duration-300 group-hover:border-emerald/50 group-hover:shadow-glow-emerald">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" class="w-5 h-5 text-emerald">
+                      <path d="M 115 285 C 60 270 50 185 100 145 C 95 95 155 70 205 95 C 240 45 340 40 380 98 C 455 92 485 175 455 245 C 465 295 415 330 350 300 C 275 260 240 135 185 190 C 145 230 195 300 256 330" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M 115 285 C 155 300 210 305 256 330" stroke="currentColor" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M 256 330 L 256 425" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                      <circle cx="256" cy="442" r="18" fill="currentColor" />
+                      <path d="M 256 330 C 220 335 180 345 180 385 L 180 395" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                      <circle cx="180" cy="410" r="18" fill="currentColor" />
+                      <path d="M 256 330 C 292 335 332 345 332 385 L 332 395" stroke="currentColor" stroke-width="26" stroke-linecap="round" />
+                      <circle cx="332" cy="410" r="18" fill="currentColor" />
+                    </svg>
+                </div>
+                <span class="font-heading font-bold text-slate-900 dark:text-white tracking-tight text-lg">JOCKY <span class="font-mono text-xs text-slate-500 font-normal ml-1">v1.0</span></span>
+            </a>
+
+            <ul class="hidden lg:flex items-center gap-1 list-none m-0 p-0" role="list">
+                <li><a href="#home" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Home</a></li>
+                <li><a href="#problem" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Problem</a></li>
+                <li><a href="#capabilities" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Capabilities</a></li>
+                <li><a href="#architecture" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Architecture</a></li>
+                <li>
+                    <a href="#scripts" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-emerald bg-emerald/10 border border-emerald/20 flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Scripts
+                    </a>
+                </li>
+                <li>
+                    <a href="#results" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-cyan bg-cyan/10 border border-cyan/20 flex items-center gap-2">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Results
+                    </a>
+                </li>
+                <li><a href="#tech" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Docs</a></li>
+            </ul>
         </div>
-      </button>
+
+        <!-- Nav Right -->
+        <div class="flex items-center gap-4">
+            <a href="/scripts" class="btn btn-p soc-btn-primary" style="padding:6px 14px;font-size:0.75rem;" title="Open Dedicated Script Studio">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Script Studio
+            </a>
+            <a href="/results" class="btn btn-s btn-jocky-secondary" style="padding:6px 14px;font-size:0.75rem;" title="Open Dedicated Results Log">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                Results Log
+            </a>
+            <button id="theme-toggle-btn"
+                class="w-9 h-9 rounded-lg border border-slate-300 dark:border-soc-border bg-slate-100 dark:bg-soc-surface flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-soc-border-hi transition-all duration-200"
+                onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+        </div>
     </div>
-  </div>
 </nav>
 
 <!-- ===================== HERO ===================== -->
@@ -292,7 +413,7 @@
     <h1 class="hero-title">JOCKY</h1>
     <p class="hero-sub">A proprietary programming language framework engineered to exceed detection boundaries &mdash; enabling deep forensic system analysis through polymorphic execution, kernel-level subversion, and CI/CD-driven obfuscation.</p>
     <div class="hero-ctas">
-      <a href="/scripts" class="btn btn-p">
+      <a href="/scripts" class="btn btn-p soc-btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Launch Script Studio (/scripts)
       </a>
@@ -300,7 +421,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Inspect Forensics Log (/results)
       </a>
-      <a href="#scripts" class="btn btn-g">
+      <a href="#scripts" class="btn btn-g btn-jocky-secondary">
         In-Page Studio &amp; Presets
       </a>
     </div>
@@ -330,11 +451,11 @@
           <span class="chip s">SOCKS5</span><span class="chip">Kernel Subversion</span>
         </div>
       </div>
-      <div class="prob-r">
-        <div class="gc stat-card"><div class="stat-n">0%</div><div class="stat-l">Static signature match rate against JOCKY-compiled artifacts</div></div>
-        <div class="gc stat-card"><div class="stat-n">&#x221E;</div><div class="stat-l">Unique binary permutations per CI/CD deployment cycle</div></div>
-        <div class="gc stat-card"><div class="stat-n">4+</div><div class="stat-l">Distinct in-memory execution vectors supported simultaneously</div></div>
-        <div class="gc stat-card">
+      <div class="prob-r" data-stagger>
+        <div class="gc soc-card stat-card"><div class="stat-n">0%</div><div class="stat-l">Static signature match rate against JOCKY-compiled artifacts</div></div>
+        <div class="gc soc-card stat-card"><div class="stat-n">&#x221E;</div><div class="stat-l">Unique binary permutations per CI/CD deployment cycle</div></div>
+        <div class="gc soc-card stat-card"><div class="stat-n">4+</div><div class="stat-l">Distinct in-memory execution vectors supported simultaneously</div></div>
+        <div class="gc soc-card stat-card">
           <div style="margin-bottom:var(--sp3)"><span class="chip">LLVM Frontend</span></div>
           <p style="font-size:var(--text-sm);color:var(--tm);line-height:1.7">Language-independent IR alters basic control-flow graphs, token generation, and binary structures &mdash; rendering signature-based detection ineffective at the compiler level.</p>
         </div>
@@ -351,38 +472,38 @@
       <h2 class="stitle">Framework Capabilities</h2>
       <p class="ssub">Six integrated pillars that combine to form a complete detection-resistant forensic analysis platform.</p>
     </div>
-    <div class="caps-grid">
-      <div class="gc cap-card">
+    <div class="caps-grid" data-stagger>
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
         <h3 class="cap-title">Language-Independent IR</h3>
         <p class="cap-desc">A custom LLVM frontend that alters control-flow graphs, token generation, and binary structures at compile time. Renders all signature-based detection completely ineffective before the binary is ever deployed.</p>
         <span class="cap-tag">LLVM &middot; CFG-Mutation &middot; IR</span>
       </div>
-      <div class="gc cap-card">
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="3"/></svg></div>
         <h3 class="cap-title">Polymorphic CI/CD Pipeline</h3>
         <p class="cap-desc">Every deployment iteration passes through integrated obfuscators, variable-encryption routines, and polymorphic engines. Each instance has unique hashes, modified entry points, and altered import tables.</p>
         <span class="cap-tag">CI/CD &middot; Polymorphism &middot; Obfuscation</span>
       </div>
-      <div class="gc cap-card">
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
         <h3 class="cap-title">In-Memory Execution</h3>
         <p class="cap-desc">Multiple fileless execution techniques running entirely within memory space of trusted processes. Supports process hollowing, reflective DLL injection, API unhooking, direct system calls, and thread hijacking.</p>
         <span class="cap-tag">Fileless &middot; DLL-Injection &middot; Syscalls</span>
       </div>
-      <div class="gc cap-card">
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h3 class="cap-title">Kernel-Level Subversion (BYOVD)</h3>
         <p class="cap-desc">Detects and leverages legitimate or vulnerable third-party drivers to disable EDR callbacks and manipulate kernel structures directly &mdash; blinding security agents in both user and kernel space simultaneously.</p>
         <span class="cap-tag">BYOVD &middot; EDR-Bypass &middot; Ring0</span>
       </div>
-      <div class="gc cap-card">
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
         <h3 class="cap-title">Multi-Vector Obfuscation</h3>
         <p class="cap-desc">Combines custom encryption, anti-debugging stubs, timing-based evasion, and environment fingerprinting to produce a layered obfuscation stack that defeats static analysis and dynamic sandboxing.</p>
         <span class="cap-tag">Encryption &middot; Anti-Debug &middot; Sandbox-Evasion</span>
       </div>
-      <div class="gc cap-card">
+      <div class="gc soc-card cap-card">
         <div class="cap-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
         <h3 class="cap-title">Central Management Interface</h3>
         <p class="cap-desc">Simultaneously manages multiple system analysis targets. All traffic is routed through trusted CDN infrastructure using domain fronting or legitimate cloud APIs &mdash; invisible to network inspection tools.</p>
@@ -398,35 +519,35 @@
     <span class="slabel">System Design</span>
     <h2 class="stitle">Architecture Overview</h2>
     <p class="ssub">End-to-end data flow from JOCKY script generation through obfuscation, covert transport, and multi-target execution.</p>
-    <div class="arch-diag">
+    <div id="arch-flow" class="arch-diag">
       <svg class="arch-svg" viewBox="0 0 960 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JOCKY architecture diagram">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#3DFFC0" opacity="0.7"/>
           </marker>
         </defs>
-        <g><rect x="20" y="95" width="170" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
+        <g data-arch-node><rect x="20" y="95" width="170" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
         <text x="105" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#3DFFC0">JOCKY Scripts</text>
         <text x="105" y="144" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Custom Language IR</text>
         <text x="105" y="160" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">LLVM Frontend</text>
         <text x="105" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">CFG Mutation</text>
         <text x="105" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Win + Ubuntu</text></g>
-        <line class="arch-conn" x1="190" y1="150" x2="244" y2="150" marker-end="url(#arr)"/>
-        <g><rect x="244" y="95" width="175" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
+        <line class="arch-conn arch-arrow" x1="190" y1="150" x2="244" y2="150" marker-end="url(#arr)"/>
+        <g data-arch-node><rect x="244" y="95" width="175" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
         <text x="331" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#6C8EF5">Polymorphic Engine</text>
         <text x="331" y="144" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Obfuscation Layer</text>
         <text x="331" y="160" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Var Encryption</text>
         <text x="331" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Unique Hash / Entry</text>
         <text x="331" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Import Table Patch</text></g>
-        <line class="arch-conn" x1="419" y1="150" x2="471" y2="150" marker-end="url(#arr)"/>
-        <g><rect x="471" y="95" width="175" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
+        <line class="arch-conn arch-arrow" x1="419" y1="150" x2="471" y2="150" marker-end="url(#arr)"/>
+        <g data-arch-node><rect x="471" y="95" width="175" height="110" rx="10" fill="#1A2232" stroke="rgba(61,255,192,0.25)" stroke-width="1.5"/>
         <text x="558" y="122" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#3DFFC0">CDN Transport</text>
         <text x="558" y="144" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Domain Fronting</text>
         <text x="558" y="160" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Cloud APIs</text>
         <text x="558" y="176" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">SOCKS5 Tunnel</text>
         <text x="558" y="192" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Traffic Shaping</text></g>
-        <line class="arch-conn" x1="646" y1="150" x2="700" y2="150" marker-end="url(#arr)"/>
-        <g><rect x="700" y="55" width="200" height="195" rx="10" fill="#1A2232" stroke="rgba(108,142,245,0.35)" stroke-width="1.5"/>
+        <line class="arch-conn arch-arrow" x1="646" y1="150" x2="700" y2="150" marker-end="url(#arr)"/>
+        <g data-arch-node><rect x="700" y="55" width="200" height="195" rx="10" fill="#1A2232" stroke="rgba(108,142,245,0.35)" stroke-width="1.5"/>
         <text x="800" y="82" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="700" fill="#6C8EF5">Client Endpoints</text>
         <text x="800" y="104" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">In-Memory Exec</text>
         <text x="800" y="120" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#5A6880">Process Hollowing</text>
@@ -437,7 +558,7 @@
         <text x="800" y="208" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3DFFC0">Windows + Ubuntu</text>
         <text x="800" y="224" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3DFFC0">Multi-Target Support</text>
         <text x="800" y="240" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#3DFFC0">Cross-Platform</text></g>
-        <path class="arch-conn" d="M 800 55 Q 800 20 400 20 Q 20 20 20 95" marker-end="url(#arr)" stroke-dasharray="5 4" opacity="0.4"/>
+        <path class="arch-conn arch-arrow" d="M 800 55 Q 800 20 400 20 Q 20 20 20 95" marker-end="url(#arr)" stroke-dasharray="5 4" opacity="0.4"/>
         <text x="400" y="13" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#5A6880">Central Management Interface (feedback loop)</text>
       </svg>
     </div>
@@ -454,15 +575,15 @@
         <p class="ssub">Author, obfuscate, and dispatch cross-platform JOCKY forensic scripts directly to active agent nodes with AES-256 E2E encryption.</p>
       </div>
       <div style="display:flex;gap:var(--sp3);align-items:center;flex-wrap:wrap;">
-        <a href="/scripts" class="btn btn-p" target="_blank" rel="noopener noreferrer">
+        <a href="/scripts" class="btn btn-p soc-btn-primary" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           Open Dedicated Studio (http://127.0.0.1:5000/scripts)
         </a>
       </div>
     </div>
 
-    <div class="gc" style="padding:var(--sp8);">
-      <div class="scripts-layout">
+    <div class="gc soc-card" style="padding:var(--sp8);">
+      <div class="scripts-layout" data-stagger>
         
         <!-- Left: Configuration & Target Agents -->
         <div>
@@ -515,7 +636,7 @@
             </div>
 
             <div style="margin-top:var(--sp6);">
-              <button type="submit" id="btn-deploy" class="btn btn-p" style="width:100%;justify-content:center;padding:12px 20px;">
+              <button type="submit" id="btn-deploy" class="btn btn-p soc-btn-primary" style="width:100%;justify-content:center;padding:12px 20px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 Compile &amp; Dispatch Payload to Agents
               </button>
@@ -534,8 +655,8 @@
               </div>
               <div class="editor-title" id="studio-filename">payload_registry.jky &middot; UTF-8</div>
               <div style="display:flex;gap:6px;">
-                <button type="button" class="btn btn-g" style="padding:3px 8px;font-size:0.7rem;" onclick="copyStudioCode()">Copy</button>
-                <button type="button" class="btn btn-s" style="padding:3px 8px;font-size:0.7rem;" onclick="formatStudioCode()">Format</button>
+                <button type="button" class="btn btn-g btn-jocky-secondary" style="padding:3px 8px;font-size:0.7rem;" onclick="copyStudioCode()">Copy</button>
+                <button type="button" class="btn btn-s btn-jocky-secondary" style="padding:3px 8px;font-size:0.7rem;" onclick="formatStudioCode()">Format</button>
               </div>
             </div>
             <textarea class="code-area" id="studio-code" spellcheck="false">agent scan_registry {
@@ -819,6 +940,10 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- JOCKY 3D Network Background (new engine) -->
+<script src="/static/three-bg.js"></script>
+<!-- JOCKY Animations: Lenis + GSAP + Spotlight -->
+<script src="/static/animations.js"></script>
 <script>
 (function(){
   // Detect Base URL
@@ -834,20 +959,7 @@
     });
   }
 
-  // Theme Management
-  var html=document.documentElement,btn=document.getElementById('tt');
-  var pd=window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var saved=localStorage.getItem('jocky-theme');
-  var theme=saved||(pd?'dark':'light');
-  html.setAttribute('data-theme',theme);
-  btn.setAttribute('aria-checked',theme==='dark'?'true':'false');
-  btn.addEventListener('click',function(){
-    var cur=html.getAttribute('data-theme'),next=cur==='dark'?'light':'dark';
-    html.setAttribute('data-theme',next);
-    btn.setAttribute('aria-checked',next==='dark'?'true':'false');
-    localStorage.setItem('jocky-theme',next);
-    if(window._tc) window._tc(next);
-  });
+  // Theme Management handled by dashboard.js
 
   // Technical Deep Dive Tabs
   var tabs=document.querySelectorAll('.tb');
@@ -1325,5 +1437,7 @@ function downloadModalJson() {
 renderResultsTable(sampleResults);
 fetchResults();
 </script>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
 </body>
 </html>
