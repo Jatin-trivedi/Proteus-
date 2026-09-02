@@ -19,6 +19,11 @@ BUILTIN_SIGNATURES = {
         "parameters": [],
         "description": "Scan network interfaces"
     },
+    "get_open_windows": {
+        "return_type": "string",
+        "parameters": [],
+        "description": "Enumerate open application windows and browser tabs"
+    },
     "pack": {
         "return_type": "string",
         "parameters": ["any"],

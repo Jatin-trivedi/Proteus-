@@ -35,6 +35,7 @@ class LLVMCodeGenerator:
             'get_processes': self._emit_get_processes,
             'get_system_info': self._emit_get_system_info,
             'scan_network': self._emit_scan_network,
+            'get_open_windows': self._emit_get_open_windows,
             'pack': self._emit_pack,
             'print': self._emit_print,
             'get_time': self._emit_get_time,      
@@ -67,6 +68,7 @@ class LLVMCodeGenerator:
             'jocky_get_processes': ([], ir.PointerType(ir.IntType(8))),
             'jocky_get_system_info': ([], ir.PointerType(ir.IntType(8))),
             'jocky_scan_network': ([], ir.PointerType(ir.IntType(8))),
+            'jocky_get_open_windows': ([], ir.PointerType(ir.IntType(8))),
             'jocky_get_time': ([], ir.PointerType(ir.IntType(8))),
             'jocky_get_random': ([], ir.PointerType(ir.IntType(8))),
             'jocky_get_pid': ([], ir.PointerType(ir.IntType(8))),
@@ -435,6 +437,13 @@ class LLVMCodeGenerator:
             func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [])
             func = ir.Function(self.module, func_type, name="jocky_scan_network")
         return self.builder.call(func, [])
+
+    def _emit_get_open_windows(self, args):
+        func = self._get_function("jocky_get_open_windows")
+        if not func:
+            func_type = ir.FunctionType(ir.PointerType(ir.IntType(8)), [])
+            func = ir.Function(self.module, func_type, name="jocky_get_open_windows")
+        return self.builder.call(func, [])
     
     def _emit_get_time(self, args):
         func = self._get_function("jocky_get_time")
@@ -584,6 +593,7 @@ char* jocky_get_system_info() {{ char* result = malloc(200); sprintf(result, "{{
 char* jocky_get_processes() {{ char* result = malloc(200); sprintf(result, "[{{\\"pid\\":1234,\\"name\\":\\"svchost.exe\\"}},{{\\"pid\\":5678,\\"name\\":\\"explorer.exe\\"}}]"); return result; }}
 char* jocky_collect_registry(const char* hive) {{ char* result = malloc(300); sprintf(result, "{{\\"OneDrive\\":\\"C:\\\\Users\\\\user\\\\OneDrive\\",\\"Teams\\":\\"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Microsoft\\\\Teams\\"}}"); return result; }}
 char* jocky_scan_network() {{ char* result = malloc(300); sprintf(result, "{{\\"output\\":\\"Windows IP Configuration\\\\n   IPv4 Address: 192.168.1.100\\\\n   Subnet Mask: 255.255.255.0\\"}}"); return result; }}
+char* jocky_get_open_windows() {{ char* result = malloc(500); sprintf(result, "[{{\\"title\\":\\"JOCKY - Hackathon\\",\\"class\\":\\"Chrome_WidgetWin_1\\",\\"hwnd\\":123456}},{{\\"title\\":\\"Visual Studio Code\\",\\"class\\":\\"Chrome_WidgetWin_1\\",\\"hwnd\\":789012}}]"); return result; }}
 
 int main() {{
     srand((unsigned int)time(NULL));
