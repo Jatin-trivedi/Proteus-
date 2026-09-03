@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:,">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -129,9 +130,6 @@
     .slabel::before{content:'';display:block;width:20px;height:2px;background:var(--ap);border-radius:2px}
     .stitle{font-size:var(--text-2xl);font-weight:700;color:var(--tp);line-height:1.25;margin-bottom:var(--sp3)}
     .ssub{font-size:var(--text-base);color:var(--tm);max-width:620px;line-height:1.7}
-    
-    /* CANVAS */
-    #three-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
     
     /* NAV */
     .nav{position:fixed;top:0;left:0;right:0;z-index:100;height:70px;display:flex;align-items:center;background:var(--glass);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border-bottom:1px solid var(--bor);transition:background var(--ds),border-color var(--ds)}
@@ -340,9 +338,6 @@
     <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(6,182,212,0.4),transparent);animation:scanLine 6s linear infinite;"></div>
 </div>
 
-<!-- Legacy Three.js canvas (kept for existing particle JS below) -->
-<canvas id="three-canvas" aria-hidden="true" style="display:none;"></canvas>
-
 <!-- ===================== NAVIGATION ===================== -->
 <nav id="main-nav" class="fixed top-0 w-full z-50 border-b border-slate-300/30 dark:border-soc-border bg-white/80 dark:bg-[#05050a]/85 backdrop-blur-xl">
     <div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -370,18 +365,6 @@
                 <li><a href="#problem" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Problem</a></li>
                 <li><a href="#capabilities" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Capabilities</a></li>
                 <li><a href="#architecture" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Architecture</a></li>
-                <li>
-                    <a href="#scripts" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-emerald bg-emerald/10 border border-emerald/20 flex items-center gap-2">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                        Scripts
-                    </a>
-                </li>
-                <li>
-                    <a href="#results" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-cyan bg-cyan/10 border border-cyan/20 flex items-center gap-2">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        Results
-                    </a>
-                </li>
                 <li><a href="#tech" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent">Docs</a></li>
             </ul>
         </div>
@@ -420,9 +403,6 @@
       <a href="/results" class="btn btn-s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         Inspect Forensics Log (/results)
-      </a>
-      <a href="#scripts" class="btn btn-g btn-jocky-secondary">
-        In-Page Studio &amp; Presets
       </a>
     </div>
   </div>
@@ -561,177 +541,6 @@
         <path class="arch-conn arch-arrow" d="M 800 55 Q 800 20 400 20 Q 20 20 20 95" marker-end="url(#arr)" stroke-dasharray="5 4" opacity="0.4"/>
         <text x="400" y="13" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9" fill="#5A6880">Central Management Interface (feedback loop)</text>
       </svg>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== SCRIPTS STUDIO SECTION ===================== -->
-<section id="scripts" class="sec scripts-sec">
-  <div class="ctr">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp4);margin-bottom:var(--sp8);">
-      <div>
-        <span class="slabel">Polymorphic Engine &amp; Studio</span>
-        <h2 class="stitle">JOCKY Script Studio</h2>
-        <p class="ssub">Author, obfuscate, and dispatch cross-platform JOCKY forensic scripts directly to active agent nodes with AES-256 E2E encryption.</p>
-      </div>
-      <div style="display:flex;gap:var(--sp3);align-items:center;flex-wrap:wrap;">
-        <a href="/scripts" class="btn btn-p soc-btn-primary" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Open Dedicated Studio (http://127.0.0.1:5000/scripts)
-        </a>
-      </div>
-    </div>
-
-    <div class="gc soc-card" style="padding:var(--sp8);">
-      <div class="scripts-layout" data-stagger>
-        
-        <!-- Left: Configuration & Target Agents -->
-        <div>
-          <div class="form-group">
-            <label class="form-label">Forensic Presets</label>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--sp3);">
-              <span class="preset-pill active" onclick="loadScriptPreset('registry')">Registry Autorun Scan</span>
-              <span class="preset-pill" onclick="loadScriptPreset('process')">Process Memory Hunter</span>
-              <span class="preset-pill" onclick="loadScriptPreset('sysinfo')">System Fingerprint</span>
-              <span class="preset-pill" onclick="loadScriptPreset('byovd')">BYOVD Driver Scan</span>
-              <span class="preset-pill" onclick="loadScriptPreset('network')">Network Sockets</span>
-            </div>
-          </div>
-
-          <form id="studio-deploy-form" onsubmit="handleDeploy(event)">
-            <div class="form-group">
-              <label for="script-id" class="form-label">Script Identifier</label>
-              <input type="text" id="script-id" class="form-input mono" value="Registry_Autorun_Scan_v1" required placeholder="e.g. Memory_Forensics_01" />
-            </div>
-
-            <div class="form-group">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <label for="target-agents" class="form-label" style="margin-bottom:0;">Target Agent Nodes</label>
-                <span style="font-size:0.75rem;color:var(--ap);cursor:pointer;font-weight:600;" onclick="fillAllAgents()">Select All Available</span>
-              </div>
-              <input type="text" id="target-agents" class="form-input mono" value="win-target-01, ubuntu-srv-02" required placeholder="e.g. agent-001, test-agent-01" />
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
-                <span class="agent-tag" onclick="addAgent('win-target-01')">+ win-target-01</span>
-                <span class="agent-tag" onclick="addAgent('ubuntu-srv-02')">+ ubuntu-srv-02</span>
-                <span class="agent-tag" onclick="addAgent('edge-node-03')">+ edge-node-03</span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Polymorphic Engine Settings</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.8rem;color:var(--tm);">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" checked id="opt-cfg" /> CFG Mutation Pass
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" checked id="opt-opaque" /> Opaque Predicates
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" checked id="opt-enc" /> AES-256 E2E Payload
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" checked id="opt-import" /> Import Obfuscation
-                </label>
-              </div>
-            </div>
-
-            <div style="margin-top:var(--sp6);">
-              <button type="submit" id="btn-deploy" class="btn btn-p soc-btn-primary" style="width:100%;justify-content:center;padding:12px 20px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Compile &amp; Dispatch Payload to Agents
-              </button>
-            </div>
-          </form>
-
-          <div id="deploy-feedback" style="margin-top:var(--sp4);display:none;"></div>
-        </div>
-
-        <!-- Right: JOCKY Code Studio (IDE Style) -->
-        <div>
-          <div class="editor-wrapper">
-            <div class="editor-header">
-              <div class="editor-dots">
-                <span></span><span></span><span></span>
-              </div>
-              <div class="editor-title" id="studio-filename">payload_registry.jky &middot; UTF-8</div>
-              <div style="display:flex;gap:6px;">
-                <button type="button" class="btn btn-g btn-jocky-secondary" style="padding:3px 8px;font-size:0.7rem;" onclick="copyStudioCode()">Copy</button>
-                <button type="button" class="btn btn-s btn-jocky-secondary" style="padding:3px 8px;font-size:0.7rem;" onclick="formatStudioCode()">Format</button>
-              </div>
-            </div>
-            <textarea class="code-area" id="studio-code" spellcheck="false">agent scan_registry {
-    let hive = "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
-    let results = collect_registry(hive)
-    
-    // Evaluate autorun entries for unverified signature anomalies
-    for entry in results {
-        if entry.is_unsigned || entry.entropy > 7.2 {
-            alert_forensic_finding(entry.path, "SUSPICIOUS_AUTORUN")
-        }
-    }
-    return results
-}</textarea>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:0.75rem;color:var(--tm);font-family:'JetBrains Mono',monospace;">
-            <span>Synthesizes AST &amp; Bytecode upon dispatch</span>
-            <span>AES-256 E2E Encryption</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== RESULTS / FORENSICS SECTION ===================== -->
-<section id="results" class="sec results-sec">
-  <div class="ctr">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp4);margin-bottom:var(--sp8);">
-      <div>
-        <span class="slabel">Digital Forensics &amp; Threat Telemetry</span>
-        <h2 class="stitle">Forensics &amp; Results Log</h2>
-        <p class="ssub">Real-time encrypted payload telemetry returned from distributed client nodes &mdash; inspectable in real-time.</p>
-      </div>
-      <div style="display:flex;gap:var(--sp3);align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-g" onclick="fetchResults()" style="padding:8px 14px;font-size:var(--text-xs);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Refresh Feed
-        </button>
-        <a href="/results" class="btn btn-s" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          Open Dedicated Results (http://127.0.0.1:5000/results)
-        </a>
-      </div>
-    </div>
-
-    <!-- Filter & Search Toolbar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp4);margin-bottom:var(--sp4);">
-      <div style="flex:1;max-width:380px;">
-        <input type="text" id="result-search" class="form-input mono" placeholder="Search by Agent ID or Script ID..." oninput="filterResultsTable()" />
-      </div>
-      <div style="font-size:0.8rem;color:var(--tm);font-family:'JetBrains Mono',monospace;" id="results-count">
-        Loaded telemetry records: 4
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="table-container">
-      <table class="f-table">
-        <thead>
-          <tr>
-            <th>Result ID</th>
-            <th>Target Agent</th>
-            <th>Script Identifier</th>
-            <th>Encryption State</th>
-            <th>AV Status</th>
-            <th>Received At</th>
-            <th style="text-align:right;">Action</th>
-          </tr>
-        </thead>
-        <tbody id="results-tbody">
-          <!-- Dynamically populated -->
-        </tbody>
-      </table>
     </div>
   </div>
 </section>
@@ -939,9 +748,6 @@
   </div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- JOCKY 3D Network Background (new engine) -->
-<script src="/static/three-bg.js"></script>
 <!-- JOCKY Animations: Lenis + GSAP + Spotlight -->
 <script src="/static/animations.js"></script>
 <script>
@@ -976,79 +782,6 @@
       if(e.key==='ArrowLeft'){arr[(i-1+arr.length)%arr.length].focus();arr[(i-1+arr.length)%arr.length].click();}
     });
   });
-
-  // Three.js Background Particle Net
-  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    if(typeof THREE!=='undefined'){
-      var canvas=document.getElementById('three-canvas');
-      var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-      renderer.setSize(window.innerWidth,window.innerHeight);
-      var scene=new THREE.Scene();
-      var camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,1000);
-      camera.position.z=80;
-      var N=260,SP=100,MD=22;
-      var pos=new Float32Array(N*3),vel=[];
-      for(var i=0;i<N;i++){
-        pos[i*3]=(Math.random()-.5)*SP;pos[i*3+1]=(Math.random()-.5)*SP;pos[i*3+2]=(Math.random()-.5)*40;
-        vel.push((Math.random()-.5)*.04,(Math.random()-.5)*.04,0);
-      }
-      var pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
-      var pm=new THREE.PointsMaterial({color:0x3DFFC0,size:.8,transparent:true,opacity:.55,depthWrite:false});
-      scene.add(new THREE.Points(pg,pm));
-      var ML=N*6,lp=new Float32Array(ML*6),lc=new Float32Array(ML*6);
-      var lg=new THREE.BufferGeometry();
-      lg.setAttribute('position',new THREE.BufferAttribute(lp,3));
-      lg.setAttribute('color',new THREE.BufferAttribute(lc,3));
-      var lm=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.25,depthWrite:false});
-      scene.add(new THREE.LineSegments(lg,lm));
-      window._tc=function(t){
-        pm.color.setHex(t==='dark'?0x3DFFC0:0x0A7B5C);
-        pm.opacity=t==='dark'?.55:.35;
-        lm.opacity=t==='dark'?.25:.12;
-      };
-      window._tc(html.getAttribute('data-theme'));
-      function glc(){return html.getAttribute('data-theme')==='dark'?new THREE.Color(0x6C8EF5):new THREE.Color(0x3B52CC);}
-      (function loop(){
-        requestAnimationFrame(loop);
-        for(var i=0;i<N;i++){
-          pos[i*3]+=vel[i*3];pos[i*3+1]+=vel[i*3+1];
-          if(pos[i*3]>SP/2)pos[i*3]=-SP/2;if(pos[i*3]<-SP/2)pos[i*3]=SP/2;
-          if(pos[i*3+1]>SP/2)pos[i*3+1]=-SP/2;if(pos[i*3+1]<-SP/2)pos[i*3+1]=SP/2;
-        }
-        pg.attributes.position.needsUpdate=true;
-        var li=0,col=glc();
-        for(var i=0;i<N&&li<ML-1;i++){
-          for(var j=i+1;j<N&&li<ML-1;j++){
-            var dx=pos[i*3]-pos[j*3],dy=pos[i*3+1]-pos[j*3+1],dz=pos[i*3+2]-pos[j*3+2];
-            var d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-            if(d<MD){
-              var a=1-d/MD;
-              lp[li*6]=pos[i*3];lp[li*6+1]=pos[i*3+1];lp[li*6+2]=pos[i*3+2];
-              lp[li*6+3]=pos[j*3];lp[li*6+4]=pos[j*3+1];lp[li*6+5]=pos[j*3+2];
-              lc[li*6]=col.r*a;lc[li*6+1]=col.g*a;lc[li*6+2]=col.b*a;
-              lc[li*6+3]=col.r*a;lc[li*6+4]=col.g*a;lc[li*6+5]=col.b*a;
-              li++;
-            }
-          }
-        }
-        for(var k=li;k<ML;k++){for(var d2=0;d2<6;d2++){lp[k*6+d2]=0;lc[k*6+d2]=0;}}
-        lg.setDrawRange(0,li*2);lg.attributes.position.needsUpdate=true;lg.attributes.color.needsUpdate=true;
-        renderer.render(scene,camera);
-      })();
-      window.addEventListener('resize',function(){
-        camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth,window.innerHeight);
-      });
-      var mx=0,my=0;
-      document.addEventListener('mousemove',function(e){
-        mx=(e.clientX/window.innerWidth-.5)*2;my=(e.clientY/window.innerHeight-.5)*2;
-        camera.position.x+=(mx*3-camera.position.x)*.02;
-        camera.position.y+=(-my*3-camera.position.y)*.02;
-        camera.lookAt(scene.position);
-      });
-    }
-  }
 
   // Active Nav Highlight
   var secs=document.querySelectorAll('section[id]');
