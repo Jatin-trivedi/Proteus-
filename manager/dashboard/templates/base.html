@@ -190,7 +190,7 @@
                         <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div> HIGH</span>
                     </div>
                     <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
-                        <span class="gsap-counter" data-target="124">0</span>
+                        <span class="gsap-counter" id="metric-active-threats" data-target="0">0</span>
                     </div>
                 </div>
                 <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
@@ -199,7 +199,7 @@
                         <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-dot"></div>
                     </div>
                     <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
-                        <span class="gsap-counter" data-target="99.8">0</span>%
+                        <span class="gsap-counter" id="metric-defense-grid" data-target="0">0</span>%
                     </div>
                 </div>
                 <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
@@ -207,7 +207,7 @@
                         Network Nodes
                     </div>
                     <div class="font-mono text-xl font-bold text-slate-100 mt-2">
-                        1,428 / 1,430 <span class="text-emerald-400 text-sm ml-1">Online</span>
+                        <span id="metric-nodes-total">0</span> / <span id="metric-nodes-online">0</span> <span class="text-emerald-400 text-sm ml-1">Online</span>
                     </div>
                 </div>
                 <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
@@ -215,7 +215,7 @@
                         MTTR
                     </div>
                     <div class="font-mono text-3xl font-bold text-cyan-400 mt-1">
-                        <span class="gsap-counter" data-target="42">0</span>ms
+                        <span class="gsap-counter" id="metric-mttr" data-target="0">0</span>ms
                     </div>
                 </div>
             </div>
@@ -240,8 +240,8 @@
                             <path d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90 L100,100 L0,100 Z" fill="rgba(16, 185, 129, 0.1)" />
                             
                             <!-- Foreground strokes -->
-                            <path d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75" fill="none" stroke="#06b6d4" stroke-width="2" vector-effect="non-scaling-stroke" />
-                            <path d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90" fill="none" stroke="#10b981" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+                            <path id="traffic-path-cyan" d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75" fill="none" stroke="#06b6d4" stroke-width="2" vector-effect="non-scaling-stroke" />
+                            <path id="traffic-path-emerald" d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90" fill="none" stroke="#10b981" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
                         </svg>
                     </div>
                 </div>
@@ -292,39 +292,8 @@
                                 <th class="py-3 px-4 font-medium text-right">Action Taken</th>
                             </tr>
                         </thead>
-                        <tbody class="font-mono text-xs text-slate-300">
-                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
-                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:42:01</td>
-                                <td class="py-3 px-4 text-cyan-400">AUTH_BYPASS_ATTEMPT</td>
-                                <td class="py-3 px-4">192.168.1.105</td>
-                                <td class="py-3 px-4">443</td>
-                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-amber-400 bg-amber-400/10 border border-amber-400/20">WARN</span></td>
-                                <td class="py-3 px-4 text-slate-400 text-right">Logged</td>
-                            </tr>
-                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
-                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:42:15</td>
-                                <td class="py-3 px-4 text-rose-400">MALWARE_PAYLOAD_DROP</td>
-                                <td class="py-3 px-4">45.22.19.112</td>
-                                <td class="py-3 px-4">8080</td>
-                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-rose-400 bg-rose-400/10 border border-rose-400/20">CRIT</span></td>
-                                <td class="py-3 px-4 text-emerald-400 text-right">Blocked &amp; Isolated</td>
-                            </tr>
-                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
-                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:43:02</td>
-                                <td class="py-3 px-4 text-cyan-400">UNEXPECTED_PORT_SCAN</td>
-                                <td class="py-3 px-4">10.0.0.42</td>
-                                <td class="py-3 px-4">Multiple</td>
-                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-amber-400 bg-amber-400/10 border border-amber-400/20">WARN</span></td>
-                                <td class="py-3 px-4 text-slate-400 text-right">Rate Limited</td>
-                            </tr>
-                            <tr class="hover:bg-white/5 transition-colors">
-                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:45:11</td>
-                                <td class="py-3 px-4 text-emerald-400">DEFENSE_GRID_SYNC</td>
-                                <td class="py-3 px-4">Internal</td>
-                                <td class="py-3 px-4">N/A</td>
-                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">INFO</span></td>
-                                <td class="py-3 px-4 text-emerald-400 text-right">Success</td>
-                            </tr>
+                        <tbody id="dashboard-telemetry-log" class="font-mono text-xs text-slate-300">
+                            <tr><td colspan="6" class="py-4 px-4 text-center text-slate-500">Connecting to telemetry stream...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -341,6 +310,8 @@
 
     <!-- Dashboard Global JS -->
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+    <!-- Dashboard API Data Binding -->
+    <script src="{{ url_for('static', filename='dashboard-api.js') }}"></script>
     <!-- Animations & Interactions -->
     <script src="{{ url_for('static', filename='animations.js') }}"></script>
 
