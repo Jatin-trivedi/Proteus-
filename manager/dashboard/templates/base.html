@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}JOCKY Manager · Enterprise Endpoint Defense{% endblock %}</title>
     <meta name="description" content="JOCKY Manager — a next-generation C2 management interface for forensic analysis and script deployment.">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='logo.svg') }}">
-
+    <link rel="icon" href="data:,">
     <!-- Prevent Theme Flash (FOUC) -->
     <script>
         (function() {
@@ -90,9 +89,6 @@
     <!-- Lenis Smooth Scroll -->
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
 
-    <!-- Three.js 3D Background -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -102,9 +98,6 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-slate-50 dark:bg-void font-body text-slate-800 dark:text-slate-300 antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-emerald/30 selection:text-emerald">
-
-    <!-- 3D WebGL Background Canvas -->
-    <canvas id="bg-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
 
     <!-- Fixed SVG Grid Texture (layered on top of canvas) -->
     <div class="fixed inset-0 bg-grid-faint-light dark:bg-grid-faint pointer-events-none" style="z-index:0;mask-image:radial-gradient(ellipse 90% 80% at 50% 50%, black 30%, transparent 100%);"></div>
@@ -140,8 +133,8 @@
 
                 <ul class="hidden md:flex items-center gap-1 list-none m-0 p-0" role="list">
                     <li>
-                        <a href="/" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
-                            {% if request.path == '/' %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
+                        <a href="#dashboard" id="nav-dashboard-link" class="nav-link font-body text-sm font-medium px-3 py-2 rounded-lg transition-all duration-200
+                            {% if request.path == '/' or request.path == '/dashboard' %}text-emerald bg-emerald/10 border border-emerald/20{% else %}text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent{% endif %}">
                             Dashboard
                         </a>
                     </li>
@@ -186,7 +179,161 @@
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <main id="main-content" class="relative z-10 flex-1 w-full max-w-screen-xl mx-auto px-6 py-8">
-        {% block content %}{% endblock %}
+        
+        <!-- ==================== DASHBOARD SPA VIEW ==================== -->
+        <div id="dashboard-view" style="display: none;">
+            <!-- 1. Metric KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-between">
+                        Active Threat Vectors
+                        <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div> HIGH</span>
+                    </div>
+                    <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
+                        <span class="gsap-counter" data-target="124">0</span>
+                    </div>
+                </div>
+                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-between">
+                        Defense Grid Status
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-dot"></div>
+                    </div>
+                    <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
+                        <span class="gsap-counter" data-target="99.8">0</span>%
+                    </div>
+                </div>
+                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
+                        Network Nodes
+                    </div>
+                    <div class="font-mono text-xl font-bold text-slate-100 mt-2">
+                        1,428 / 1,430 <span class="text-emerald-400 text-sm ml-1">Online</span>
+                    </div>
+                </div>
+                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
+                        MTTR
+                    </div>
+                    <div class="font-mono text-3xl font-bold text-cyan-400 mt-1">
+                        <span class="gsap-counter" data-target="42">0</span>ms
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Central Operations & Telemetry Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Left: Live Threat & Traffic Monitor -->
+                <div class="soc-card p-6 rounded-xl flex flex-col transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-heading text-lg font-bold text-slate-100">Live Traffic Monitor</h3>
+                        <div class="flex gap-2">
+                            <span class="px-2 py-1 text-[10px] font-mono border border-emerald-500/30 text-emerald-400 rounded bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 transition-colors">All</span>
+                            <span class="px-2 py-1 text-[10px] font-mono border border-slate-700 text-slate-400 rounded cursor-pointer hover:bg-slate-800 transition-colors">HTTP/S</span>
+                            <span class="px-2 py-1 text-[10px] font-mono border border-slate-700 text-slate-400 rounded cursor-pointer hover:bg-slate-800 transition-colors">SSH</span>
+                            <span class="px-2 py-1 text-[10px] font-mono border border-rose-500/30 text-rose-400 rounded bg-rose-500/10 cursor-pointer hover:bg-rose-500/20 transition-colors">Zero-Day</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 relative min-h-[160px] flex items-end border-b border-l border-slate-700/50 pb-1 pl-1">
+                        <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                            <!-- Background fill -->
+                            <path d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75 L100,100 L0,100 Z" fill="rgba(6, 182, 212, 0.1)" />
+                            <path d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90 L100,100 L0,100 Z" fill="rgba(16, 185, 129, 0.1)" />
+                            
+                            <!-- Foreground strokes -->
+                            <path d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75" fill="none" stroke="#06b6d4" stroke-width="2" vector-effect="non-scaling-stroke" />
+                            <path d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90" fill="none" stroke="#10b981" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Right: System Defense Quick Actions -->
+                <div class="soc-card p-6 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <h3 class="font-heading text-lg font-bold text-slate-100 mb-6">System Defense Actions</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
+                            <div class="font-mono text-[10px] text-cyan-400 mb-1.5 opacity-80 group-hover:opacity-100">SYS_01</div>
+                            <div class="font-body font-bold text-sm text-slate-200">Run Full Spectrum Scan</div>
+                        </button>
+                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
+                            <div class="font-mono text-[10px] text-amber-400 mb-1.5 opacity-80 group-hover:opacity-100">NET_02</div>
+                            <div class="font-body font-bold text-sm text-slate-200">Flush IP Tables</div>
+                        </button>
+                        <button class="p-4 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:border-rose-500/60 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
+                            <div class="font-mono text-[10px] text-rose-400 mb-1.5 opacity-80 group-hover:opacity-100">CRIT_03</div>
+                            <div class="font-body font-bold text-sm text-rose-100">Isolate Compromised Node</div>
+                        </button>
+                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
+                            <div class="font-mono text-[10px] text-emerald-400 mb-1.5 opacity-80 group-hover:opacity-100">REP_04</div>
+                            <div class="font-body font-bold text-sm text-slate-200">Export Threat Report</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Real-Time Telemetry Event Log -->
+            <div class="soc-card rounded-xl overflow-hidden flex flex-col transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
+                <div class="bg-slate-900/80 border-b border-slate-700/50 px-4 py-3 flex items-center gap-2">
+                    <div class="flex gap-1.5 mr-4">
+                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
+                    </div>
+                    <span class="font-mono text-xs text-slate-400">root@jocky-manager:~# tail -f /var/log/telemetry.log</span>
+                </div>
+                <div class="overflow-x-auto w-full">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-700/50 font-mono text-xs text-slate-500 uppercase tracking-wider bg-black/20">
+                                <th class="py-3 px-4 font-medium">Timestamp</th>
+                                <th class="py-3 px-4 font-medium">Event Signature</th>
+                                <th class="py-3 px-4 font-medium">Source IP</th>
+                                <th class="py-3 px-4 font-medium">Target Port</th>
+                                <th class="py-3 px-4 font-medium">Severity</th>
+                                <th class="py-3 px-4 font-medium text-right">Action Taken</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs text-slate-300">
+                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:42:01</td>
+                                <td class="py-3 px-4 text-cyan-400">AUTH_BYPASS_ATTEMPT</td>
+                                <td class="py-3 px-4">192.168.1.105</td>
+                                <td class="py-3 px-4">443</td>
+                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-amber-400 bg-amber-400/10 border border-amber-400/20">WARN</span></td>
+                                <td class="py-3 px-4 text-slate-400 text-right">Logged</td>
+                            </tr>
+                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:42:15</td>
+                                <td class="py-3 px-4 text-rose-400">MALWARE_PAYLOAD_DROP</td>
+                                <td class="py-3 px-4">45.22.19.112</td>
+                                <td class="py-3 px-4">8080</td>
+                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-rose-400 bg-rose-400/10 border border-rose-400/20">CRIT</span></td>
+                                <td class="py-3 px-4 text-emerald-400 text-right">Blocked &amp; Isolated</td>
+                            </tr>
+                            <tr class="border-b border-slate-800/50 hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:43:02</td>
+                                <td class="py-3 px-4 text-cyan-400">UNEXPECTED_PORT_SCAN</td>
+                                <td class="py-3 px-4">10.0.0.42</td>
+                                <td class="py-3 px-4">Multiple</td>
+                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-amber-400 bg-amber-400/10 border border-amber-400/20">WARN</span></td>
+                                <td class="py-3 px-4 text-slate-400 text-right">Rate Limited</td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="py-3 px-4 text-slate-500 whitespace-nowrap">2026-09-03 10:45:11</td>
+                                <td class="py-3 px-4 text-emerald-400">DEFENSE_GRID_SYNC</td>
+                                <td class="py-3 px-4">Internal</td>
+                                <td class="py-3 px-4">N/A</td>
+                                <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-emerald-400 bg-emerald-400/10 border border-emerald-400/20">INFO</span></td>
+                                <td class="py-3 px-4 text-emerald-400 text-right">Success</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-content">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
     <!-- ==================== TOAST CONTAINER ==================== -->
@@ -194,8 +341,6 @@
 
     <!-- Dashboard Global JS -->
     <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
-    <!-- 3D Background Engine -->
-    <script src="{{ url_for('static', filename='three-bg.js') }}"></script>
     <!-- Animations & Interactions -->
     <script src="{{ url_for('static', filename='animations.js') }}"></script>
 
