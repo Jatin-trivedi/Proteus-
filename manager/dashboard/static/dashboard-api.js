@@ -80,13 +80,18 @@
             if (!container) return;
 
             if (agents.length === 0) {
+                const origin = window.location.origin || 'http://127.0.0.1:5001';
                 container.innerHTML = `
-                    <div class="p-8 text-center border border-dashed border-slate-300 dark:border-white/10 rounded-xl bg-slate-50/80 dark:bg-white/[0.02]">
+                    <div class="p-6 text-center border border-dashed border-slate-300 dark:border-white/10 rounded-xl bg-slate-50/80 dark:bg-white/[0.02]">
                         <div class="w-12 h-12 rounded-xl bg-emerald/10 text-emerald flex items-center justify-center mx-auto mb-3">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
                         </div>
                         <h4 class="font-heading text-base font-bold text-slate-900 dark:text-white mb-1">No Active Agents Registered</h4>
-                        <p class="text-slate-500 dark:text-slate-400 text-xs max-w-sm mx-auto mb-4">Run the local agent binary or register a client node to begin telemetry collection.</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-xs max-w-sm mx-auto mb-3">Run the following command on your machine to connect an agent to this server:</p>
+                        <div class="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-slate-900 font-mono text-xs max-w-md mx-auto mb-4 text-left">
+                            <code class="text-emerald truncate select-all">python local_agent.py --manager-url ${origin}</code>
+                            <button onclick="copyConnectCommand(this)" class="shrink-0 px-2.5 py-1 rounded bg-emerald text-white text-[11px] font-sans font-semibold hover:bg-emerald-600 transition-all">Copy</button>
+                        </div>
                         <a href="/scripts" class="soc-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold">Open Script Studio</a>
                     </div>
                 `;
@@ -197,6 +202,37 @@
                 showToast('Failed to delete agent: ' + err.message, 'error');
             } else {
                 alert('Failed to delete agent: ' + err.message);
+            }
+        }
+    };
+
+    window.copyConnectCommand = function (btn) {
+        const origin = window.location.origin || 'http://127.0.0.1:5001';
+        const cmd = `python local_agent.py --manager-url ${origin}`;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(cmd).then(() => {
+                if (typeof showToast === 'function') {
+                    showToast('Connect command copied to clipboard!', 'success');
+                } else {
+                    alert('Copied to clipboard:\n' + cmd);
+                }
+            }).catch(() => fallbackCopy(cmd));
+        } else {
+            fallbackCopy(cmd);
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (typeof showToast === 'function') {
+                showToast('Connect command copied to clipboard!', 'success');
             }
         }
     };
