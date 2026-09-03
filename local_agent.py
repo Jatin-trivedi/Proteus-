@@ -412,7 +412,7 @@ class JockyAgent:
 # ==============================================================================
 
 def main():
-    default_manager_url = os.getenv("MANAGER_URL", "http://127.0.0.1:5001")
+    default_manager_url = os.getenv("MANAGER_URL", "https://jockey-framework.onrender.com")
     parser = argparse.ArgumentParser(description="JOCKY Local Agent Daemon")
     parser.add_argument("--manager-url", default=default_manager_url, help=f"Manager API URL (default: {default_manager_url})")
     parser.add_argument("--agent-id", default=os.getenv("AGENT_ID", None), help="Custom Agent ID (default: auto-generated)")

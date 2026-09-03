@@ -822,13 +822,13 @@
 <script>
 (function(){
   // Detect Base URL
-  window.MANAGER_BASE_URL = (window.location.protocol.startsWith('http')) ? '' : 'http://127.0.0.1:5000';
+  window.MANAGER_BASE_URL = (window.location.protocol.startsWith('http')) ? '' : 'https://jockey-framework.onrender.com';
 
   // Fix relative navigation links if opened via file://
   if(!window.location.protocol.startsWith('http')) {
     document.querySelectorAll('a[href^="/"]').forEach(function(a){
       var path = a.getAttribute('href');
-      a.setAttribute('href', 'http://127.0.0.1:5000' + path);
+      a.setAttribute('href', 'https://jockey-framework.onrender.com' + path);
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener noreferrer');
     });
