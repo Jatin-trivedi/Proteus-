@@ -120,3 +120,16 @@ def list_agents():
         'status': a.status,
         'last_seen': a.last_seen.isoformat() if a.last_seen else None
     } for a in agents]), 200
+
+
+@agent_bp.route('/<agent_id>', methods=['DELETE'])
+def delete_agent(agent_id):
+    """Delete an agent and related deployments."""
+    agent = Agent.query.get(agent_id)
+    if not agent:
+        return jsonify({'error': 'Agent not found'}), 404
+
+    Deploy.query.filter_by(agent_id=agent_id).delete()
+    db.session.delete(agent)
+    db.session.commit()
+    return jsonify({'status': 'deleted', 'agent_id': agent_id}), 200

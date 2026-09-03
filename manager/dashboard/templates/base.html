@@ -171,7 +171,7 @@
                 <!-- C2 Status Pill -->
                 <div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald/20 bg-emerald/5">
                     <div class="w-2 h-2 rounded-full bg-emerald animate-pulse-dot"></div>
-                    <span class="font-mono text-xs font-semibold text-emerald tracking-wide">C2 Online</span>
+                    <span class="font-mono text-xs font-semibold text-emerald tracking-wide">C2 Engine Online</span>
                 </div>
             </div>
         </div>
@@ -182,122 +182,116 @@
         
         <!-- ==================== DASHBOARD SPA VIEW ==================== -->
         <div id="dashboard-view" style="display: none;">
-            <!-- 1. Metric KPI Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-between">
-                        Active Threat Vectors
-                        <span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-[9px] px-1.5 py-0.5 rounded-full flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div> HIGH</span>
-                    </div>
-                    <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
-                        <span class="gsap-counter" id="metric-active-threats" data-target="0">0</span>
-                    </div>
+            
+            <!-- Page Header -->
+            <div class="flex items-start justify-between gap-4 mb-8" data-stagger>
+                <div>
+                    <p class="font-mono text-xs font-semibold uppercase tracking-widest text-emerald mb-1">Fleet Orchestration · Active Endpoints</p>
+                    <h1 class="font-heading text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Agent Fleet Overview</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mt-1 max-w-xl">
+                        Real-time status, connected nodes, and payload deployment orchestration across your distributed infrastructure.
+                    </p>
                 </div>
-                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3 flex items-center justify-between">
-                        Defense Grid Status
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-dot"></div>
-                    </div>
-                    <div class="font-mono text-3xl font-bold text-slate-100 mt-1">
-                        <span class="gsap-counter" id="metric-defense-grid" data-target="0">0</span>%
-                    </div>
-                </div>
-                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
-                        Network Nodes
-                    </div>
-                    <div class="font-mono text-xl font-bold text-slate-100 mt-2">
-                        <span id="metric-nodes-total">0</span> / <span id="metric-nodes-online">0</span> <span class="text-emerald-400 text-sm ml-1">Online</span>
-                    </div>
-                </div>
-                <div class="soc-card p-5 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div class="font-heading text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
-                        MTTR
-                    </div>
-                    <div class="font-mono text-3xl font-bold text-cyan-400 mt-1">
-                        <span class="gsap-counter" id="metric-mttr" data-target="0">0</span>ms
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Central Operations & Telemetry Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <!-- Left: Live Threat & Traffic Monitor -->
-                <div class="soc-card p-6 rounded-xl flex flex-col transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-heading text-lg font-bold text-slate-100">Live Traffic Monitor</h3>
-                        <div class="flex gap-2">
-                            <span class="px-2 py-1 text-[10px] font-mono border border-emerald-500/30 text-emerald-400 rounded bg-emerald-500/10 cursor-pointer hover:bg-emerald-500/20 transition-colors">All</span>
-                            <span class="px-2 py-1 text-[10px] font-mono border border-slate-700 text-slate-400 rounded cursor-pointer hover:bg-slate-800 transition-colors">HTTP/S</span>
-                            <span class="px-2 py-1 text-[10px] font-mono border border-slate-700 text-slate-400 rounded cursor-pointer hover:bg-slate-800 transition-colors">SSH</span>
-                            <span class="px-2 py-1 text-[10px] font-mono border border-rose-500/30 text-rose-400 rounded bg-rose-500/10 cursor-pointer hover:bg-rose-500/20 transition-colors">Zero-Day</span>
-                        </div>
-                    </div>
-                    <div class="flex-1 relative min-h-[160px] flex items-end border-b border-l border-slate-700/50 pb-1 pl-1">
-                        <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                            <!-- Background fill -->
-                            <path d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75 L100,100 L0,100 Z" fill="rgba(6, 182, 212, 0.1)" />
-                            <path d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90 L100,100 L0,100 Z" fill="rgba(16, 185, 129, 0.1)" />
-                            
-                            <!-- Foreground strokes -->
-                            <path id="traffic-path-cyan" d="M0,80 Q10,70 20,85 T40,60 T60,80 T80,40 T100,75" fill="none" stroke="#06b6d4" stroke-width="2" vector-effect="non-scaling-stroke" />
-                            <path id="traffic-path-emerald" d="M0,90 Q15,95 30,85 T60,95 T85,70 T100,90" fill="none" stroke="#10b981" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="4 4" />
+                <div class="flex items-center gap-3">
+                    <button id="btn-refresh" onclick="loadFleetDashboard()" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-white/20 text-sm font-medium transition-all duration-200">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                            <path d="M16 21h5v-5"></path>
                         </svg>
-                    </div>
+                        Refresh Fleet
+                    </button>
+                    <a href="/scripts" class="soc-btn-primary shrink-0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Deploy Payload
+                    </a>
                 </div>
+            </div>
 
-                <!-- Right: System Defense Quick Actions -->
-                <div class="soc-card p-6 rounded-xl transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <h3 class="font-heading text-lg font-bold text-slate-100 mb-6">System Defense Actions</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
-                            <div class="font-mono text-[10px] text-cyan-400 mb-1.5 opacity-80 group-hover:opacity-100">SYS_01</div>
-                            <div class="font-body font-bold text-sm text-slate-200">Run Full Spectrum Scan</div>
-                        </button>
-                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
-                            <div class="font-mono text-[10px] text-amber-400 mb-1.5 opacity-80 group-hover:opacity-100">NET_02</div>
-                            <div class="font-body font-bold text-sm text-slate-200">Flush IP Tables</div>
-                        </button>
-                        <button class="p-4 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:border-rose-500/60 hover:shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
-                            <div class="font-mono text-[10px] text-rose-400 mb-1.5 opacity-80 group-hover:opacity-100">CRIT_03</div>
-                            <div class="font-body font-bold text-sm text-rose-100">Isolate Compromised Node</div>
-                        </button>
-                        <button class="p-4 rounded-lg border border-slate-700 bg-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(6,182,212,0.15)] transition-all duration-200 transform hover:-translate-y-0.5 text-left group cursor-pointer">
-                            <div class="font-mono text-[10px] text-emerald-400 mb-1.5 opacity-80 group-hover:opacity-100">REP_04</div>
-                            <div class="font-body font-bold text-sm text-slate-200">Export Threat Report</div>
-                        </button>
+            <!-- Main Studio/Dashboard Panel -->
+            <div class="soc-card rounded-2xl border border-slate-200 dark:border-white/8 overflow-hidden"
+                style="background: rgba(255,255,255,0.03); backdrop-filter: blur(24px);">
+                <!-- Top Emerald-Cyan Accent Bar -->
+                <div class="h-0.5 w-full" style="background: linear-gradient(90deg, #10b981, #06b6d4, #10b981);"></div>
+
+                <div class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        
+                        <!-- Left Column: Summary & Metrics (5 cols) -->
+                        <div class="lg:col-span-5 flex flex-col justify-between h-full">
+                            <div>
+                                <h2 class="font-heading text-lg font-semibold text-slate-900 dark:text-white mb-1">Fleet Command &amp; Orchestration</h2>
+                                <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+                                    JOCKY framework is actively synchronizing connected agent nodes across your infrastructure. Polymorphic bytecode compilation, encrypted C2 heartbeat channels, and forensic data streams are operating normally.
+                                </p>
+
+                                <!-- Live Metrics 2x2 Grid -->
+                                <div class="grid grid-cols-2 gap-3 mb-6">
+                                    <div class="p-4 rounded-xl border border-slate-200 dark:border-white/8 bg-slate-50/80 dark:bg-white/[0.02] flex flex-col">
+                                        <span class="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">TOTAL AGENTS</span>
+                                        <span class="font-mono text-3xl font-bold text-slate-900 dark:text-white" id="metric-fleet-total">0</span>
+                                    </div>
+                                    <div class="p-4 rounded-xl border border-slate-200 dark:border-white/8 bg-slate-50/80 dark:bg-white/[0.02] flex flex-col">
+                                        <span class="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">ACTIVE ONLINE</span>
+                                        <span class="font-mono text-3xl font-bold text-emerald" id="metric-fleet-online">0</span>
+                                    </div>
+                                    <div class="p-4 rounded-xl border border-slate-200 dark:border-white/8 bg-slate-50/80 dark:bg-white/[0.02] flex flex-col">
+                                        <span class="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">OFFLINE / STANDBY</span>
+                                        <span class="font-mono text-3xl font-bold text-slate-500 dark:text-slate-400" id="metric-fleet-offline">0</span>
+                                    </div>
+                                    <div class="p-4 rounded-xl border border-slate-200 dark:border-white/8 bg-slate-50/80 dark:bg-white/[0.02] flex flex-col">
+                                        <span class="font-mono text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">SECURITY STATE</span>
+                                        <span class="font-mono text-base font-bold text-emerald tracking-wider pt-1 flex items-center gap-1.5">
+                                            <span class="w-2 h-2 rounded-full bg-emerald animate-pulse-dot"></span>
+                                            SECURE
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col gap-3">
+                                <a href="/scripts" class="soc-btn-primary w-full justify-center">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Launch Script Studio
+                                </a>
+                                <a href="/results" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 dark:hover:border-white/20 text-sm font-medium transition-all duration-200 w-full">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
+                                    Inspect Forensics Log
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Connected Fleet Nodes (7 cols) -->
+                        <div class="lg:col-span-7 flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-heading text-base font-semibold text-slate-900 dark:text-white">Connected Fleet Nodes</h3>
+                                <span class="font-mono text-xs text-slate-500" id="fleet-last-updated">Live · Updating...</span>
+                            </div>
+
+                            <div id="fleet-agent-list" class="flex flex-col gap-3.5 max-h-[580px] overflow-y-auto pr-1">
+                                <div class="p-8 text-center border border-slate-200 dark:border-white/8 rounded-xl bg-slate-50/50 dark:bg-white/[0.01]">
+                                    <div class="inline-block w-6 h-6 border-2 border-emerald border-t-transparent rounded-full animate-spin mb-3"></div>
+                                    <p class="text-slate-500 text-xs font-mono">Synchronizing C2 fleet nodes...</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Real-Time Telemetry Event Log -->
-            <div class="soc-card rounded-xl overflow-hidden flex flex-col transition-all duration-300" style="background: rgba(10, 15, 29, 0.88); border: 1px solid rgba(255, 255, 255, 0.08);">
-                <div class="bg-slate-900/80 border-b border-slate-700/50 px-4 py-3 flex items-center gap-2">
-                    <div class="flex gap-1.5 mr-4">
-                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></div>
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></div>
-                    </div>
-                    <span class="font-mono text-xs text-slate-400">root@jocky-manager:~# tail -f /var/log/telemetry.log</span>
-                </div>
-                <div class="overflow-x-auto w-full">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-slate-700/50 font-mono text-xs text-slate-500 uppercase tracking-wider bg-black/20">
-                                <th class="py-3 px-4 font-medium">Timestamp</th>
-                                <th class="py-3 px-4 font-medium">Event Signature</th>
-                                <th class="py-3 px-4 font-medium">Source IP</th>
-                                <th class="py-3 px-4 font-medium">Target Port</th>
-                                <th class="py-3 px-4 font-medium">Severity</th>
-                                <th class="py-3 px-4 font-medium text-right">Action Taken</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dashboard-telemetry-log" class="font-mono text-xs text-slate-300">
-                            <tr><td colspan="6" class="py-4 px-4 text-center text-slate-500">Connecting to telemetry stream...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
 
         <div id="page-content">

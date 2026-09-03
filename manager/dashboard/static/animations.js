@@ -227,6 +227,7 @@
         if(e) e.preventDefault();
         dashView.style.display = 'block';
         pageContent.style.display = 'none';
+        if (typeof window.loadFleetDashboard === 'function') window.loadFleetDashboard();
 
         // Update nav active states
         document.querySelectorAll('.nav-link').forEach(n => {
