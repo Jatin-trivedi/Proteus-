@@ -12,8 +12,10 @@ from .agent import Agent
 from .script import Script
 from .result import Result
 from .deploy import Deploy
+from .user import User
+from .finding import Finding
+from .report import Report
 
 # Export everything
-__all__ = ['db', 'Agent', 'Script', 'Result', 'Deploy']
-
+__all__ = ['db', 'Agent', 'Script', 'Result', 'Deploy', 'User', 'Finding', 'Report']
 

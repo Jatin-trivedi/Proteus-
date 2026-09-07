@@ -52,6 +52,13 @@ def get_script(script_id):
     })
 
 
+@script_bp.route('/list', methods=['GET'])
+def list_scripts():
+    """List scripts available to the React dashboard."""
+    scripts = Script.query.order_by(Script.created_at.desc()).all()
+    return jsonify([script.to_dict() for script in scripts]), 200
+
+
 @script_bp.route('/<script_id>/hash', methods=['POST'])
 def update_script_hash(script_id):
     data = request.get_json()
@@ -151,3 +158,14 @@ def deploy_script():
         'script_id': script.script_id,
         'deploy_ids': deploy_ids
     }), 201
+
+
+@script_bp.route('/deployments', methods=['GET'])
+def list_deployments():
+    """List deployments with enough context for the operations dashboard."""
+    deployments = Deploy.query.order_by(Deploy.deployed_at.desc()).all()
+    return jsonify([{
+        **deployment.to_dict(),
+        "script_name": deployment.script.name if deployment.script else None,
+        "hostname": deployment.agent.hostname if deployment.agent else None,
+    } for deployment in deployments]), 200

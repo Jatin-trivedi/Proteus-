@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime
-from models import db, Result, Deploy
+from models import db, Result, Deploy, Finding
 import uuid
 import io
 import json
@@ -29,6 +29,23 @@ def submit():
         submitted_at=datetime.utcnow()
     )
     db.session.add(result)
+    db.session.commit()
+
+    findings = data.get("findings", [])
+    if not isinstance(findings, list):
+        return jsonify({"error": "findings must be a list"}), 400
+    for finding_data in findings:
+        if not isinstance(finding_data, dict):
+            return jsonify({"error": "each finding must be an object"}), 400
+        db.session.add(Finding(
+            result_id=result.result_id,
+            agent_id=agent_id,
+            severity=finding_data.get("severity", "medium"),
+            category=finding_data.get("category", "uncategorized"),
+            title=finding_data.get("title", "Untitled finding"),
+            description=finding_data.get("description", ""),
+            evidence=finding_data.get("evidence"),
+        ))
     db.session.commit()
 
     deploy = Deploy.query.filter_by(
