@@ -13,9 +13,9 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "Reports — JOCKY Labs" },
-      { name: "description", content: "Generate court-ready forensic reports with tunable scope, chain of custody, and exports." },
-      { property: "og:title", content: "Reports — JOCKY Labs" },
+      { title: "Reports — Proteus" },
+      { name: "description", content: "Generate audit-grade forensic investigation reports for legal, compliance, and incident response teams." },
+      { property: "og:title", content: "Reports — Proteus" },
       { property: "og:description", content: "Court-ready forensic reporting." },
     ],
   }),

@@ -37,7 +37,7 @@ export type Result = {
   data_encrypted: string;
 };
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
+const API_BASE_URL = ((import.meta.env as Record<string, string | undefined>)["VITE_API_BASE_URL"] || "/api/v1").replace(/\/$/, "");
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem("access_token");

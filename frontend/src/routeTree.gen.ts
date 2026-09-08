@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentsRouteImport } from './routes/agents'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as OperationsRouteImport } from './routes/operations'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ResultsRouteImport } from './routes/results'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentsRoute = AgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OperationsRoute = OperationsRouteImport.update({
@@ -50,6 +56,7 @@ const ScriptsRoute = ScriptsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reports': typeof ReportsRoute
   '/results': typeof ResultsRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reports': typeof ReportsRoute
   '/results': typeof ResultsRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/login': typeof LoginRoute
   '/operations': typeof OperationsRoute
   '/reports': typeof ReportsRoute
   '/results': typeof ResultsRoute
@@ -75,13 +84,27 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/agents' | '/operations' | '/reports' | '/results' | '/scripts'
+    | '/'
+    | '/agents'
+    | '/login'
+    | '/operations'
+    | '/reports'
+    | '/results'
+    | '/scripts'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/operations' | '/reports' | '/results' | '/scripts'
+  to:
+    | '/'
+    | '/agents'
+    | '/login'
+    | '/operations'
+    | '/reports'
+    | '/results'
+    | '/scripts'
   id:
     | '__root__'
     | '/'
     | '/agents'
+    | '/login'
     | '/operations'
     | '/reports'
     | '/results'
@@ -91,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentsRoute: typeof AgentsRoute
+  LoginRoute: typeof LoginRoute
   OperationsRoute: typeof OperationsRoute
   ReportsRoute: typeof ReportsRoute
   ResultsRoute: typeof ResultsRoute
@@ -111,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof AgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/operations': {
@@ -147,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentsRoute: AgentsRoute,
+  LoginRoute: LoginRoute,
   OperationsRoute: OperationsRoute,
   ReportsRoute: ReportsRoute,
   ResultsRoute: ResultsRoute,

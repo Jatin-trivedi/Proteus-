@@ -88,6 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/proteus-logo.png", type: "image/png" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
@@ -114,13 +115,20 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+import { AuthProvider } from "@/lib/auth-context";
+import { SmoothScroll } from "@/components/smooth-scroll";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster />
+      <AuthProvider>
+        <SmoothScroll>
+          <Outlet />
+          <Toaster />
+        </SmoothScroll>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

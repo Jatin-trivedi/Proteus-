@@ -10,9 +10,9 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/operations")({
   head: () => ({
     meta: [
-      { title: "Operations — JOCKY Labs" },
-      { name: "description", content: "Track live and completed forensic operations across the JOCKY agent fleet in real time." },
-      { property: "og:title", content: "Operations — JOCKY Labs" },
+      { title: "Operations — Proteus" },
+      { name: "description", content: "Track live and completed forensic operations across the Proteus agent fleet in real time." },
+      { property: "og:title", content: "Operations — Proteus" },
       { property: "og:description", content: "Real-time deployment orchestration." },
     ],
   }),
@@ -58,12 +58,12 @@ function OpsPage() {
           const m = statusMeta[status];
           const progress = op.status === "completed" ? 100 : op.status === "pending" ? 0 : 50;
           return (
-            <div key={op.id} className="panel p-6">
+            <div key={op.deploy_id} className="panel p-6">
               <div className="flex items-start gap-3">
                 <StatusDot status={m.dot} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-foreground truncate">{op.name}</h3>
+                    <h3 className="text-base font-semibold text-foreground truncate">{op.script_name ?? `Deployment ${op.deploy_id}`}</h3>
                     <Badge className={m.cls}>{m.label}</Badge>
                   </div>
                   <div className="text-[11px] font-mono text-muted-foreground mt-0.5">

@@ -21,6 +21,8 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)   # <-- This enables 'flask db' commands
+    with app.app_context():
+        db.create_all()
 
     @app.before_request
     def handle_api_options():

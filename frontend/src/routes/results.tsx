@@ -12,9 +12,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 export const Route = createFileRoute("/results")({
   head: () => ({
     meta: [
-      { title: "Results — JOCKY Labs" },
-      { name: "description", content: "Investigate forensic findings across registry, filesystem, network, and process telemetry." },
-      { property: "og:title", content: "Results — JOCKY Labs" },
+      { title: "Results — Proteus" },
+      { name: "description", content: "Review and analyze forensic artifacts, memory dumps, and execution logs from deployed agents." },
+      { property: "og:title", content: "Results — Proteus" },
       { property: "og:description", content: "Every finding, correlated." },
     ],
   }),

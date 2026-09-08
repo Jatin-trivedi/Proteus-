@@ -10,10 +10,10 @@ import { useEffect, useMemo, useState } from "react";
 export const Route = createFileRoute("/agents")({
   head: () => ({
     meta: [
-      { title: "Agents — JOCKY Labs" },
-      { name: "description", content: "Live agent fleet: hostnames, OS, status, and current task across the investigation network." },
-      { property: "og:title", content: "Agent Fleet — JOCKY Labs" },
-      { property: "og:description", content: "Every endpoint. Every heartbeat." },
+      { title: "Agents — Proteus" },
+      { name: "description", content: "Manage deployed forensic agents across Windows, Linux, and macOS endpoints with live telemetry." },
+      { property: "og:title", content: "Agent Fleet — Proteus" },
+      { property: "og:description", content: "Stealth agents reporting in real time." },
     ],
   }),
   component: AgentsPage,
@@ -50,7 +50,7 @@ function AgentsPage() {
   return (
     <AppLayout
       title="Agent Fleet"
-      subtitle="Stealth endpoints reporting to the JOCKY relay grid."
+      subtitle="Stealth endpoints reporting to the Proteus relay grid."
       actions={
         <Button onClick={loadAgents} variant="outline" className="border-border">
           <RefreshCw className="mr-2 h-4 w-4" /> Sync Fleet
@@ -90,7 +90,7 @@ function AgentsPage() {
                   const active = selected?.agent_id === a.agent_id;
                   return (
                     <tr
-                      key={a.id}
+                      key={a.agent_id}
                       onClick={() => setSelected(a)}
                       className={`border-t border-border cursor-pointer transition-colors ${active ? "bg-primary/5" : "hover:bg-panel/60"}`}
                     >
@@ -102,7 +102,7 @@ function AgentsPage() {
                       <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{a.ip}</td>
                       <td className="px-5 py-4">
                         <span className="inline-flex items-center gap-2 capitalize text-foreground">
-                          <StatusDot status={a.status} />
+                          <StatusDot status={a.status as "online" | "offline" | "executing" | "warning"} />
                           {a.status}
                         </span>
                       </td>
