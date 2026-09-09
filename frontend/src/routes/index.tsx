@@ -144,6 +144,22 @@ function Dashboard() {
       title=""
       subtitle=""
       actions={null}
+      fullscreenBackground={
+        <div className="fixed inset-0 w-screen h-screen -z-10 overflow-hidden pointer-events-none">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover scale-105 opacity-40 brightness-95 contrast-125"
+          >
+            <source src="/hero-bg.mp4" type="video/mp4" />
+          </video>
+          {/* Subtle dark gradient overlays covering the entire display */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#06080D]/75 via-[#06080D]/85 to-[#06080D]/95" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,156,255,0.12)_0%,transparent_75%)]" />
+        </div>
+      }
     >
       {/* ======================================================== */}
       {/* 1. HERO SECTION */}
@@ -165,15 +181,15 @@ function Dashboard() {
         {/* Brand Title */}
         <h1
           ref={titleRef}
-          className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-[#3B9CFF]/70 drop-shadow-[0_0_50px_rgba(59,156,255,0.4)] font-heading uppercase tracking-[0.22em] select-none leading-none mb-6 md:mb-8"
+          className="text-6xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-[#3B9CFF]/75 drop-shadow-[0_0_60px_rgba(59,156,255,0.45)] font-heading uppercase tracking-[0.22em] select-none leading-none mb-6 md:mb-8"
         >
           PROTEUS
         </h1>
 
-        {/* Subtitle */}
+        {/* Subtitle / Tagline */}
         <p
           ref={subtitleRef}
-          className="max-w-3xl text-sm sm:text-base md:text-lg leading-relaxed text-zinc-300 font-normal px-4 mb-10 md:mb-12 font-sans tracking-wide"
+          className="max-w-5xl text-base sm:text-lg md:text-xl leading-relaxed text-zinc-200/95 font-normal px-4 sm:px-8 mb-10 md:mb-12 font-sans tracking-wide"
         >
           A proprietary programming language framework engineered to exceed detection boundaries — enabling deep forensic system analysis through polymorphic execution, kernel-level subversion, and CI/CD-driven obfuscation.
         </p>

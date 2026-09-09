@@ -18,7 +18,7 @@ import {
   Send,
   CheckCircle2,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { ProteusLogo, ProteusIcon } from "@/components/proteus-logo";
@@ -408,20 +408,40 @@ export function AppLayout({
   subtitle,
   actions,
   children,
+  fullscreenBackground,
 }: {
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
+  fullscreenBackground?: ReactNode;
 }) {
   const [stealth, setStealth] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <div className="relative z-10 flex min-h-screen flex-col bg-background selection:bg-primary/20 selection:text-primary">
+    <div className={cn("relative z-10 flex min-h-screen flex-col selection:bg-primary/20 selection:text-primary", fullscreenBackground ? "bg-transparent" : "bg-background")}>
+      {fullscreenBackground}
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-[#0a0f1d]/90 backdrop-blur-xl transition-all">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <header
+        className={cn(
+          "sticky top-0 z-40 w-full transition-all duration-300",
+          scrolled
+            ? "border-b border-white/10 bg-black/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]"
+            : "border-b border-transparent bg-transparent"
+        )}
+      >
+        <div className="w-full flex h-20 items-center justify-between px-6 sm:px-10 lg:px-14 xl:px-16">
           {/* Left Brand */}
           <div className="flex items-center gap-6">
             <Brand />
@@ -502,7 +522,7 @@ export function AppLayout({
       </div>
 
       {/* Professional Enterprise Footer */}
-      <footer className="mt-auto border-t border-white/10 bg-background relative overflow-hidden text-xs text-muted-foreground">
+      <footer className={cn("mt-auto border-t border-white/10 relative overflow-hidden text-xs text-muted-foreground", fullscreenBackground ? "bg-[#06080D]/85 backdrop-blur-md" : "bg-background")}>
         {/* Subtle background glow accents */}
         <div className="absolute top-0 left-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute top-0 right-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />

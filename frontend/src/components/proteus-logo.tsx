@@ -93,10 +93,10 @@ export function ProteusLogo({
 
   // Horizontal variant (for Navbar & Headers)
   return (
-    <div className={cn("flex items-center gap-3 group", className)}>
-      <div className="relative grid place-items-center rounded-xl bg-white/[0.04] p-1.5 border border-white/10 glow-cyber group-hover:border-primary/50 group-hover:bg-primary/[0.06] transition-all duration-300">
+    <div className={cn("flex items-center gap-3.5 group", className)}>
+      <div className="relative grid place-items-center rounded-xl bg-white/[0.04] p-2 border border-white/10 glow-cyber group-hover:border-primary/50 group-hover:bg-primary/[0.06] transition-all duration-300">
         <ProteusIcon
-          size={size}
+          size={size === "md" ? 44 : size === "sm" ? 34 : size}
           theme={theme}
           className="transition-transform group-hover:scale-105"
           glow={glow}
@@ -105,11 +105,11 @@ export function ProteusLogo({
         <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary pulse-dot" />
       </div>
       <div className="flex flex-col">
-        <span className="text-lg font-black tracking-[0.16em] text-white font-sans leading-none select-none">
+        <span className="text-xl sm:text-2xl font-black tracking-[0.18em] text-white font-sans leading-none select-none">
           PRO<span className="text-primary font-black">TEUS</span>
         </span>
         {subtitle && (
-          <span className="text-[9px] uppercase tracking-[0.2em] text-zinc-400 font-medium whitespace-nowrap mt-1">
+          <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-300 font-semibold whitespace-nowrap mt-1.5">
             {subtitle}
           </span>
         )}
