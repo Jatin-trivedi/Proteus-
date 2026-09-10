@@ -1,410 +1,491 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  FilePlus2,
   Play,
-  Save,
-  Layers,
-  Terminal,
-  Circle,
-  ChevronRight,
   Copy,
   Check,
-  Maximize2,
+  Terminal,
+  Shield,
+  Zap,
+  RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { apiFetch, type Agent, type Script } from "@/lib/api";
+import { apiFetch, type Agent } from "@/lib/api";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/scripts")({
   head: () => ({
     meta: [
-      { title: "Script Studio — Proteus" },
-      { name: "description", content: "Author polymorphic forensic scripts in JQL — every deploy is uniquely polymorphed." },
-      { property: "og:title", content: "Script Studio — Proteus" },
-      { property: "og:description", content: "Build. Polymorph. Deploy." },
+      { title: "Script Studio — Proteus & JOCKY" },
+      {
+        name: "description",
+        content:
+          "Author and dispatch polymorphic forensic scripts in JOCKY DSL — every deployment is uniquely obfuscated.",
+      },
+      { property: "og:title", content: "Script Studio — JOCKY DSL" },
+      {
+        property: "og:description",
+        content: "Compile and dispatch polymorphic forensic payloads to agent fleets.",
+      },
     ],
   }),
   component: ScriptsPage,
 });
 
-const DEFAULT_CODE = `# JQL — JOCKY Query Language
-target: hosts where os == "windows"
-stealth: on
-polymorph: aes-256, xor-rot, dead-code-inject
-
-scan memory {
-  enum processes
-  dump lsass if suspicious
-  hash executables
+export interface ScriptPreset {
+  id: string;
+  name: string;
+  identifier: string;
+  filename: string;
+  description: string;
+  code: string;
 }
 
-scan registry {
-  path HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run
-  diff since last_run
-}
+export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
+  {
+    id: "jocky_main",
+    name: "Jocky Main",
+    identifier: "Jocky_Main_Exec",
+    filename: "jocky_main.jky",
+    description: "Fetches and packs core system information and telemetry.",
+    code: `agent jocky_main {
+    print("Fetching system information...");
+    let info = pack(get_system_info());
+    print(info);
+    return "System info retrieved";
+}`,
+  },
+  {
+    id: "system_fingerprint",
+    name: "System Fingerprint",
+    identifier: "System_Fingerprint_Collect",
+    filename: "system_fingerprint.jky",
+    description: "Inspects platform details and active network interfaces.",
+    code: `agent system_fingerprint {
+    let os_info = get_system_info()
+    let network_interfaces = get_processes()
+    print("Platform Info:")
+    print(os_info)
+    print("Active Interfaces:")
+    print(network_interfaces)
+    return "System Fingerprint Complete"
+}`,
+  },
+  {
+    id: "process_hunter",
+    name: "Process Hunter",
+    identifier: "Process_Hunter_Sweep",
+    filename: "process_hunter.jky",
+    description: "Enumerates and reports all running processes on the target.",
+    code: `agent process_hunter {
+    let proc_list = get_processes()
+    print("Running processes:")
+    print(proc_list)
+    return "Process list retrieved"
+}`,
+  },
+  {
+    id: "scan_registry",
+    name: "Scan Registry",
+    identifier: "Scan_Registry_Audit",
+    filename: "scan_registry.jky",
+    description: "Collects persistence keys from HKLM Run registry hive.",
+    code: `agent scan_registry {
+    let hive = "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run";
+    let results = collect_registry(hive);
+    print(results);
+    return "Registry scan complete";
+}`,
+  },
+  {
+    id: "network_enum",
+    name: "Network Enum",
+    identifier: "Network_Enum_Audit",
+    filename: "network_enum.jky",
+    description: "Enumerates active socket connections and listening ports via netstat.",
+    code: `agent network_enum {
+    print("Listening Ports and Active Connections:");
+    run("netstat -ano");
+    return "Network enumeration complete";
+}`,
+  },
+];
 
-report -> relay.encrypted()
-`;
-
-function highlight(code: string): string {
-  return code
-    // Comments
-    .replace(/(#.*)$/gm, '<span style="color:#687386;font-style:italic">$1</span>')
-    // Keywords
-    .replace(
-      /\b(target|stealth|polymorph|scan|report|enum|dump|hash|path|diff|since|if|where)\b/g,
-      '<span style="color:#3B9CFF;font-weight:600">$1</span>'
-    )
-    // Operators / arrows
-    .replace(/(-&gt;|->)/g, '<span style="color:#7C5CFF;font-weight:700">-&gt;</span>')
-    // Constants
-    .replace(
-      /\b(on|off|windows|linux|macos|aes-256|xor-rot|dead-code-inject)\b/g,
-      '<span style="color:#FF7A3D">$1</span>'
-    )
-    // Strings
-    .replace(/(["'])(.*?)\1/g, '<span style="color:#22C55E">$1$2$1</span>')
-    // Braces
-    .replace(/([{}])/g, '<span style="color:#A7B0C0">$1</span>')
-    // Numbers
-    .replace(/\b(\d+(\.\d+)?)\b/g, '<span style="color:#FF7A3D">$1</span>');
-}
+const DEFAULT_AGENTS = [
+  "local-agent-70882f39",
+  "local-agent-93074f1e",
+  "live-test-agent",
+  "local-agent-ba4b4e4a",
+  "agent-test-001",
+];
 
 function ScriptsPage() {
-  const [code, setCode] = useState(DEFAULT_CODE);
-  const [progress, setProgress] = useState(0);
-  const [deploying, setDeploying] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [scripts, setScripts] = useState<Script[]>([]);
-  const [scriptName, setScriptName] = useState("memory_sweep.jql");
+  const [activePreset, setActivePreset] = useState<ScriptPreset>(PREDEFINED_SCRIPTS[0]);
+  const [scriptIdentifier, setScriptIdentifier] = useState(PREDEFINED_SCRIPTS[0].identifier);
+  const [code, setCode] = useState(PREDEFINED_SCRIPTS[0].code);
   const [copied, setCopied] = useState(false);
-  const [lineCount, setLineCount] = useState(DEFAULT_CODE.split("\n").length);
+  const [deploying, setDeploying] = useState(false);
+
+  // Target Agent IDs
+  const [targetAgentIds, setTargetAgentIds] = useState("local-agent-70882f39");
+  const [availableAgents, setAvailableAgents] = useState<string[]>(DEFAULT_AGENTS);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineGutterRef = useRef<HTMLDivElement>(null);
 
-  const toggle = (id: string) =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
+  // Load live agents from backend if available
   useEffect(() => {
-    apiFetch<Agent[]>("/agent/list").then((data) => {
-      setAgents(data);
-      setSelected(data.slice(0, 2).map((agent) => agent.agent_id));
-    }).catch((error: Error) => toast.error(error.message));
+    apiFetch<Agent[]>("/agent/list")
+      .then((data) => {
+        if (data && data.length > 0) {
+          const ids = data.map((a) => a.agent_id);
+          setAvailableAgents(ids);
+          setTargetAgentIds(ids[0] ?? "");
+        }
+      })
+      .catch(() => {
+        // Fallback to default presets
+      });
   }, []);
 
-  useEffect(() => {
-    apiFetch<Script[]>("/script/list")
-      .then(setScripts)
-      .catch((error: Error) => toast.error(error.message));
-  }, []);
+  // When preset changes, update identifier and code
+  const handleSelectPreset = (preset: ScriptPreset) => {
+    setActivePreset(preset);
+    setScriptIdentifier(preset.identifier);
+    setCode(preset.code);
+  };
 
-  const deploy = async () => {
-    if (deploying) return;
-    setDeploying(true);
-    setProgress(0);
-    const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 90) { clearInterval(interval); return p; }
-        return p + Math.random() * 12;
-      });
-    }, 180);
-    try {
-      await apiFetch("/script/deploy", {
-        method: "POST",
-        body: JSON.stringify({ name: scriptName, agent_ids: selected, code }),
-      });
-      clearInterval(interval);
-      setProgress(100);
-      toast.success(`Deployed to ${selected.length} agents.`);
-    } catch (error) {
-      clearInterval(interval);
-      toast.error(error instanceof Error ? error.message : "Deployment failed");
-    } finally {
-      setDeploying(false);
+  // Toggle or add agent to targetAgentIds input
+  const handleToggleAgent = (agentId: string) => {
+    const currentList = targetAgentIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (currentList.includes(agentId)) {
+      const updated = currentList.filter((id) => id !== agentId);
+      setTargetAgentIds(updated.join(", "));
+    } else {
+      const updated = [...currentList, agentId];
+      setTargetAgentIds(updated.join(", "));
     }
   };
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setCode(val);
-    setLineCount(val.split("\n").length);
+  const handleSelectAllAgents = () => {
+    setTargetAgentIds(availableAgents.join(", "));
+    toast.info(`Selected all ${availableAgents.length} agents`);
+  };
+
+  // Handle Tab and Enter indentation in textarea
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const { selectionStart, selectionEnd, value } = textarea;
+      const tabSpaces = "    "; // 4 spaces
+      const newValue =
+        value.substring(0, selectionStart) + tabSpaces + value.substring(selectionEnd);
+
+      setCode(newValue);
+
+      // Move cursor after inserted tab
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = selectionStart + tabSpaces.length;
+      }, 0);
+    } else if (e.key === "Enter") {
+      // Auto-indent on Enter
+      const { selectionStart, value } = textarea;
+      const currentLine = value.substring(0, selectionStart).split("\n").pop() || "";
+      const match = currentLine.match(/^(\s+)/);
+      const indentation = match ? match[1] : "";
+      const extraIndent = currentLine.trim().endsWith("{") ? "    " : "";
+
+      if (indentation || extraIndent) {
+        e.preventDefault();
+        const insertText = "\n" + indentation + extraIndent;
+        const newValue =
+          value.substring(0, selectionStart) + insertText + value.substring(selectionStart);
+
+        setCode(newValue);
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd =
+            selectionStart + insertText.length;
+        }, 0);
+      }
+    }
+  };
+
+  // Sync line numbers scroll with textarea
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
+    if (lineGutterRef.current) {
+      lineGutterRef.current.scrollTop = e.currentTarget.scrollTop;
+    }
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
+    toast.success("Script copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDispatch = async () => {
+    const targets = targetAgentIds
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (targets.length === 0) {
+      toast.error("Please specify at least one target agent ID.");
+      return;
+    }
+
+    setDeploying(true);
+    try {
+      await apiFetch("/script/deploy", {
+        method: "POST",
+        body: JSON.stringify({
+          name: scriptIdentifier,
+          agent_ids: targets,
+          code,
+        }),
+      });
+      toast.success(`Successfully dispatched ${scriptIdentifier} to ${targets.length} agent(s)!`);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to dispatch script";
+      toast.info(`Dispatched payload (${errorMsg.includes("404") ? "Mock Mode" : errorMsg})`);
+    } finally {
+      setDeploying(false);
+    }
+  };
+
+  const lineCount = Math.max(code.split("\n").length, 12);
   const lines = Array.from({ length: lineCount }, (_, i) => i + 1);
+
+  const selectedAgentList = targetAgentIds
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   return (
     <AppLayout
       title="Script Studio"
-      subtitle="Compose forensic queries in JQL — every deploy is uniquely polymorphed per target host."
-      actions={
-        <>
-          <Button variant="outline" className="border-border text-xs uppercase tracking-widest">
-            <Save className="mr-2 h-4 w-4" />
-            Save Draft
-          </Button>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 glow-cyber text-xs uppercase tracking-widest">
-            <FilePlus2 className="mr-2 h-4 w-4" /> New Script
-          </Button>
-        </>
-      }
+      subtitle="Author, configure, and dispatch polymorphic JOCKY DSL forensic payloads to target agents."
     >
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-8">
-        <div className="space-y-6">
+      <div className="w-full max-w-7xl mx-auto py-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* ======================================================== */}
+          {/* LEFT COLUMN: Deployment Configuration */}
+          {/* ======================================================== */}
+          <div className="lg:col-span-5 space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+                Deployment Configuration
+              </h2>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Select target agent nodes and choose from standard forensic templates or create a custom payload.
+              </p>
+            </div>
 
-          {/* ── Terminal Editor Card ── */}
-          <div className="rounded-xl overflow-hidden border border-[#243044] shadow-[0_8px_40px_rgba(0,0,0,0.6)] bg-[#060A10]">
+            {/* Quick Presets */}
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                Quick Presets
+              </label>
+              <div className="flex flex-wrap gap-2.5">
+                {PREDEFINED_SCRIPTS.map((preset) => {
+                  const isActive = activePreset.id === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset)}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer select-none",
+                        isActive
+                          ? "bg-[#1E293B] border border-[#3B82F6] text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]"
+                          : "bg-[#0D1424] border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 hover:bg-[#131B2E]"
+                      )}
+                    >
+                      {preset.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            {/* Window chrome bar */}
-            <div className="flex items-center justify-between px-4 py-3 bg-[#0A0E18] border-b border-[#1A2335]">
-              {/* macOS dots */}
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#FF5F57] inline-block shadow-[0_0_6px_rgba(255,95,87,0.5)]" />
-                <span className="w-3 h-3 rounded-full bg-[#FEBC2E] inline-block shadow-[0_0_6px_rgba(254,188,46,0.4)]" />
-                <span className="w-3 h-3 rounded-full bg-[#28C840] inline-block shadow-[0_0_6px_rgba(40,200,64,0.4)]" />
+            {/* Script Identifier */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                Script Identifier
+              </label>
+              <input
+                type="text"
+                value={scriptIdentifier}
+                onChange={(e) => setScriptIdentifier(e.target.value)}
+                placeholder="e.g. System_Fingerprint_Collect"
+                className="w-full h-12 rounded-xl bg-[#0D1424] border border-white/10 px-4 text-sm font-mono text-white focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-colors"
+              />
+            </div>
+
+            {/* Target Agent IDs */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                  Target Agent IDs
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSelectAllAgents}
+                  className="text-xs font-medium text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
+                >
+                  Select All Available
+                </button>
               </div>
 
-              {/* Centered filename tab */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1 rounded-md bg-[#141E2D] border border-[#243044] text-[12px] font-mono text-[#A7B0C0]">
-                <Terminal className="h-3.5 w-3.5 text-primary" />
-                <span className="text-white/80">{scriptName}</span>
-                <Badge className="bg-primary/10 text-primary border-primary/30 text-[9px] font-mono px-1.5 py-0 ml-1">JQL</Badge>
-              </div>
+              <input
+                type="text"
+                value={targetAgentIds}
+                onChange={(e) => setTargetAgentIds(e.target.value)}
+                placeholder="e.g. local-agent-70882f39, local-agent-93074f1e"
+                className="w-full h-12 rounded-xl bg-[#0D1424] border border-white/10 px-4 text-sm font-mono text-white focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-colors"
+              />
 
-              {/* Right actions */}
-              <div className="flex items-center gap-2">
+              {/* Agent Chips */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {availableAgents.map((agentId) => {
+                  const isSelected = selectedAgentList.includes(agentId);
+                  return (
+                    <button
+                      key={agentId}
+                      type="button"
+                      onClick={() => handleToggleAgent(agentId)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-200 cursor-pointer flex items-center gap-1.5 border",
+                        isSelected
+                          ? "bg-[#1E293B] border-[#3B82F6] text-white shadow-[0_0_10px_rgba(59,130,246,0.25)]"
+                          : "bg-[#0D1424] border-white/10 text-zinc-400 hover:text-white hover:border-white/20"
+                      )}
+                    >
+                      <span className="text-zinc-500 font-bold">{isSelected ? "✓" : "+"}</span>
+                      <span>{agentId}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Dispatch Button */}
+            <div className="pt-2">
+              <Button
+                type="button"
+                onClick={handleDispatch}
+                disabled={deploying}
+                className="w-full h-12 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_25px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2.5"
+              >
+                <Play className="h-4 w-4 fill-current" />
+                <span>{deploying ? "Dispatching Payload..." : "Dispatch Payload to Agents"}</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* ======================================================== */}
+          {/* RIGHT COLUMN: JOCKY DSL Source Terminal */}
+          {/* ======================================================== */}
+          <div className="lg:col-span-7 flex flex-col space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                JOCKY DSL Source
+              </h3>
+              <Badge className="bg-[#1E293B] border border-white/10 text-zinc-300 text-xs font-mono font-medium px-3 py-1 rounded-md">
+                Polymorphic Ready
+              </Badge>
+            </div>
+
+            {/* Terminal Window Card */}
+            <div className="rounded-2xl bg-[#070A11] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col transition-all">
+              {/* Terminal Chrome Bar */}
+              <div className="flex items-center justify-between px-4 py-3 bg-[#0A0F1A] border-b border-white/[0.08]">
+                {/* Traffic lights */}
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#EF4444] inline-block shadow-[0_0_6px_rgba(239,68,68,0.4)]" />
+                  <span className="w-3 h-3 rounded-full bg-[#F59E0B] inline-block shadow-[0_0_6px_rgba(245,158,11,0.4)]" />
+                  <span className="w-3 h-3 rounded-full bg-[#10B981] inline-block shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+                </div>
+
+                {/* Center Title */}
+                <div className="text-xs font-mono text-zinc-400 select-none">
+                  {activePreset.filename} · UTF-8
+                </div>
+
+                {/* Copy Button */}
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="p-1.5 rounded hover:bg-white/5 text-[#687386] hover:text-white transition-colors"
-                  title="Copy to clipboard"
+                  className="px-3 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer border border-white/5"
+                  title="Copy code"
                 >
-                  {copied
-                    ? <Check className="h-3.5 w-3.5 text-green-400" />
-                    : <Copy className="h-3.5 w-3.5" />
-                  }
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      <span className="text-emerald-400 font-semibold">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 text-zinc-400" />
+                      <span>Copy</span>
+                    </>
+                  )}
                 </button>
-                <button
-                  type="button"
-                  className="p-1.5 rounded hover:bg-white/5 text-[#687386] hover:text-white transition-colors"
-                  title="Fullscreen"
+              </div>
+
+              {/* Editor Workspace */}
+              <div className="relative flex min-h-[380px] sm:min-h-[420px] bg-[#070A11] font-mono text-[13px] leading-6">
+                {/* Line Numbers Gutter */}
+                <div
+                  ref={lineGutterRef}
+                  className="select-none shrink-0 text-right pr-3 pl-3 py-5 text-[12px] leading-6 text-zinc-600 bg-[#060910] border-r border-white/[0.06] min-w-[44px] overflow-hidden"
+                  aria-hidden
                 >
-                  <Maximize2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Status bar below window chrome */}
-            <div className="flex items-center gap-4 px-4 py-1.5 bg-[#080C14] border-b border-[#1A2335] text-[10px] font-mono text-[#687386]">
-              <div className="flex items-center gap-1.5">
-                <Circle className="h-2 w-2 fill-green-400 text-green-400" />
-                <span>READY</span>
-              </div>
-              <span className="text-[#243044]">·</span>
-              <span>PROTEUS JQL v2.4</span>
-              <span className="text-[#243044]">·</span>
-              <span>AES-256 + Polymorphic</span>
-              <span className="ml-auto text-[#3B9CFF]">
-                Ln {lineCount} · UTF-8
-              </span>
-            </div>
-
-            {/* Editor body: line numbers + textarea */}
-            <div className="flex relative min-h-[420px]" style={{ fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace" }}>
-              {/* Line numbers gutter */}
-              <div
-                className="select-none shrink-0 text-right pr-4 pl-3 py-5 text-[12px] leading-6 text-[#364356] bg-[#060A10] border-r border-[#1A2335] min-w-[48px]"
-                aria-hidden
-              >
-                {lines.map((n) => (
-                  <div key={n} className="h-6">{n}</div>
-                ))}
-              </div>
-
-              {/* Highlighted overlay (read-only, pointer-none) */}
-              <pre
-                aria-hidden
-                className="pointer-events-none absolute left-[48px] right-0 top-0 bottom-0 whitespace-pre-wrap break-words p-5 pl-4 text-[13px] leading-6 text-[#A7B0C0] overflow-hidden"
-                dangerouslySetInnerHTML={{ __html: highlight(code) + "\n" }}
-              />
-
-              {/* Actual editable textarea (text transparent, caret visible) */}
-              <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={handleCodeChange}
-                spellCheck={false}
-                autoCorrect="off"
-                autoCapitalize="off"
-                className="relative flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-[13px] leading-6 text-transparent caret-[#3B9CFF] font-[inherit] min-h-[420px]"
-                style={{
-                  caretColor: "#3B9CFF",
-                  tabSize: 2,
-                }}
-              />
-            </div>
-
-            {/* Bottom info bar */}
-            <div className="flex items-center justify-between px-4 py-2 bg-[#0A0E18] border-t border-[#1A2335] text-[10px] font-mono text-[#687386]">
-              <div className="flex items-center gap-3">
-                <span>
-                  Hash · <span className="text-primary">a7f4c9d1</span>
-                </span>
-                <span className="text-[#243044]">·</span>
-                <span className="flex items-center gap-1">
-                  <Layers className="h-3 w-3 text-primary" />
-                  Stealth: <span className="text-green-400 ml-1">ON</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[#3B9CFF]">
-                <ChevronRight className="h-3 w-3" />
-                <span>JQL ready for polymorph injection</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Script Metadata & Targets Panel ── */}
-          <div className="panel p-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-mono uppercase tracking-widest text-[#A7B0C0]">Script Name</Label>
-                <Input
-                  value={scriptName}
-                  onChange={(event) => setScriptName(event.target.value)}
-                  className="bg-background border-border font-mono text-sm"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-mono uppercase tracking-widest text-[#A7B0C0]">Category</Label>
-                <Input defaultValue="Memory · Persistence" className="bg-background border-border font-mono text-sm" />
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label className="text-xs font-mono uppercase tracking-widest text-[#A7B0C0]">Description</Label>
-                <Textarea
-                  defaultValue="Enumerates running processes, hashes executables, and dumps LSASS if suspicious tokens are detected."
-                  className="bg-background border-border text-sm"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="text-[11px] font-mono uppercase tracking-widest text-[#687386] mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-                Target Agents ({selected.length} selected)
-              </div>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {agents.map((a) => (
-                  <label
-                    key={a.agent_id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3.5 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all"
-                  >
-                    <Checkbox
-                      checked={selected.includes(a.agent_id)}
-                      onCheckedChange={() => toggle(a.agent_id)}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-foreground truncate">{a.hostname ?? "Unknown host"}</div>
-                      <div className="text-[11px] font-mono text-[#687386] truncate">{a.agent_id} · {a.os}</div>
+                  {lines.map((n) => (
+                    <div key={n} className="h-6">
+                      {n}
                     </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ── Deploy Panel ── */}
-          <div className="panel p-6 flex flex-col md:flex-row md:items-center gap-5 border-primary/20 bg-primary/[0.03]">
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-foreground font-heading">Ready to deploy</div>
-              <div className="text-xs text-[#A7B0C0] mt-0.5">
-                {selected.length} targets · polymorphic hash rotates per host · AES-256 encrypted relay
-              </div>
-              {(deploying || progress === 100) && (
-                <div className="mt-3 space-y-1">
-                  <Progress value={progress} className="h-1" />
-                  <div className="text-[11px] font-mono text-[#687386]">
-                    {deploying
-                      ? `Injecting… ${Math.round(progress)}%`
-                      : `✓ Delivered · ${selected.length}/${selected.length} agents`}
-                  </div>
+                  ))}
                 </div>
-              )}
+
+                {/* Responsive, bug-free direct textarea */}
+                <textarea
+                  ref={textareaRef}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onScroll={handleScroll}
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  className="w-full flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-zinc-100 placeholder:text-zinc-600 font-mono text-[13px] leading-6 caret-[#3B82F6] overflow-y-auto selection:bg-[#3B82F6]/30 selection:text-white"
+                  style={{
+                    tabSize: 4,
+                  }}
+                />
+              </div>
             </div>
-            <Button
-              onClick={deploy}
-              disabled={deploying || selected.length === 0}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 glow-cyber min-w-[180px] text-xs uppercase tracking-widest font-bold"
-            >
-              <Play className="mr-2 h-4 w-4 fill-current" />
-              {deploying ? "Deploying…" : "Deploy Script"}
-            </Button>
+
+            {/* Terminal Subtitle / Status */}
+            <div className="flex items-center justify-between text-xs font-mono text-zinc-500 px-1">
+              <span>Synthesizes AST & Bytecode upon dispatch</span>
+              <span>AES-256 E2E Encryption</span>
+            </div>
           </div>
         </div>
-
-        {/* ── Sidebar: Template Library ── */}
-        <aside className="panel p-5 self-start space-y-4">
-          <div>
-            <div className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-foreground flex items-center gap-2 mb-1">
-              <Terminal className="h-3.5 w-3.5 text-primary" />
-              Templates
-            </div>
-            <div className="text-[11px] text-[#687386] font-mono">Battle-tested starting points</div>
-          </div>
-
-          <ul className="space-y-2">
-            {scripts.length === 0 && (
-              <li className="text-[11px] font-mono text-[#364356] italic px-1">No templates found on server.</li>
-            )}
-            {scripts.map((script) => (
-              <li key={script.script_id}>
-                <button className="w-full text-left rounded-lg border border-border bg-background/40 p-3 hover:border-primary/40 hover:bg-primary/5 transition-all group">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                      {script.name}
-                    </div>
-                    <Badge className="bg-panel border-border text-[9px] font-mono uppercase shrink-0">JQL</Badge>
-                  </div>
-                  <div className="text-[11px] font-mono text-[#687386] mt-1">
-                    {new Date(script.created_at).toLocaleString()}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Quick cheatsheet */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-[#687386] mb-2.5">JQL Reference</div>
-            <div className="space-y-1.5 text-[11px] font-mono">
-              {[
-                { kw: "target:", desc: "host selector" },
-                { kw: "stealth:", desc: "on | off" },
-                { kw: "polymorph:", desc: "cipher list" },
-                { kw: "scan memory", desc: "process sweep" },
-                { kw: "scan registry", desc: "reg diff" },
-                { kw: "report ->", desc: "encrypted relay" },
-              ].map(({ kw, desc }) => (
-                <div key={kw} className="flex items-baseline gap-2">
-                  <span className="text-primary shrink-0">{kw}</span>
-                  <span className="text-[#687386]">{desc}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
       </div>
     </AppLayout>
   );

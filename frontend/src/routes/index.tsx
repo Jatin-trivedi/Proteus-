@@ -183,7 +183,7 @@ function Dashboard() {
           ref={titleRef}
           className="text-6xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-white/90 to-[#3B9CFF]/75 drop-shadow-[0_0_60px_rgba(59,156,255,0.45)] font-heading uppercase tracking-[0.22em] select-none leading-none mb-6 md:mb-8"
         >
-          PROTEUS
+          JOCKY
         </h1>
 
         {/* Subtitle / Tagline */}
