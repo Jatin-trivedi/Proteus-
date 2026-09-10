@@ -40,6 +40,6 @@ class Config:
         SQLALCHEMY_ENGINE_OPTIONS = {
             "pool_pre_ping": True,       # Check connection before using
             "pool_recycle": 300,         # Recycle connections every 5 minutes
-            "pool_size": 10,
-            "max_overflow": 20
+            "pool_size": 5,
+            "max_overflow": 10,
         }

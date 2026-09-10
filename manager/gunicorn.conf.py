@@ -1,21 +1,21 @@
-import multiprocessing
 import os
 
-# Server
-bind = "0.0.0.0:5000"
-workers = multiprocessing.cpu_count() * 2 + 1
-threads = 2
+# Bind
+bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
+
+# Keep the default conservative for deployments with limited database connections.
+workers = int(os.getenv("WEB_CONCURRENCY", "3"))
 worker_class = "sync"
+timeout = 120
+graceful_timeout = 30
 max_requests = 1000
 max_requests_jitter = 100
 preload_app = True
-timeout = 120
-graceful_timeout = 30
 
 # Logging
 accesslog = "-"
 errorlog = "-"
-loglevel = "info"
+loglevel = os.getenv("LOG_LEVEL", "info")
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Security

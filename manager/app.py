@@ -1,4 +1,3 @@
-import os
 from flask import Flask, jsonify, request
 from config import Config
 from models import db
@@ -83,9 +82,5 @@ def create_app():
 
     return app
 
-# Create application instance
+# Create application instance for WSGI servers such as Gunicorn.
 app = create_app()
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
