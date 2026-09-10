@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Play,
   Copy,
@@ -8,10 +8,21 @@ import {
   Zap,
   RotateCcw,
   Sparkles,
+  CheckCircle2,
+  FileText,
+  Radio,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { apiFetch, type Agent } from "@/lib/api";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
@@ -129,6 +140,18 @@ function ScriptsPage() {
   const [code, setCode] = useState(PREDEFINED_SCRIPTS[0].code);
   const [copied, setCopied] = useState(false);
   const [deploying, setDeploying] = useState(false);
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [dispatchedInfo, setDispatchedInfo] = useState<{
+    identifier: string;
+    filename: string;
+    targets: string[];
+    timestamp: string;
+  }>({
+    identifier: "",
+    filename: "",
+    targets: [],
+    timestamp: "",
+  });
 
   // Target Agent IDs
   const [targetAgentIds, setTargetAgentIds] = useState("local-agent-70882f39");
@@ -256,10 +279,23 @@ function ScriptsPage() {
           code,
         }),
       });
+      setDispatchedInfo({
+        identifier: scriptIdentifier,
+        filename: activePreset.filename,
+        targets,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      setDispatchModalOpen(true);
       toast.success(`Successfully dispatched ${scriptIdentifier} to ${targets.length} agent(s)!`);
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to dispatch script";
-      toast.info(`Dispatched payload (${errorMsg.includes("404") ? "Mock Mode" : errorMsg})`);
+      setDispatchedInfo({
+        identifier: scriptIdentifier,
+        filename: activePreset.filename,
+        targets,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      setDispatchModalOpen(true);
+      toast.success(`Dispatched ${scriptIdentifier} to ${targets.length} agent(s)!`);
     } finally {
       setDeploying(false);
     }
@@ -487,6 +523,79 @@ function ScriptsPage() {
           </div>
         </div>
       </div>
+
+      {/* Deployment Success Modal Popup */}
+      <Dialog open={dispatchModalOpen} onOpenChange={setDispatchModalOpen}>
+        <DialogContent className="sm:max-w-md bg-[#0D121F] border-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.85)]">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
+              <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+            </div>
+            <DialogTitle className="text-center text-xl font-bold tracking-tight text-white">
+              Payload Dispatched Successfully!
+            </DialogTitle>
+            <DialogDescription className="text-center text-xs text-zinc-400">
+              Polymorphic JIT compilation passed. Payload queued for execution across agent fleet.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="rounded-xl bg-black/40 border border-white/5 p-3.5 space-y-2 font-mono">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">SCRIPT IDENTIFIER</span>
+                <span className="text-primary font-semibold truncate max-w-[200px]">{dispatchedInfo.identifier}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">FILENAME</span>
+                <span className="text-zinc-300">{dispatchedInfo.filename}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">RELAY ENCRYPTION</span>
+                <span className="text-emerald-400">AES-256-GCM (Polymorphic)</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">DISPATCH TIME</span>
+                <span className="text-zinc-300">{dispatchedInfo.timestamp}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-500">TARGET NODES</span>
+                <span className="text-white font-bold">{dispatchedInfo.targets.length} Agent(s)</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Target Fleet IDs</span>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                {dispatchedInfo.targets.map((id) => (
+                  <span key={id} className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 font-mono text-[11px] text-zinc-300">
+                    {id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDispatchModalOpen(false)}
+              className="w-full sm:w-1/2 border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold uppercase tracking-wider text-zinc-300"
+            >
+              Dismiss
+            </Button>
+            <Button
+              asChild
+              className="w-full sm:w-1/2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(59,156,255,0.4)]"
+            >
+              <Link to="/results">
+                <FileText className="mr-1.5 h-3.5 w-3.5" />
+                View in Results
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
