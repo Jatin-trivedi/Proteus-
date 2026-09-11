@@ -36,7 +36,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { login, register, loginDemo, isAuthenticated, user, logout } = useAuth();
+  const { login, register, isAuthenticated, user, logout } = useAuth();
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
@@ -80,14 +80,6 @@ function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDemoLogin = (selectedRole: UserRole) => {
-    loginDemo(selectedRole);
-    toast.success("Demo Clearance Granted", {
-      description: `Authenticated as ${selectedRole.replace("_", " ").toUpperCase()}.`,
-    });
-    navigate({ to: "/" });
   };
 
   return (
@@ -284,60 +276,6 @@ function LoginPage() {
               )}
             </Button>
           </form>
-
-          {/* Divider */}
-          <div className="relative my-6 text-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <span className="relative bg-panel px-3 text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
-              Quick Operator Clearance (Dev Preview)
-            </span>
-          </div>
-
-          {/* Fast Demo Access Pills */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("lead_investigator")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-[11px] h-8 text-zinc-300 hover:text-white justify-start"
-            >
-              <Zap className="h-3 w-3 text-primary mr-1.5 shrink-0" />
-              <span className="truncate">Lead Investigator</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("admin")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-[11px] h-8 text-zinc-300 hover:text-white justify-start"
-            >
-              <Shield className="h-3 w-3 text-cyan-400 mr-1.5 shrink-0" />
-              <span className="truncate">Security Admin</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("analyst")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-[11px] h-8 text-zinc-300 hover:text-white justify-start"
-            >
-              <Terminal className="h-3 w-3 text-emerald-400 mr-1.5 shrink-0" />
-              <span className="truncate">Forensic Analyst</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleDemoLogin("auditor")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-[11px] h-8 text-zinc-300 hover:text-white justify-start"
-            >
-              <CheckCircle2 className="h-3 w-3 text-yellow-400 mr-1.5 shrink-0" />
-              <span className="truncate">SOC 2 Auditor</span>
-            </Button>
-          </div>
         </div>
 
         {/* Security badges below card */}
