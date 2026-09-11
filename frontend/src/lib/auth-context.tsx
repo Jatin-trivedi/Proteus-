@@ -41,7 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedDemo = localStorage.getItem(DEMO_USER_KEY);
 
-    if (storedToken) {
+    if (storedToken === "demo-session-token" && storedDemo) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedDemo) as User);
+      } catch {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(DEMO_USER_KEY);
+      }
+      setIsLoading(false);
+    } else if (storedToken) {
       setToken(storedToken);
       // Attempt to load current user profile from backend
       apiFetch<User>("/auth/me")
@@ -49,87 +58,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData);
         })
         .catch(() => {
-          // If backend isn't ready or token expired, check stored demo user
-          if (storedDemo) {
-            try {
-              setUser(JSON.parse(storedDemo));
-            } catch {
-              localStorage.removeItem(DEMO_USER_KEY);
-            }
-          }
+          // Do not keep an invalid backend session or silently authenticate as a cached user.
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(DEMO_USER_KEY);
+          setToken(null);
+          setUser(null);
         })
         .finally(() => {
           setIsLoading(false);
         });
-    } else if (storedDemo) {
-      try {
-        const demoUser = JSON.parse(storedDemo);
-        setUser(demoUser);
-        setToken("demo-session-token");
-      } catch {
-        localStorage.removeItem(DEMO_USER_KEY);
-      }
-      setIsLoading(false);
     } else {
+      localStorage.removeItem(DEMO_USER_KEY);
       setIsLoading(false);
     }
   }, []);
 
   const login = async (username: string, password: string): Promise<User> => {
-    try {
-      const data = await apiFetch<AuthResponse>("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ username, password }),
-      });
-      localStorage.setItem(TOKEN_KEY, data.access_token);
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(data.user));
-      setToken(data.access_token);
-      setUser(data.user);
-      return data.user;
-    } catch (err: any) {
-      // If backend is offline during development, fallback gracefully with demo session
-      if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError") || err.message?.includes("404")) {
-        const fallbackUser: User = {
-          user_id: `op-${Math.random().toString(36).substring(2, 8)}`,
-          username,
-          role: "analyst",
-        };
-        localStorage.setItem(TOKEN_KEY, "dev-fallback-token");
-        localStorage.setItem(DEMO_USER_KEY, JSON.stringify(fallbackUser));
-        setToken("dev-fallback-token");
-        setUser(fallbackUser);
-        return fallbackUser;
-      }
-      throw err;
-    }
+    const data = await apiFetch<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    localStorage.removeItem(DEMO_USER_KEY);
+    setToken(data.access_token);
+    setUser(data.user);
+    return data.user;
   };
 
   const register = async (username: string, password: string, role = "analyst"): Promise<User> => {
-    try {
-      const data = await apiFetch<AuthResponse>("/auth/register", {
-        method: "POST",
-        body: JSON.stringify({ username, password, role }),
-      });
-      localStorage.setItem(TOKEN_KEY, data.access_token);
-      localStorage.setItem(DEMO_USER_KEY, JSON.stringify(data.user));
-      setToken(data.access_token);
-      setUser(data.user);
-      return data.user;
-    } catch (err: any) {
-      if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError") || err.message?.includes("404")) {
-        const fallbackUser: User = {
-          user_id: `op-${Math.random().toString(36).substring(2, 8)}`,
-          username,
-          role,
-        };
-        localStorage.setItem(TOKEN_KEY, "dev-fallback-token");
-        localStorage.setItem(DEMO_USER_KEY, JSON.stringify(fallbackUser));
-        setToken("dev-fallback-token");
-        setUser(fallbackUser);
-        return fallbackUser;
-      }
-      throw err;
-    }
+    const data = await apiFetch<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ username, password, role }),
+    });
+    localStorage.setItem(TOKEN_KEY, data.access_token);
+    localStorage.removeItem(DEMO_USER_KEY);
+    setToken(data.access_token);
+    setUser(data.user);
+    return data.user;
   };
 
   const loginDemo = (role: UserRole = "lead_investigator") => {
