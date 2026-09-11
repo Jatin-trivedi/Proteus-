@@ -58,60 +58,70 @@
 /* #06080D base → #3B9CFF primary → #7C5CFF purple → #FF7A3D orange   */
 /* ================================================================== */
 :root {
-  --radius: 0.375rem; /* 6px — enterprise angular, not startup-rounded */
+  --radius: 0.375rem;
+  /* 6px — enterprise angular, not startup-rounded */
 
   /* ── Backgrounds ── */
-  --background: #06080D;          /* Near-black — deepest base */
-  --foreground: #F4F7FB;          /* Off-white primary text */
+  --background: #06080D;
+  /* Near-black — deepest base */
+  --foreground: #F4F7FB;
+  /* Off-white primary text */
 
   /* ── Surfaces ── */
-  --panel:            #0D111A;    /* Dark navy surface */
+  --panel: #0D111A;
+  /* Dark navy surface */
   --panel-foreground: #F4F7FB;
-  --card:             #121925;    /* Deep blue-gray cards */
-  --card-foreground:  #F4F7FB;
-  --popover:          #0D111A;
+  --card: #121925;
+  /* Deep blue-gray cards */
+  --card-foreground: #F4F7FB;
+  --popover: #0D111A;
   --popover-foreground: #F4F7FB;
 
   /* ── Primary: Cyber Blue #3B9CFF ── */
-  --primary:            #3B9CFF;
+  --primary: #3B9CFF;
   --primary-foreground: #06080D;
 
   /* ── Secondary / Muted ── */
-  --secondary:            #1A2335;
+  --secondary: #1A2335;
   --secondary-foreground: #A7B0C0;
-  --muted:            #141E2D;
-  --muted-foreground: #687386;    /* Subdued labels */
+  --muted: #141E2D;
+  --muted-foreground: #687386;
+  /* Subdued labels */
 
   /* ── Accent: Intelligence Purple #7C5CFF ── */
-  --accent:            #7C5CFF;
+  --accent: #7C5CFF;
   --accent-foreground: #F4F7FB;
 
   /* ── Cyber alias (same as primary, used for glow utilities) ── */
-  --cyber:            #3B9CFF;
+  --cyber: #3B9CFF;
   --cyber-foreground: #06080D;
 
   /* ── Semantic ── */
-  --success:            #22C55E;   /* Green — fleet online */
+  --success: #22C55E;
+  /* Green — fleet online */
   --success-foreground: #06080D;
-  --warning:            #FF7A3D;   /* Cyber Orange — forensics / alerts */
+  --warning: #FF7A3D;
+  /* Cyber Orange — forensics / alerts */
   --warning-foreground: #06080D;
-  --destructive:        #FF4D4D;   /* Red — critical alerts */
+  --destructive: #FF4D4D;
+  /* Red — critical alerts */
   --destructive-foreground: #F4F7FB;
 
   /* ── Borders & Inputs ── */
-  --border: rgba(36, 48, 68, 0.9); /* #243044 — dark gray-blue lines */
-  --input:  #141E2D;
-  --ring:   #3B9CFF;
+  --border: rgba(36, 48, 68, 0.9);
+  /* #243044 — dark gray-blue lines */
+  --input: #141E2D;
+  --ring: #3B9CFF;
 
   /* ── Sidebar ── */
-  --sidebar:                  #08090F;
-  --sidebar-foreground:       #A7B0C0;
-  --sidebar-primary:          #3B9CFF;
+  --sidebar: #08090F;
+  --sidebar-foreground: #A7B0C0;
+  --sidebar-primary: #3B9CFF;
   --sidebar-primary-foreground: #06080D;
-  --sidebar-accent:           #141E2D;
+  --sidebar-accent: #141E2D;
   --sidebar-accent-foreground: #F4F7FB;
-  --sidebar-border:           #1A2335;
-  --sidebar-ring:             #3B9CFF;
+  --sidebar-border: #1A2335;
+  --sidebar-ring: #3B9CFF;
 }
 
 /* ================================================================== */
@@ -122,7 +132,8 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -131,7 +142,12 @@
   }
 
   /* Apply Manrope to all headings */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
     font-weight: 700;
     letter-spacing: -0.02em;
@@ -164,7 +180,11 @@
     z-index: 0;
   }
 
-  main, header, footer, section, div {
+  main,
+  header,
+  footer,
+  section,
+  div {
     position: relative;
     z-index: 1;
   }
@@ -212,21 +232,45 @@
 /* Animations                                                           */
 /* ================================================================== */
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(1.45); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(1.45);
+  }
 }
+
 @utility pulse-dot {
   animation: pulse-dot 1.6s ease-in-out infinite;
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @utility fade-up {
   animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* No-scrollbar utility */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

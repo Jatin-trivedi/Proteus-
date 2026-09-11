@@ -21,6 +21,7 @@ import {
 import { useState, useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
+import { PlanetBackground } from "@/components/planet-background";
 import { ProteusLogo, ProteusIcon } from "@/components/proteus-logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -236,33 +237,20 @@ function NavLinks() {
 
       <span className="h-3 w-px bg-white/20 select-none" />
 
-      {/* 2. OPERATIONS */}
+      {/* 2. SCRIPTS */}
       <Link
-        to="/operations"
+        to="/scripts"
         className={cn(
           "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/operations") && "text-primary font-black"
+          pathname.startsWith("/scripts") && "text-primary font-black"
         )}
       >
-        OPERATIONS
+        SCRIPTS
       </Link>
 
       <span className="h-3 w-px bg-white/20 select-none" />
 
-      {/* 3. REPORTS */}
-      <Link
-        to="/reports"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/reports") && "text-primary font-black"
-        )}
-      >
-        REPORTS
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 4. AGENTS */}
+      {/* 3. AGENTS */}
       <Link
         to="/agents"
         className={cn(
@@ -271,6 +259,19 @@ function NavLinks() {
         )}
       >
         AGENTS
+      </Link>
+
+      <span className="h-3 w-px bg-white/20 select-none" />
+
+      {/* 4. OPERATIONS */}
+      <Link
+        to="/operations"
+        className={cn(
+          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
+          pathname.startsWith("/operations") && "text-primary font-black"
+        )}
+      >
+        OPERATIONS
       </Link>
 
       <span className="h-3 w-px bg-white/20 select-none" />
@@ -288,15 +289,15 @@ function NavLinks() {
 
       <span className="h-3 w-px bg-white/20 select-none" />
 
-      {/* 6. SCRIPTS */}
+      {/* 6. REPORTS */}
       <Link
-        to="/scripts"
+        to="/reports"
         className={cn(
           "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/scripts") && "text-primary font-black"
+          pathname.startsWith("/reports") && "text-primary font-black"
         )}
       >
-        SCRIPTS
+        REPORTS
       </Link>
     </nav>
   );
@@ -306,11 +307,11 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const links = [
     { to: "/", label: "Home", icon: LayoutDashboard },
-    { to: "/operations", label: "Operations", icon: Radio },
-    { to: "/reports", label: "Reports", icon: FileText },
-    { to: "/agents", label: "Agents", icon: Bot },
-    { to: "/results", label: "Results", icon: BarChart3 },
     { to: "/scripts", label: "Scripts", icon: FileCode2 },
+    { to: "/agents", label: "Agents", icon: Bot },
+    { to: "/operations", label: "Operations", icon: Radio },
+    { to: "/results", label: "Results", icon: BarChart3 },
+    { to: "/reports", label: "Reports", icon: FileText },
   ] as const;
 
   return (
@@ -366,7 +367,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
 const WORKFLOW = [
   { to: "/", label: "Home" },
-  { to: "/scripts", label: "Script" },
+  { to: "/scripts", label: "Scripts" },
   { to: "/agents", label: "Agents" },
   { to: "/operations", label: "Operations" },
   { to: "/results", label: "Results" },
@@ -416,13 +417,15 @@ export function AppLayout({
   children: ReactNode;
   fullscreenBackground?: ReactNode;
 }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHome = pathname === "/";
   const [stealth, setStealth] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 25);
     };
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -430,18 +433,26 @@ export function AppLayout({
   }, []);
 
   return (
-    <div className={cn("relative z-10 flex min-h-screen flex-col selection:bg-primary/20 selection:text-primary", fullscreenBackground ? "bg-transparent" : "bg-background")}>
+    <div className={cn("relative z-10 flex min-h-screen flex-col selection:bg-primary/20 selection:text-primary", (fullscreenBackground || !isHome) ? "bg-transparent" : "bg-background")}>
       {fullscreenBackground}
+      {!isHome && !fullscreenBackground && <PlanetBackground />}
       {/* Top Navbar */}
       <header
         className={cn(
-          "sticky top-0 z-40 w-full transition-all duration-300",
+          "sticky top-0 z-40 w-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
           scrolled
-            ? "border-b border-white/10 bg-black/95 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.85)]"
-            : "border-b border-transparent bg-transparent"
+            ? "border-b border-white/10 bg-black shadow-[0_12px_35px_rgba(0,0,0,0.95)] backdrop-blur-md"
+            : "border-b border-white/5 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(0,0,0,0.25)_45%,rgba(0,0,0,0.7)_100%)]"
         )}
       >
-        <div className="w-full flex h-20 items-center justify-between px-6 sm:px-10 lg:px-14 xl:px-16">
+        <div
+          className={cn(
+            "w-full flex items-center justify-between px-6 sm:px-10 lg:px-14 xl:px-16 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            scrolled
+              ? "h-16 lg:h-[68px]"
+              : "h-20 sm:h-24 lg:h-[104px]"
+          )}
+        >
           {/* Left Brand */}
           <div className="flex items-center gap-6">
             <Brand />
@@ -488,10 +499,10 @@ export function AppLayout({
       </header>
 
       {/* Main Content Area (Full width clean container) */}
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full bg-transparent">
         {/* Page header banner (only for subpages that pass title) */}
         {title && (
-          <div className="border-b border-border/60 bg-background/40 backdrop-blur-sm relative overflow-hidden">
+          <div className="border-b border-white/10 bg-transparent relative overflow-hidden">
             {/* Subtle glow accent */}
             <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[150px] bg-primary/10 blur-[100px] pointer-events-none rounded-full" />
 
@@ -516,13 +527,13 @@ export function AppLayout({
         )}
 
         {/* Page body */}
-        <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 md:py-14 space-y-10 md:space-y-14">
+        <main className={cn("mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 md:space-y-14", isHome ? "py-4 md:py-8" : "py-10 md:py-14")}>
           {children}
         </main>
       </div>
 
       {/* Professional Enterprise Footer */}
-      <footer className={cn("mt-auto border-t border-white/10 relative overflow-hidden text-xs text-muted-foreground", fullscreenBackground ? "bg-[#06080D]/85 backdrop-blur-md" : "bg-background")}>
+      <footer className={cn("mt-auto border-t border-white/10 relative overflow-hidden text-xs text-muted-foreground", (fullscreenBackground || !isHome) ? "bg-[#06080D]/85 backdrop-blur-md" : "bg-background")}>
         {/* Subtle background glow accents */}
         <div className="absolute top-0 left-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute top-0 right-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
@@ -580,11 +591,6 @@ export function AppLayout({
                   </Link>
                 </li>
                 <li>
-                  <Link to="/operations" className="text-zinc-400 hover:text-white transition-colors">
-                    Operations Hub
-                  </Link>
-                </li>
-                <li>
                   <Link to="/scripts" className="text-zinc-400 hover:text-white transition-colors">
                     Script Studio & JIT
                   </Link>
@@ -592,6 +598,11 @@ export function AppLayout({
                 <li>
                   <Link to="/agents" className="text-zinc-400 hover:text-white transition-colors">
                     Agent Fleet Grid
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/operations" className="text-zinc-400 hover:text-white transition-colors">
+                    Operations Hub
                   </Link>
                 </li>
                 <li>
