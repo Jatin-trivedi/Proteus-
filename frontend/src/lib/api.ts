@@ -37,7 +37,19 @@ export type Result = {
   data_encrypted: string;
 };
 
-const API_BASE_URL = ((import.meta.env as Record<string, string | undefined>)["VITE_API_BASE_URL"] || "/api/v1").replace(/\/$/, "");
+const API_BASE_URL = (
+  (import.meta.env as Record<string, string | undefined>)["VITE_API_BASE_URL"] || "/api/v1"
+).replace(/\/$/, "");
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem("access_token");
@@ -50,22 +62,12 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      ...options,
-      headers,
-      signal: options?.signal ?? controller.signal,
-    });
-    const body = await response.json().catch(() => null);
-    if (!response.ok) {
-      const message = body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
-      throw new Error(message);
-    }
-    return body as T;
-  } finally {
-    clearTimeout(timeoutId);
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message =
+      body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
+    throw new ApiError(message, response.status);
   }
+  return body as T;
 }

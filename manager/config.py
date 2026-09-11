@@ -24,12 +24,12 @@ class Config:
     JWT_ALGORITHM = "HS256"
     
     CORS_ALLOWED_ORIGINS = tuple(
-        origin.strip()
+        origin.strip().rstrip("/")
         for origin in os.getenv(
             "CORS_ALLOWED_ORIGINS",
-            "https://jocky.netlify.app,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080",
+            "https://jocky-snowy.vercel.app,https://jocky.netlify.app,http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080",
         ).split(",")
-        if origin.strip()
+        if origin.strip().rstrip("/")
     )
 
     if db_url.startswith("sqlite"):

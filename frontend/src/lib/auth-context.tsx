@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { apiFetch } from "@/lib/api";
+import { ApiError, apiFetch } from "@/lib/api";
 
 export type UserRole = "admin" | "lead_investigator" | "analyst" | "auditor";
 
@@ -29,6 +29,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEMO_USER_KEY = "proteus_demo_user";
+const SESSION_USER_KEY = "proteus_session_user";
 const TOKEN_KEY = "access_token";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check localStorage for existing session
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedDemo = localStorage.getItem(DEMO_USER_KEY);
+    const storedSessionUser = localStorage.getItem(SESSION_USER_KEY);
 
     if (storedToken === "demo-session-token" && storedDemo) {
       try {
@@ -52,17 +54,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     } else if (storedToken) {
       setToken(storedToken);
+      if (storedSessionUser) {
+        try {
+          setUser(JSON.parse(storedSessionUser) as User);
+        } catch {
+          localStorage.removeItem(SESSION_USER_KEY);
+        }
+      }
       // Attempt to load current user profile from backend
       apiFetch<User>("/auth/me")
         .then((userData) => {
+          localStorage.setItem(SESSION_USER_KEY, JSON.stringify(userData));
           setUser(userData);
         })
-        .catch(() => {
-          // Do not keep an invalid backend session or silently authenticate as a cached user.
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(DEMO_USER_KEY);
-          setToken(null);
-          setUser(null);
+        .catch((error: unknown) => {
+          // Only an explicit auth rejection invalidates the saved session.
+          if (error instanceof ApiError && [401, 404].includes(error.status)) {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(SESSION_USER_KEY);
+            localStorage.removeItem(DEMO_USER_KEY);
+            setToken(null);
+            setUser(null);
+          }
         })
         .finally(() => {
           setIsLoading(false);
@@ -79,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password }),
     });
     localStorage.setItem(TOKEN_KEY, data.access_token);
+    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(data.user));
     localStorage.removeItem(DEMO_USER_KEY);
     setToken(data.access_token);
     setUser(data.user);
@@ -91,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password, role }),
     });
     localStorage.setItem(TOKEN_KEY, data.access_token);
+    localStorage.setItem(SESSION_USER_KEY, JSON.stringify(data.user));
     localStorage.removeItem(DEMO_USER_KEY);
     setToken(data.access_token);
     setUser(data.user);
@@ -124,12 +139,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const selectedUser = demoProfiles[role] || demoProfiles.lead_investigator;
     localStorage.setItem(TOKEN_KEY, "demo-session-token");
     localStorage.setItem(DEMO_USER_KEY, JSON.stringify(selectedUser));
+    localStorage.removeItem(SESSION_USER_KEY);
     setToken("demo-session-token");
     setUser(selectedUser);
   };
 
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(SESSION_USER_KEY);
     localStorage.removeItem(DEMO_USER_KEY);
     setUser(null);
     setToken(null);
