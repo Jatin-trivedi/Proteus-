@@ -262,9 +262,9 @@ function ReportsPage() {
         <Button
           variant="outline"
           onClick={loadData}
-          className="border-white/15 bg-white/5 hover:bg-white/10 text-xs text-zinc-300 gap-1.5"
+          className="border-border"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Sync Reports
         </Button>
       }

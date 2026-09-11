@@ -164,9 +164,9 @@ function ResultsPage() {
             variant="outline"
             onClick={loadResults}
             disabled={loading}
-            className="border-white/15 bg-white/5 hover:bg-white/10 text-xs text-zinc-300"
+            className="border-border"
           >
-            <RefreshCw className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin text-primary" : ""}`} />
             Refresh
           </Button>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 glow-cyber text-xs">
