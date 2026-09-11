@@ -222,10 +222,12 @@
 
 /* Glass panel card */
 @utility panel {
-  background-color: color-mix(in srgb, var(--panel) 90%, transparent);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border);
+  background-color: rgba(13, 17, 26, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* ================================================================== */
@@ -273,4 +275,57 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ================================================================== */
+/* Toast Notifications — Pure White Light Theme High Contrast        */
+/* ================================================================== */
+[data-sonner-toaster] [data-sonner-toast] {
+  background: #ffffff !important;
+  color: #09090b !important;
+  border: 1px solid #e4e4e7 !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] [data-title] {
+  color: #09090b !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] [data-description] {
+  color: #52525b !important;
+  font-size: 12px !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  border-left: 5px solid #10b981 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
+  border-left: 5px solid #3b82f6 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  border-left: 5px solid #ef4444 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
+  border-left: 5px solid #f59e0b !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] [data-icon] {
+  margin-right: 6px !important;
+}
+
+[data-sonner-toaster] [data-close-button] {
+  background: #ffffff !important;
+  color: #71717a !important;
+  border: 1px solid #e4e4e7 !important;
+}
+
+[data-sonner-toaster] [data-close-button]:hover {
+  background: #f4f4f5 !important;
+  color: #09090b !important;
 }
