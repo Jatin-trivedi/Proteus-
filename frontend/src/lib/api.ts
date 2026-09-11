@@ -50,11 +50,22 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message = body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
-    throw new Error(message);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options?.signal ?? controller.signal,
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
+      throw new Error(message);
+    }
+    return body as T;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return body as T;
 }

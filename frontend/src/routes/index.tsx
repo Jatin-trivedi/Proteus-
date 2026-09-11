@@ -151,6 +151,8 @@ function Dashboard() {
             loop
             muted
             playsInline
+            preload="auto"
+            poster="/hero-poster.jpg"
             className="w-full h-full object-cover scale-105 opacity-40 brightness-95 contrast-125"
           >
             <source src="/hero-bg.mp4" type="video/mp4" />
