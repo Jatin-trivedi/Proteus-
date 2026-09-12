@@ -59,8 +59,8 @@ function OperatorAuthButton() {
           variant="ghost"
           onClick={() => {
             logout();
-            toast.info("Operator Session Terminated", {
-              description: "You have been signed out of the Proteus console.",
+            toast.info("Signed Out Successfully", {
+              description: "You have been safely signed out of the Proteus console.",
             });
           }}
           className="h-8 px-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full"

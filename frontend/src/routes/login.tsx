@@ -55,8 +55,8 @@ function LoginPage() {
     try {
       if (mode === "login") {
         await login(username, password);
-        toast.success("Security Clearance Verified", {
-          description: `Welcome back, Operator ${username}. Session established.`,
+        toast.success("Signed In Successfully", {
+          description: `Welcome back, Operator ${username}. Your session has been established.`,
         });
         navigate({ to: "/" });
       } else {
@@ -67,15 +67,15 @@ function LoginPage() {
           throw new Error("Security policy requirement: Password must be at least 8 characters.");
         }
         await register(username, password, role);
-        toast.success("Operator Credentials Provisioned", {
-          description: `Clearance granted for ${username} [${role.toUpperCase()}].`,
+        toast.success("Account Created Successfully", {
+          description: `Clearance granted for ${username} [${role.toUpperCase()}]. Welcome to Proteus.`,
         });
         navigate({ to: "/" });
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Authentication failed. Verify credentials.");
-      toast.error("Access Denied", {
-        description: err.message || "Failed to authenticate operator credentials.",
+      toast.error("Authentication Failed", {
+        description: err.message || "Invalid operator credentials. Please check your username and passphrase.",
       });
     } finally {
       setIsLoading(false);
@@ -154,11 +154,16 @@ function LoginPage() {
             </button>
           </div>
 
-          {/* Error Message Box */}
+          {/* Error Notification Box (Light Mode, Pure White, High Contrast) */}
           {errorMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>{errorMessage}</span>
+            <div className="mb-4 p-3.5 rounded-xl bg-white text-zinc-900 border border-red-200 border-l-4 border-l-red-500 text-xs flex items-start gap-2.5 shadow-[0_10px_25px_rgba(0,0,0,0.45)]">
+              <div className="p-1 rounded-md bg-red-100 text-red-600 shrink-0 mt-0.5">
+                <AlertCircle className="h-4 w-4" />
+              </div>
+              <div className="flex-1">
+                <span className="font-bold text-zinc-950 block text-[13px]">Authentication Notice</span>
+                <span className="text-zinc-600 leading-relaxed text-[12px]">{errorMessage}</span>
+              </div>
             </div>
           )}
 

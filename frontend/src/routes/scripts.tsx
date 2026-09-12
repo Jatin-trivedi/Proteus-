@@ -200,7 +200,9 @@ function ScriptsPage() {
 
   const handleSelectAllAgents = () => {
     setTargetAgentIds(availableAgents.join(", "));
-    toast.info(`Selected all ${availableAgents.length} agents`);
+    toast.info("All Agents Selected", {
+      description: `Targeting all ${availableAgents.length} active forensic agent nodes.`,
+    });
   };
 
   // Handle Tab and Enter indentation in textarea
@@ -254,7 +256,9 @@ function ScriptsPage() {
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
-    toast.success("Script copied to clipboard!");
+    toast.success("Script Copied to Clipboard", {
+      description: "Polymorphic script source code copied.",
+    });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -265,7 +269,9 @@ function ScriptsPage() {
       .filter(Boolean);
 
     if (targets.length === 0) {
-      toast.error("Please specify at least one target agent ID.");
+      toast.error("Target Node Required", {
+        description: "Please specify at least one target agent ID before dispatching.",
+      });
       return;
     }
 
@@ -286,7 +292,9 @@ function ScriptsPage() {
         timestamp: new Date().toLocaleTimeString(),
       });
       setDispatchModalOpen(true);
-      toast.success(`Successfully dispatched ${scriptIdentifier} to ${targets.length} agent(s)!`);
+      toast.success("Script Dispatched Successfully", {
+        description: `Dispatched ${scriptIdentifier} to ${targets.length} agent(s).`,
+      });
     } catch (err: unknown) {
       setDispatchedInfo({
         identifier: scriptIdentifier,
@@ -295,7 +303,9 @@ function ScriptsPage() {
         timestamp: new Date().toLocaleTimeString(),
       });
       setDispatchModalOpen(true);
-      toast.success(`Dispatched ${scriptIdentifier} to ${targets.length} agent(s)!`);
+      toast.success("Script Dispatched Successfully", {
+        description: `Dispatched ${scriptIdentifier} to ${targets.length} agent(s).`,
+      });
     } finally {
       setDeploying(false);
     }

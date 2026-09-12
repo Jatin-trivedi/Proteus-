@@ -131,7 +131,9 @@ function ResultsPage() {
     if (!fullResultJson) return;
     navigator.clipboard.writeText(fullResultJson);
     setCopied(true);
-    toast.success("JSON copied to clipboard!");
+    toast.success("JSON Copied to Clipboard", {
+      description: "Forensic telemetry payload copied successfully.",
+    });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -146,7 +148,9 @@ function ResultsPage() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("JSON file downloaded!");
+    toast.success("JSON Export Downloaded", {
+      description: `Saved result_${selectedResult.result_id.slice(0, 8)}.json to your device.`,
+    });
   };
 
   const severityMix = useMemo(

@@ -160,10 +160,14 @@ function ReportsPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
-      toast.success(`Downloaded ${defaultFilename}`);
+      toast.success("Report Export Downloaded", {
+        description: `Saved ${defaultFilename} to your downloads.`,
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Export failed";
-      toast.error(msg);
+      toast.error("Export Failed", {
+        description: msg,
+      });
     }
   };
 
@@ -186,10 +190,14 @@ function ReportsPage() {
 
       setReports((prev) => [newReport, ...prev]);
       setActiveReport(newReport);
-      toast.success("Report generated and saved to history!");
+      toast.success("Report Generated Successfully", {
+        description: "Compliance dossier saved to report history.",
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to generate report";
-      toast.error(msg);
+      toast.error("Report Generation Failed", {
+        description: msg,
+      });
     } finally {
       setGenerating(false);
     }
@@ -202,7 +210,9 @@ function ReportsPage() {
     try {
       // If no report exists yet, generate one first
       if (!target) {
-        toast.info("Generating report prior to PDF export...");
+        toast.info("Generating Dossier", {
+          description: "Compiling forensic report prior to PDF export...",
+        });
         target = await apiFetch<GeneratedReport>("/report", {
           method: "POST",
           body: JSON.stringify({
@@ -219,7 +229,9 @@ function ReportsPage() {
       await downloadFile(`/report/${target.report_id}/export?format=pdf`, filename);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "PDF export failed";
-      toast.error(msg);
+      toast.error("PDF Export Failed", {
+        description: msg,
+      });
     } finally {
       setExportingPdf(false);
     }
@@ -231,7 +243,9 @@ function ReportsPage() {
     setExportingCsv(true);
     try {
       if (!target) {
-        toast.info("Generating report prior to CSV export...");
+        toast.info("Generating Dossier", {
+          description: "Compiling forensic report prior to CSV export...",
+        });
         target = await apiFetch<GeneratedReport>("/report", {
           method: "POST",
           body: JSON.stringify({
@@ -248,7 +262,9 @@ function ReportsPage() {
       await downloadFile(`/report/${target.report_id}/export?format=csv`, filename);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "CSV export failed";
-      toast.error(msg);
+      toast.error("CSV Export Failed", {
+        description: msg,
+      });
     } finally {
       setExportingCsv(false);
     }

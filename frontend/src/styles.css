@@ -280,11 +280,16 @@
 /* ================================================================== */
 /* Toast Notifications — Pure White Light Theme High Contrast        */
 /* ================================================================== */
+[data-sonner-toaster] {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
 [data-sonner-toaster] [data-sonner-toast] {
   background: #ffffff !important;
   color: #09090b !important;
   border: 1px solid #e4e4e7 !important;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
   border-radius: 12px !important;
 }
 

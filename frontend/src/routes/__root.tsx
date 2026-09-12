@@ -127,8 +127,8 @@ function RootComponent() {
       <AuthProvider>
         <SmoothScroll>
           <Outlet />
-          <Toaster />
         </SmoothScroll>
+        <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
