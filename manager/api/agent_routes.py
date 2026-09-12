@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from models import db, Agent, Deploy, Script
+from models import db, Agent, Deploy, Script, Finding, Result
 
 agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 
@@ -124,12 +124,18 @@ def list_agents():
 
 @agent_bp.route('/<agent_id>', methods=['DELETE'])
 def delete_agent(agent_id):
-    """Delete an agent and related deployments."""
+    """Delete an agent and related deployments, results, and findings."""
     agent = Agent.query.get(agent_id)
     if not agent:
         return jsonify({'error': 'Agent not found'}), 404
 
-    Deploy.query.filter_by(agent_id=agent_id).delete()
-    db.session.delete(agent)
-    db.session.commit()
-    return jsonify({'status': 'deleted', 'agent_id': agent_id}), 200
+    try:
+        Finding.query.filter_by(agent_id=agent_id).delete()
+        Deploy.query.filter_by(agent_id=agent_id).delete()
+        Result.query.filter_by(agent_id=agent_id).delete()
+        db.session.delete(agent)
+        db.session.commit()
+        return jsonify({'status': 'deleted', 'agent_id': agent_id}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to delete agent: {str(e)}'}), 500
