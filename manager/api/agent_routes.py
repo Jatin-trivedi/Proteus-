@@ -124,15 +124,28 @@ def list_agents():
 
 @agent_bp.route('/<agent_id>', methods=['DELETE'])
 def delete_agent(agent_id):
-    """Delete an agent and related deployments, results, and findings."""
+    """Delete an agent and all related deployments, results, and findings."""
     agent = Agent.query.get(agent_id)
     if not agent:
         return jsonify({'error': 'Agent not found'}), 404
 
     try:
-        Finding.query.filter_by(agent_id=agent_id).delete()
-        Deploy.query.filter_by(agent_id=agent_id).delete()
-        Result.query.filter_by(agent_id=agent_id).delete()
+        results = Result.query.filter_by(agent_id=agent_id).all()
+        result_ids = [result.result_id for result in results]
+
+        # Remove dependents that may reference the agent's results.
+        if result_ids:
+            Finding.query.filter(
+                (Finding.agent_id == agent_id) | (Finding.result_id.in_(result_ids))
+            ).delete(synchronize_session=False)
+            Deploy.query.filter(
+                (Deploy.agent_id == agent_id) | (Deploy.result_id.in_(result_ids))
+            ).delete(synchronize_session=False)
+        else:
+            Finding.query.filter_by(agent_id=agent_id).delete(synchronize_session=False)
+            Deploy.query.filter_by(agent_id=agent_id).delete(synchronize_session=False)
+
+        Result.query.filter_by(agent_id=agent_id).delete(synchronize_session=False)
         db.session.delete(agent)
         db.session.commit()
         return jsonify({'status': 'deleted', 'agent_id': agent_id}), 200
