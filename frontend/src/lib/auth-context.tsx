@@ -31,6 +31,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEMO_USER_KEY = "proteus_demo_user";
 const SESSION_USER_KEY = "proteus_session_user";
 const TOKEN_KEY = "access_token";
+const DEMO_SESSION_STARTED_KEY = "proteus_demo_session_started";
+const DEMO_SESSION_DURATION_MS = 60 * 60 * 1000;
+
+function clearStoredSession() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(SESSION_USER_KEY);
+  localStorage.removeItem(DEMO_USER_KEY);
+  localStorage.removeItem(DEMO_SESSION_STARTED_KEY);
+}
+
+function isJwtExpired(token: string) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1])) as { exp?: number };
+    return typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -38,52 +56,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage for existing session
+    let expiryTimer: number | undefined;
+    const handleAuthExpired = () => {
+      clearStoredSession();
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("proteus:auth-expired", handleAuthExpired);
+
     const storedToken = localStorage.getItem(TOKEN_KEY);
     const storedDemo = localStorage.getItem(DEMO_USER_KEY);
-    const storedSessionUser = localStorage.getItem(SESSION_USER_KEY);
+    const demoStartedAt = Number(localStorage.getItem(DEMO_SESSION_STARTED_KEY));
 
-    if (storedToken === "demo-session-token" && storedDemo) {
+    if (
+      storedToken === "demo-session-token" &&
+      storedDemo &&
+      Number.isFinite(demoStartedAt) &&
+      Date.now() - demoStartedAt < DEMO_SESSION_DURATION_MS
+    ) {
       try {
         setToken(storedToken);
         setUser(JSON.parse(storedDemo) as User);
+        expiryTimer = window.setTimeout(handleAuthExpired, DEMO_SESSION_DURATION_MS - (Date.now() - demoStartedAt));
       } catch {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(DEMO_USER_KEY);
+        clearStoredSession();
       }
       setIsLoading(false);
     } else if (storedToken) {
-      setToken(storedToken);
-      if (storedSessionUser) {
+      if (isJwtExpired(storedToken)) {
+        handleAuthExpired();
+        setIsLoading(false);
+      } else {
+        setToken(storedToken);
         try {
-          setUser(JSON.parse(storedSessionUser) as User);
+          const payload = JSON.parse(atob(storedToken.split(".")[1])) as { exp: number };
+          expiryTimer = window.setTimeout(handleAuthExpired, Math.max(0, payload.exp * 1000 - Date.now()));
         } catch {
-          localStorage.removeItem(SESSION_USER_KEY);
-        }
-      }
-      // Attempt to load current user profile from backend
-      apiFetch<User>("/auth/me")
-        .then((userData) => {
-          localStorage.setItem(SESSION_USER_KEY, JSON.stringify(userData));
-          setUser(userData);
-        })
-        .catch((error: unknown) => {
-          // Only an explicit auth rejection invalidates the saved session.
-          if (error instanceof ApiError && [401, 404].includes(error.status)) {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(SESSION_USER_KEY);
-            localStorage.removeItem(DEMO_USER_KEY);
-            setToken(null);
-            setUser(null);
-          }
-        })
-        .finally(() => {
+          handleAuthExpired();
           setIsLoading(false);
-        });
+          return () => window.removeEventListener("proteus:auth-expired", handleAuthExpired);
+        }
+        apiFetch<User>("/auth/me")
+          .then((userData) => {
+            localStorage.setItem(SESSION_USER_KEY, JSON.stringify(userData));
+            setUser(userData);
+          })
+          .catch((error: unknown) => {
+            if (error instanceof ApiError && [401, 404].includes(error.status)) {
+              handleAuthExpired();
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
     } else {
-      localStorage.removeItem(DEMO_USER_KEY);
+      clearStoredSession();
       setIsLoading(false);
     }
+
+    return () => {
+      window.removeEventListener("proteus:auth-expired", handleAuthExpired);
+      if (expiryTimer !== undefined) {
+        window.clearTimeout(expiryTimer);
+      }
+    };
   }, []);
 
   const login = async (username: string, password: string): Promise<User> => {
@@ -94,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, data.access_token);
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(data.user));
     localStorage.removeItem(DEMO_USER_KEY);
+    localStorage.removeItem(DEMO_SESSION_STARTED_KEY);
     setToken(data.access_token);
     setUser(data.user);
     return data.user;
@@ -107,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(TOKEN_KEY, data.access_token);
     localStorage.setItem(SESSION_USER_KEY, JSON.stringify(data.user));
     localStorage.removeItem(DEMO_USER_KEY);
+    localStorage.removeItem(DEMO_SESSION_STARTED_KEY);
     setToken(data.access_token);
     setUser(data.user);
     return data.user;
@@ -139,15 +178,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const selectedUser = demoProfiles[role] || demoProfiles.lead_investigator;
     localStorage.setItem(TOKEN_KEY, "demo-session-token");
     localStorage.setItem(DEMO_USER_KEY, JSON.stringify(selectedUser));
+    localStorage.setItem(DEMO_SESSION_STARTED_KEY, String(Date.now()));
     localStorage.removeItem(SESSION_USER_KEY);
     setToken("demo-session-token");
     setUser(selectedUser);
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(SESSION_USER_KEY);
-    localStorage.removeItem(DEMO_USER_KEY);
+    clearStoredSession();
     setUser(null);
     setToken(null);
   };

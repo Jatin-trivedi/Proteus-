@@ -9,6 +9,7 @@ import {
   Copy,
   Check,
   Download,
+  Trash2,
   Terminal,
   RefreshCw,
 } from "lucide-react";
@@ -153,6 +154,23 @@ function ResultsPage() {
     });
   };
 
+  const handleDeleteResult = async (result: Result) => {
+    if (!window.confirm(`Delete result ${result.result_id.slice(0, 8)}? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await apiFetch(`/result/${result.result_id}`, { method: "DELETE" });
+      setResults((current) => current.filter((item) => item.result_id !== result.result_id));
+      if (selectedResult?.result_id === result.result_id) {
+        setJsonModalOpen(false);
+        setSelectedResult(null);
+      }
+      toast.success("Result deleted");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete result");
+    }
+  };
+
   const severityMix = useMemo(
     () => [{ name: "Results", value: results.length, color: "oklch(0.85 0.16 220)" }],
     [results.length]
@@ -274,6 +292,16 @@ function ResultsPage() {
                         >
                           <FileCode className="h-3.5 w-3.5" />
                           <span>View JSON</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteResult(result)}
+                          className="h-8 px-2 text-zinc-400 hover:bg-destructive/10 hover:text-destructive"
+                          title="Delete result"
+                          aria-label={`Delete result ${result.result_id.slice(0, 8)}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </li>

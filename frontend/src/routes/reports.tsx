@@ -11,6 +11,7 @@ import {
   Layers,
   Sparkles,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
@@ -200,6 +201,22 @@ function ReportsPage() {
       });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDeleteReport = async (report: GeneratedReport) => {
+    if (!window.confirm(`Delete "${report.name}"? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      await apiFetch(`/report/${report.report_id}`, { method: "DELETE" });
+      setReports((current) => current.filter((item) => item.report_id !== report.report_id));
+      if (activeReport?.report_id === report.report_id) {
+        setActiveReport(null);
+      }
+      toast.success("Report deleted");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete report");
     }
   };
 
@@ -608,6 +625,17 @@ function ReportsPage() {
                       >
                         <FileSpreadsheet className="h-3.5 w-3.5" />
                         <span>CSV</span>
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteReport(report)}
+                        className="h-8 px-2 text-zinc-400 hover:bg-destructive/10 hover:text-destructive"
+                        title="Delete report"
+                        aria-label={`Delete report ${report.name}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </li>

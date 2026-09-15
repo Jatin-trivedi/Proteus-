@@ -65,6 +65,9 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event("proteus:auth-expired"));
+    }
     const message =
       body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
     throw new ApiError(message, response.status);
