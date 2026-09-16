@@ -17,6 +17,7 @@ import {
   Activity,
   Send,
   CheckCircle2,
+  ArrowRight,
 } from "lucide-react";
 import { useState, useEffect, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -77,10 +78,10 @@ function OperatorAuthButton() {
       asChild
       size="sm"
       variant="outline"
-      className="h-8 rounded-full border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-zinc-200 hover:text-white px-3 transition-colors"
+      className="h-8 rounded-full border-white/[0.08] bg-[#08090C]/65 hover:bg-white/10 text-[11px] font-semibold text-[#F5F7F2] px-3.5 transition-colors"
     >
       <Link to="/login" className="flex items-center gap-1.5">
-        <KeyRound className="h-3 w-3 text-primary" />
+        <KeyRound className="h-3 w-3 text-[#B8F45A]" />
         <span>SIGN IN</span>
       </Link>
     </Button>
@@ -89,7 +90,7 @@ function OperatorAuthButton() {
 
 function Brand() {
   return (
-    <Link to="/" className="flex items-center">
+    <Link to="/" className="flex items-center hover:opacity-90 transition-opacity">
       <ProteusLogo variant="horizontal" size="md" />
     </Link>
   );
@@ -223,84 +224,34 @@ function ContactModal({
 
 function NavLinks() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const links = [
+    { to: "/", label: "HOME" },
+    { to: "/scripts", label: "SCRIPTS" },
+    { to: "/agents", label: "AGENTS" },
+    { to: "/operations", label: "OPERATIONS" },
+    { to: "/results", label: "RESULTS" },
+    { to: "/reports", label: "REPORTS" },
+  ];
 
   return (
-    <nav className="flex items-center gap-1 xl:gap-1.5 text-[11.5px] font-bold tracking-widest uppercase">
-      {/* 1. HOME */}
-      <Link
-        to="/"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname === "/" && "text-primary font-black"
-        )}
-      >
-        HOME
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 2. SCRIPTS */}
-      <Link
-        to="/scripts"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/scripts") && "text-primary font-black"
-        )}
-      >
-        SCRIPTS
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 3. AGENTS */}
-      <Link
-        to="/agents"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/agents") && "text-primary font-black"
-        )}
-      >
-        AGENTS
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 4. OPERATIONS */}
-      <Link
-        to="/operations"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/operations") && "text-primary font-black"
-        )}
-      >
-        OPERATIONS
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 5. RESULTS */}
-      <Link
-        to="/results"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/results") && "text-primary font-black"
-        )}
-      >
-        RESULTS
-      </Link>
-
-      <span className="h-3 w-px bg-white/20 select-none" />
-
-      {/* 6. REPORTS */}
-      <Link
-        to="/reports"
-        className={cn(
-          "px-3 py-1.5 rounded transition-colors text-zinc-300 hover:text-white",
-          pathname.startsWith("/reports") && "text-primary font-black"
-        )}
-      >
-        REPORTS
-      </Link>
+    <nav className="flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 rounded-full bg-[#08090C]/65 border border-white/[0.08] backdrop-blur-[20px] shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
+      {links.map((link) => {
+        const isActive = link.to === "/" ? pathname === "/" : pathname.startsWith(link.to);
+        return (
+          <Link
+            key={link.to}
+            to={link.to}
+            className={cn(
+              "px-3 py-1 rounded-full text-[11px] font-medium tracking-wider uppercase transition-colors duration-200",
+              isActive
+                ? "text-[#F5F7F2] font-semibold bg-white/10 shadow-sm"
+                : "text-[#8E928D] hover:text-[#FFFFFF]"
+            )}
+          >
+            {link.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

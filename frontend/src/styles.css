@@ -11,7 +11,10 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 6px);
+  --radius-pill: 999px;
+
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -47,101 +50,96 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Enterprise cybersecurity palette — Manrope headings, Inter body */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Typography */
+  --font-sans: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 /* ================================================================== */
-/* Enterprise Cyber Forensics Design System                            */
-/* #06080D base → #3B9CFF primary → #7C5CFF purple → #FF7A3D orange   */
+/* Design Tokens Specification                                        */
 /* ================================================================== */
 :root {
-  --radius: 0.375rem;
-  /* 6px — enterprise angular, not startup-rounded */
+  --radius: 1rem;
 
-  /* ── Backgrounds ── */
-  --background: #0A0E1A;
-  /* Modern deep slate navy base */
-  --foreground: #F4F7FB;
-  /* Off-white primary text */
+  /* Primary Palette */
+  --background: #08090C;
+  --background-secondary: #0D0F14;
 
-  /* ── Surfaces ── */
-  --panel: #0D111A;
-  /* Dark navy surface */
-  --panel-foreground: #F4F7FB;
-  --card: #121925;
-  /* Deep blue-gray cards */
-  --card-foreground: #F4F7FB;
-  --popover: #0D111A;
-  --popover-foreground: #F4F7FB;
+  --surface: #15171C;
+  --surface-glass: rgba(255, 255, 255, 0.06);
 
-  /* ── Primary: Cyber Blue #3B9CFF ── */
-  --primary: #3B9CFF;
-  --primary-foreground: #06080D;
+  --text-primary: #F5F7F2;
+  --text-secondary: #9B9E9A;
+  --text-muted: #666A66;
 
-  /* ── Secondary / Muted ── */
-  --secondary: #1A2335;
-  --secondary-foreground: #A7B0C0;
-  --muted: #141E2D;
-  --muted-foreground: #687386;
-  /* Subdued labels */
+  --accent: #B8F45A;
+  --accent-bright: #C8FF65;
+  --accent-dark: #496B24;
 
-  /* ── Accent: Intelligence Purple #7C5CFF ── */
-  --accent: #7C5CFF;
-  --accent-foreground: #F4F7FB;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-highlight: rgba(184, 244, 90, 0.25);
 
-  /* ── Cyber alias (same as primary, used for glow utilities) ── */
-  --cyber: #3B9CFF;
-  --cyber-foreground: #06080D;
+  /* Tailwind Component Aliases */
+  --foreground: #F5F7F2;
+  --card: #15171C;
+  --card-foreground: #F5F7F2;
+  --popover: #15171C;
+  --popover-foreground: #F5F7F2;
 
-  /* ── Semantic ── */
-  --success: #22C55E;
-  /* Green — fleet online */
-  --success-foreground: #06080D;
-  --warning: #FF7A3D;
-  /* Cyber Orange — forensics / alerts */
-  --warning-foreground: #06080D;
-  --destructive: #FF4D4D;
-  /* Red — critical alerts */
-  --destructive-foreground: #F4F7FB;
+  --primary: #B8F45A;
+  --primary-foreground: #08090C;
 
-  /* ── Borders & Inputs ── */
-  --border: rgba(36, 48, 68, 0.9);
-  /* #243044 — dark gray-blue lines */
-  --input: #141E2D;
-  --ring: #3B9CFF;
+  --secondary: #0D0F14;
+  --secondary-foreground: #9B9E9A;
 
-  /* ── Sidebar ── */
-  --sidebar: #08090F;
-  --sidebar-foreground: #A7B0C0;
-  --sidebar-primary: #3B9CFF;
-  --sidebar-primary-foreground: #06080D;
-  --sidebar-accent: #141E2D;
-  --sidebar-accent-foreground: #F4F7FB;
-  --sidebar-border: #1A2335;
-  --sidebar-ring: #3B9CFF;
+  --muted: #15171C;
+  --muted-foreground: #666A66;
+
+  --panel: #15171C;
+  --panel-foreground: #F5F7F2;
+
+  --cyber: #B8F45A;
+  --cyber-foreground: #08090C;
+
+  --success: #B8F45A;
+  --success-foreground: #08090C;
+  --warning: #FBBF24;
+  --warning-foreground: #08090C;
+  --destructive: #F87171;
+  --destructive-foreground: #F5F7F2;
+
+  --input: #15171C;
+  --ring: #B8F45A;
+
+  --sidebar: #08090C;
+  --sidebar-foreground: #9B9E9A;
+  --sidebar-primary: #B8F45A;
+  --sidebar-primary-foreground: #08090C;
+  --sidebar-accent: #15171C;
+  --sidebar-accent-foreground: #F5F7F2;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #B8F45A;
 }
 
 /* ================================================================== */
-/* Base Layer                                                           */
+/* Base Layer                                                         */
 /* ================================================================== */
 @layer base {
   * {
-    border-color: var(--color-border);
+    border-color: var(--border-subtle);
   }
 
   html,
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: var(--background);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Apply Manrope to all headings */
   h1,
   h2,
   h3,
@@ -150,32 +148,32 @@
   h6 {
     font-family: var(--font-heading);
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
   }
 
-  /* Enterprise dot-grid backdrop — very subtle */
+  /* Dual ambient spotlight streaks (Pure CSS) */
   body::before {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background-image:
-      radial-gradient(circle at 1px 1px, rgba(59, 156, 255, 0.07) 1px, transparent 0);
-    background-size: 40px 40px;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 80%);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.005) 35%, transparent 65%),
+      linear-gradient(225deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.005) 35%, transparent 65%),
+      radial-gradient(ellipse 60% 30% at 50% -5%, rgba(184, 244, 90, 0.08) 0%, transparent 60%);
     z-index: 0;
   }
 
-  /* Ambient radial glow at top */
+  /* Secondary bottom atmosphere */
   body::after {
     content: "";
     position: fixed;
-    top: -120px;
+    bottom: -180px;
     left: 50%;
     transform: translateX(-50%);
-    width: 900px;
-    height: 500px;
-    background: radial-gradient(ellipse, rgba(59, 156, 255, 0.08) 0%, transparent 65%);
+    width: 1000px;
+    height: 480px;
+    background: radial-gradient(ellipse, rgba(184, 244, 90, 0.06) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -191,56 +189,76 @@
 }
 
 /* ================================================================== */
-/* Utility Classes                                                      */
+/* Typography & Utility Classes                                       */
 /* ================================================================== */
 
-/* Primary blue glow (replaces old cyan glow) */
+/* Main Hero Heading Typography */
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: clamp(64px, 9vw, 120px);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+
+.hero-title .accent,
+.gradient-accent {
+  background: linear-gradient(
+    90deg,
+    #ffffff,
+    #B8F45A
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Card Shadows & Glass */
+@utility panel {
+  background-color: #15171C;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+@utility glass-card {
+  background-color: rgba(21, 23, 28, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Green glow utilities */
+@utility glow-green {
+  box-shadow: 0 0 40px rgba(184, 244, 90, 0.18);
+}
+
 @utility glow-cyber {
   box-shadow:
-    0 0 0 1px rgba(59, 156, 255, 0.25),
-    0 0 28px -6px rgba(59, 156, 255, 0.45);
+    0 0 0 1px rgba(184, 244, 90, 0.25),
+    0 0 35px -5px rgba(184, 244, 90, 0.35);
 }
 
-/* Purple intelligence glow */
-@utility glow-purple {
+@utility glow-lime {
   box-shadow:
-    0 0 0 1px rgba(124, 92, 255, 0.25),
-    0 0 28px -6px rgba(124, 92, 255, 0.45);
+    0 0 0 1px rgba(184, 244, 90, 0.35),
+    0 0 40px -4px rgba(184, 244, 90, 0.40);
 }
 
-/* Orange forensics glow */
-@utility glow-orange {
-  box-shadow:
-    0 0 0 1px rgba(255, 122, 61, 0.25),
-    0 0 28px -6px rgba(255, 122, 61, 0.40);
-}
-
-/* Blue text glow */
 @utility text-glow {
-  text-shadow: 0 0 14px rgba(59, 156, 255, 0.7);
-}
-
-/* Glass panel card */
-@utility panel {
-  background-color: rgba(13, 17, 26, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+  text-shadow: 0 0 18px rgba(184, 244, 90, 0.55);
 }
 
 /* ================================================================== */
-/* Animations                                                           */
+/* Animations                                                         */
 /* ================================================================== */
 @keyframes pulse-dot {
-
   0%,
   100% {
     opacity: 1;
     transform: scale(1);
   }
-
   50% {
     opacity: 0.5;
     transform: scale(1.45);
@@ -256,7 +274,6 @@
     opacity: 0;
     transform: translateY(18px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -267,18 +284,16 @@
   animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* No-scrollbar utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
 /* ================================================================== */
-/* Toast Notifications — Pure White Light Theme High Contrast        */
+/* Toast Notifications                                                */
 /* ================================================================== */
 [data-sonner-toaster] {
   z-index: 999999 !important;
@@ -286,51 +301,24 @@
 }
 
 [data-sonner-toaster] [data-sonner-toast] {
-  background: #ffffff !important;
-  color: #09090b !important;
-  border: 1px solid #e4e4e7 !important;
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 0, 0, 0.08) !important;
-  border-radius: 12px !important;
+  background: #15171C !important;
+  color: #F5F7F2 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+  border-radius: 14px !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast] [data-title] {
-  color: #09090b !important;
+  color: #F5F7F2 !important;
   font-weight: 700 !important;
   font-size: 13.5px !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast] [data-description] {
-  color: #52525b !important;
+  color: #9B9E9A !important;
   font-size: 12px !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  border-left: 5px solid #10b981 !important;
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type="info"] {
-  border-left: 5px solid #3b82f6 !important;
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
-  border-left: 5px solid #ef4444 !important;
-}
-
-[data-sonner-toaster] [data-sonner-toast][data-type="warning"] {
-  border-left: 5px solid #f59e0b !important;
-}
-
-[data-sonner-toaster] [data-sonner-toast] [data-icon] {
-  margin-right: 6px !important;
-}
-
-[data-sonner-toaster] [data-close-button] {
-  background: #ffffff !important;
-  color: #71717a !important;
-  border: 1px solid #e4e4e7 !important;
-}
-
-[data-sonner-toaster] [data-close-button]:hover {
-  background: #f4f4f5 !important;
-  color: #09090b !important;
+  border-left: 4px solid #B8F45A !important;
 }

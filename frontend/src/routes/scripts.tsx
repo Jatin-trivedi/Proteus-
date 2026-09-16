@@ -331,17 +331,17 @@ function ScriptsPage() {
           {/* ======================================================== */}
           <div className="lg:col-span-5 space-y-6">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5F7F2] mb-2 font-heading">
                 Deployment Configuration
               </h2>
-              <p className="text-sm text-zinc-400 leading-relaxed">
+              <p className="text-sm text-[#9B9E9A] leading-relaxed">
                 Select target agent nodes and choose from standard forensic templates or create a custom payload.
               </p>
             </div>
 
             {/* Quick Presets */}
             <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#9B9E9A]">
                 Quick Presets
               </label>
               <div className="flex flex-wrap gap-2.5">
@@ -353,10 +353,10 @@ function ScriptsPage() {
                       type="button"
                       onClick={() => handleSelectPreset(preset)}
                       className={cn(
-                        "px-4 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer select-none",
+                        "px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer select-none border",
                         isActive
-                          ? "bg-[#1E293B] border border-[#3B82F6] text-white shadow-[0_0_15px_rgba(59,130,246,0.35)]"
-                          : "bg-[#0D1424] border border-white/10 text-zinc-400 hover:text-white hover:border-white/20 hover:bg-[#131B2E]"
+                          ? "bg-[#15171C] border-[#B8F45A] text-[#B8F45A] font-bold shadow-[0_0_20px_rgba(184,244,90,0.25)]"
+                          : "bg-[#15171C]/75 border-white/[0.08] text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-white/20 hover:bg-[#1C1F24]"
                       )}
                     >
                       {preset.name}
@@ -368,7 +368,7 @@ function ScriptsPage() {
 
             {/* Script Identifier */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#9B9E9A]">
                 Script Identifier
               </label>
               <input
@@ -376,20 +376,20 @@ function ScriptsPage() {
                 value={scriptIdentifier}
                 onChange={(e) => setScriptIdentifier(e.target.value)}
                 placeholder="e.g. System_Fingerprint_Collect"
-                className="w-full h-12 rounded-xl bg-[#0D1424] border border-white/10 px-4 text-sm font-mono text-white focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-colors"
+                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#B8F45A] focus:ring-1 focus:ring-[#B8F45A] transition-colors"
               />
             </div>
 
             {/* Target Agent IDs */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#9B9E9A]">
                   Target Agent IDs
                 </label>
                 <button
                   type="button"
                   onClick={handleSelectAllAgents}
-                  className="text-xs font-medium text-[#3B82F6] hover:text-[#60A5FA] transition-colors cursor-pointer"
+                  className="text-xs font-medium text-[#B8F45A] hover:text-[#C8FF65] transition-colors cursor-pointer"
                 >
                   Select All Available
                 </button>
@@ -400,7 +400,7 @@ function ScriptsPage() {
                 value={targetAgentIds}
                 onChange={(e) => setTargetAgentIds(e.target.value)}
                 placeholder="e.g. local-agent-70882f39, local-agent-93074f1e"
-                className="w-full h-12 rounded-xl bg-[#0D1424] border border-white/10 px-4 text-sm font-mono text-white focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6] transition-colors"
+                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#B8F45A] focus:ring-1 focus:ring-[#B8F45A] transition-colors"
               />
 
               {/* Agent Chips */}
@@ -413,13 +413,13 @@ function ScriptsPage() {
                       type="button"
                       onClick={() => handleToggleAgent(agentId)}
                       className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-mono transition-all duration-200 cursor-pointer flex items-center gap-1.5 border",
+                        "px-3 py-1.5 rounded-full text-xs font-mono transition-all duration-200 cursor-pointer flex items-center gap-1.5 border",
                         isSelected
-                          ? "bg-[#1E293B] border-[#3B82F6] text-white shadow-[0_0_10px_rgba(59,130,246,0.25)]"
-                          : "bg-[#0D1424] border-white/10 text-zinc-400 hover:text-white hover:border-white/20"
+                          ? "bg-[#15171C] border-[#B8F45A] text-[#B8F45A] font-bold shadow-[0_0_15px_rgba(184,244,90,0.2)]"
+                          : "bg-[#15171C]/60 border-white/[0.08] text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-white/20"
                       )}
                     >
-                      <span className="text-zinc-500 font-bold">{isSelected ? "✓" : "+"}</span>
+                      <span className="text-[#666A66] font-bold">{isSelected ? "✓" : "+"}</span>
                       <span>{agentId}</span>
                     </button>
                   );
@@ -433,7 +433,7 @@ function ScriptsPage() {
                 type="button"
                 onClick={handleDispatch}
                 disabled={deploying}
-                className="w-full h-12 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_25px_rgba(59,130,246,0.4)] flex items-center justify-center gap-2.5"
+                className="w-full h-12 rounded-full bg-[#B8F45A] hover:bg-[#C8FF65] active:scale-[0.99] text-[#08090C] font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_35px_rgba(184,244,90,0.35)] flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 <Play className="h-4 w-4 fill-current" />
                 <span>{deploying ? "Dispatching Payload..." : "Dispatch Payload to Agents"}</span>
@@ -447,27 +447,27 @@ function ScriptsPage() {
           <div className="lg:col-span-7 flex flex-col space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#F5F7F2] flex items-center gap-2 font-heading">
                 JOCKY DSL Source
               </h3>
-              <Badge className="bg-[#1E293B] border border-white/10 text-zinc-300 text-xs font-mono font-medium px-3 py-1 rounded-md">
+              <Badge className="bg-[#15171C] border border-[#B8F45A]/30 text-[#B8F45A] text-xs font-mono font-medium px-3 py-1 rounded-full shadow-sm">
                 Polymorphic Ready
               </Badge>
             </div>
 
             {/* Terminal Window Card */}
-            <div className="rounded-2xl bg-[#070A11] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col transition-all">
+            <div className="rounded-[20px] bg-[#0E1015] border border-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col transition-all">
               {/* Terminal Chrome Bar */}
-              <div className="flex items-center justify-between px-4 py-3 bg-[#0A0F1A] border-b border-white/[0.08]">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#15171C] border-b border-white/[0.08]">
                 {/* Traffic lights */}
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#EF4444] inline-block shadow-[0_0_6px_rgba(239,68,68,0.4)]" />
                   <span className="w-3 h-3 rounded-full bg-[#F59E0B] inline-block shadow-[0_0_6px_rgba(245,158,11,0.4)]" />
-                  <span className="w-3 h-3 rounded-full bg-[#10B981] inline-block shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+                  <span className="w-3 h-3 rounded-full bg-[#B8F45A] inline-block shadow-[0_0_6px_rgba(184,244,90,0.4)]" />
                 </div>
 
                 {/* Center Title */}
-                <div className="text-xs font-mono text-zinc-400 select-none">
+                <div className="text-xs font-mono text-[#9B9E9A] select-none">
                   {activePreset.filename} · UTF-8
                 </div>
 
@@ -475,17 +475,17 @@ function ScriptsPage() {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="px-3 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer border border-white/5"
+                  className="px-3 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-xs font-mono text-[#9B9E9A] hover:text-[#F5F7F2] transition-colors flex items-center gap-1.5 cursor-pointer border border-white/[0.06]"
                   title="Copy code"
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-semibold">Copied</span>
+                      <Check className="h-3.5 w-3.5 text-[#B8F45A]" />
+                      <span className="text-[#B8F45A] font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3.5 w-3.5 text-zinc-400" />
+                      <Copy className="h-3.5 w-3.5 text-[#9B9E9A]" />
                       <span>Copy</span>
                     </>
                   )}
@@ -493,11 +493,11 @@ function ScriptsPage() {
               </div>
 
               {/* Editor Workspace */}
-              <div className="relative flex min-h-[380px] sm:min-h-[420px] bg-[#070A11] font-mono text-[13px] leading-6">
+              <div className="relative flex min-h-[380px] sm:min-h-[420px] bg-[#0E1015] font-mono text-[13px] leading-6">
                 {/* Line Numbers Gutter */}
                 <div
                   ref={lineGutterRef}
-                  className="select-none shrink-0 text-right pr-3 pl-3 py-5 text-[12px] leading-6 text-zinc-600 bg-[#060910] border-r border-white/[0.06] min-w-[44px] overflow-hidden"
+                  className="select-none shrink-0 text-right pr-3 pl-3 py-5 text-[12px] leading-6 text-[#666A66] bg-[#0D0F14] border-r border-white/[0.08] min-w-[44px] overflow-hidden"
                   aria-hidden
                 >
                   {lines.map((n) => (
@@ -517,7 +517,7 @@ function ScriptsPage() {
                   spellCheck={false}
                   autoCorrect="off"
                   autoCapitalize="off"
-                  className="w-full flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-zinc-100 placeholder:text-zinc-600 font-mono text-[13px] leading-6 caret-[#3B82F6] overflow-y-auto selection:bg-[#3B82F6]/30 selection:text-white"
+                  className="w-full flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-[#F5F7F2] placeholder:text-[#666A66] font-mono text-[13px] leading-6 caret-[#B8F45A] overflow-y-auto selection:bg-[#B8F45A]/30 selection:text-white"
                   style={{
                     tabSize: 4,
                   }}
@@ -526,7 +526,7 @@ function ScriptsPage() {
             </div>
 
             {/* Terminal Subtitle / Status */}
-            <div className="flex items-center justify-between text-xs font-mono text-zinc-500 px-1">
+            <div className="flex items-center justify-between text-xs font-mono text-[#666A66] px-1">
               <span>Synthesizes AST & Bytecode upon dispatch</span>
               <span>AES-256 E2E Encryption</span>
             </div>
@@ -536,48 +536,48 @@ function ScriptsPage() {
 
       {/* Deployment Success Modal Popup */}
       <Dialog open={dispatchModalOpen} onOpenChange={setDispatchModalOpen}>
-        <DialogContent className="sm:max-w-md bg-[#0D121F] border-white/10 text-white shadow-[0_20px_60px_rgba(0,0,0,0.85)]">
+        <DialogContent className="sm:max-w-md bg-[#15171C] border-white/[0.08] text-[#F5F7F2] shadow-[0_20px_60px_rgba(0,0,0,0.85)]">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
-              <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#B8F45A]/10 border border-[#B8F45A]/30 text-[#B8F45A] shadow-[0_0_20px_rgba(184,244,90,0.25)]">
+              <CheckCircle2 className="h-7 w-7 text-[#B8F45A]" />
             </div>
-            <DialogTitle className="text-center text-xl font-bold tracking-tight text-white">
+            <DialogTitle className="text-center text-xl font-bold tracking-tight text-[#F5F7F2] font-heading">
               Payload Dispatched Successfully!
             </DialogTitle>
-            <DialogDescription className="text-center text-xs text-zinc-400">
+            <DialogDescription className="text-center text-xs text-[#9B9E9A]">
               Polymorphic JIT compilation passed. Payload queued for execution across agent fleet.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2 text-xs">
-            <div className="rounded-xl bg-black/40 border border-white/5 p-3.5 space-y-2 font-mono">
+            <div className="rounded-2xl bg-[#08090C]/60 border border-white/[0.08] p-3.5 space-y-2 font-mono">
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">SCRIPT IDENTIFIER</span>
-                <span className="text-primary font-semibold truncate max-w-[200px]">{dispatchedInfo.identifier}</span>
+                <span className="text-[#666A66]">SCRIPT IDENTIFIER</span>
+                <span className="text-[#B8F45A] font-semibold truncate max-w-[200px]">{dispatchedInfo.identifier}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">FILENAME</span>
-                <span className="text-zinc-300">{dispatchedInfo.filename}</span>
+                <span className="text-[#666A66]">FILENAME</span>
+                <span className="text-[#9B9E9A]">{dispatchedInfo.filename}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">RELAY ENCRYPTION</span>
-                <span className="text-emerald-400">AES-256-GCM (Polymorphic)</span>
+                <span className="text-[#666A66]">RELAY ENCRYPTION</span>
+                <span className="text-[#B8F45A]">AES-256-GCM (Polymorphic)</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">DISPATCH TIME</span>
-                <span className="text-zinc-300">{dispatchedInfo.timestamp}</span>
+                <span className="text-[#666A66]">DISPATCH TIME</span>
+                <span className="text-[#9B9E9A]">{dispatchedInfo.timestamp}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">TARGET NODES</span>
-                <span className="text-white font-bold">{dispatchedInfo.targets.length} Agent(s)</span>
+                <span className="text-[#666A66]">TARGET NODES</span>
+                <span className="text-[#F5F7F2] font-bold">{dispatchedInfo.targets.length} Agent(s)</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider">Target Fleet IDs</span>
+              <span className="text-[11px] font-mono text-[#9B9E9A] uppercase tracking-wider">Target Fleet IDs</span>
               <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                 {dispatchedInfo.targets.map((id) => (
-                  <span key={id} className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10 font-mono text-[11px] text-zinc-300">
+                  <span key={id} className="px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] font-mono text-[11px] text-[#9B9E9A]">
                     {id}
                   </span>
                 ))}
@@ -590,13 +590,13 @@ function ScriptsPage() {
               type="button"
               variant="outline"
               onClick={() => setDispatchModalOpen(false)}
-              className="w-full sm:w-1/2 border-white/10 bg-white/5 hover:bg-white/10 text-xs font-semibold uppercase tracking-wider text-zinc-300"
+              className="w-full sm:w-1/2 rounded-full border-white/[0.08] bg-white/[0.06] hover:bg-white/10 text-xs font-semibold uppercase tracking-wider text-[#9B9E9A] hover:text-[#F5F7F2]"
             >
               Dismiss
             </Button>
             <Button
               asChild
-              className="w-full sm:w-1/2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(59,156,255,0.4)]"
+              className="w-full sm:w-1/2 rounded-full bg-[#B8F45A] text-[#08090C] hover:bg-[#C8FF65] font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(184,244,90,0.35)]"
             >
               <Link to="/results">
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
@@ -609,3 +609,5 @@ function ScriptsPage() {
     </AppLayout>
   );
 }
+
+export default ScriptsPage;

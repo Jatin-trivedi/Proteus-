@@ -177,16 +177,16 @@ export function PlanetBackground({
         height * 0.5,
         Math.max(width, height)
       );
-      bgGrad.addColorStop(0, "#131D2F");
-      bgGrad.addColorStop(0.55, "#0E1626");
-      bgGrad.addColorStop(1, "#0A0E1A");
+      bgGrad.addColorStop(0, "#15171C");
+      bgGrad.addColorStop(0.55, "#0D0F14");
+      bgGrad.addColorStop(1, "#08090C");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
       // Draw faint background stars
       for (const star of stars) {
         star.a += Math.sin(currentTime * 0.002 + star.x * 100) * 0.003;
-        ctx.fillStyle = `rgba(180, 210, 255, ${Math.max(0.1, Math.min(0.6, star.a))})`;
+        ctx.fillStyle = `rgba(245, 247, 242, ${Math.max(0.1, Math.min(0.6, star.a))})`;
         ctx.beginPath();
         ctx.arc(star.x * width, star.y * height, star.s, 0, Math.PI * 2);
         ctx.fill();
@@ -207,9 +207,9 @@ export function PlanetBackground({
         centerY,
         radius * 1.55
       );
-      glowGrad.addColorStop(0, "rgba(59, 156, 255, 0.22)");
-      glowGrad.addColorStop(0.45, "rgba(0, 229, 255, 0.10)");
-      glowGrad.addColorStop(0.75, "rgba(14, 165, 233, 0.04)");
+      glowGrad.addColorStop(0, "rgba(184, 244, 90, 0.22)");
+      glowGrad.addColorStop(0.45, "rgba(200, 255, 101, 0.10)");
+      glowGrad.addColorStop(0.75, "rgba(73, 107, 36, 0.04)");
       glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
@@ -228,11 +228,8 @@ export function PlanetBackground({
       const cosX = Math.cos(tiltX);
       const sinX = Math.sin(tiltX);
 
-      // Camera focal distance
-      const fov = 2.4;
-
-      // Project & collect dots
-      interface RenderDot {
+      // Project and render all 3D points
+      interface ProjectedPoint {
         screenX: number;
         screenY: number;
         z: number;
@@ -242,66 +239,59 @@ export function PlanetBackground({
         isBeacon: boolean;
         pulse: number;
       }
-
-      const renderList: RenderDot[] = [];
+      const renderList: ProjectedPoint[] = [];
 
       for (const pt of points) {
-
-        // 1. Rotate around planet Y-axis (spin)
+        // 1. Rotation around Y axis
         const x1 = pt.x * cosY + pt.z * sinY;
         const y1 = pt.y;
         const z1 = -pt.x * sinY + pt.z * cosY;
 
-        // 2. Axial Tilt around Z-axis
+        // 2. Axial tilt around Z axis
         const x2 = x1 * cosZ - y1 * sinZ;
         const y2 = x1 * sinZ + y1 * cosZ;
         const z2 = z1;
 
-        // 3. Viewing Pitch around X-axis
+        // 3. Camera pitch around X axis
         const x3 = x2;
         const y3 = y2 * cosX - z2 * sinX;
         const z3 = y2 * sinX + z2 * cosX;
 
-        // 4. Perspective projection
-        const persp = fov / (fov - z3 * 0.5);
+        // Perspective projection
+        const persp = 1 / (1 - z3 * 0.25);
         const screenX = centerX + x3 * radius * persp;
         const screenY = centerY + y3 * radius * persp;
 
-        // Depth & visibility
-        const isFront = z3 > -0.05;
-        const depthNormalized = (z3 + 1.2) / 2.4; // 0 (far back) to 1 (front)
+        // Depth shading & visibility (front vs back)
+        const isFront = z3 > -0.15;
+        const depthNormalized = (z3 + 1) / 2; // 0 to 1
+        const opacity = isFront
+          ? Math.pow(depthNormalized, 1.2) * 0.95 + 0.15
+          : Math.pow(Math.max(0, depthNormalized), 2.5) * 0.15;
 
-        // Pulse time for beacons and subtle breathing
-        const pulse = Math.sin(currentTime * 0.003 + pt.pulseOffset);
+        // Pulse animation for beacons
+        const pulse = Math.sin(currentTime * 0.003 + pt.pulseOffset) * 0.5 + 0.5;
 
-        let size = pt.baseSize * persp;
-        let opacity = 0;
-        let color = "";
+        // Color & sizing
+        let color = "#B8F45A";
+        let size = pt.baseSize;
 
         if (pt.colorType === "beacon") {
-          opacity = isFront ? 0.95 + pulse * 0.05 : 0.2;
-          size = (pt.baseSize + pulse * 1.0) * persp;
-          color = "#00E5FF";
-        } else if (pt.colorType === "ring") {
-          opacity = Math.max(0.1, Math.min(0.85, depthNormalized * 0.75 + 0.1));
-          color = isFront ? "#7DD3FC" : "#38BDF8";
-          size = pt.baseSize * persp * 0.9;
+          color = "#C8FF65";
+          size = (pt.baseSize + pulse * 1.5) * persp;
         } else if (pt.colorType === "grid") {
-          opacity = isFront
-            ? 0.55 + depthNormalized * 0.4
-            : 0.12 + Math.max(0, depthNormalized) * 0.15;
-          color = isFront ? "#38BDF8" : "#1E3A8A";
+          color = isFront ? "#B8F45A" : "#496B24";
+          size = pt.baseSize * persp;
+        } else if (pt.colorType === "ring") {
+          color = isFront ? "#F5F7F2" : "#666A66";
           size = pt.baseSize * persp;
         } else {
-          // Core Fibonacci dots
-          opacity = isFront
-            ? 0.45 + depthNormalized * 0.55
-            : 0.1 + Math.max(0, depthNormalized) * 0.18;
+          // Core sphere dots
           color = isFront
             ? depthNormalized > 0.7
-              ? "#FFFFFF"
-              : "#60A5FA"
-            : "#1E293B";
+              ? "#F5F7F2"
+              : "#B8F45A"
+            : "#1C1F24";
           size = pt.baseSize * persp;
         }
 
@@ -327,14 +317,14 @@ export function PlanetBackground({
 
         if (dot.isBeacon && dot.z > 0) {
           // Glowing beacon halo
-          ctx.shadowColor = "#00E5FF";
+          ctx.shadowColor = "#B8F45A";
           ctx.shadowBlur = 12;
           ctx.beginPath();
           ctx.arc(dot.screenX, dot.screenY, dot.size + 1, 0, Math.PI * 2);
           ctx.fill();
 
           // Outer beacon radar pulse ring
-          ctx.strokeStyle = "rgba(0, 229, 255, 0.45)";
+          ctx.strokeStyle = "rgba(184, 244, 90, 0.45)";
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(dot.screenX, dot.screenY, dot.size * 2.8, 0, Math.PI * 2);
@@ -356,8 +346,8 @@ export function PlanetBackground({
         centerX + radius,
         centerY + radius
       );
-      rimGrad.addColorStop(0, "rgba(59, 156, 255, 0.18)");
-      rimGrad.addColorStop(0.5, "rgba(59, 156, 255, 0.04)");
+      rimGrad.addColorStop(0, "rgba(184, 244, 90, 0.18)");
+      rimGrad.addColorStop(0.5, "rgba(184, 244, 90, 0.04)");
       rimGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.strokeStyle = rimGrad;
       ctx.lineWidth = 1.5;
@@ -373,10 +363,10 @@ export function PlanetBackground({
       const btmPoleY = centerY + Math.cos(tiltZ) * poleLen;
 
       const axisGrad = ctx.createLinearGradient(topPoleX, topPoleY, btmPoleX, btmPoleY);
-      axisGrad.addColorStop(0, "rgba(0, 229, 255, 0.45)");
-      axisGrad.addColorStop(0.2, "rgba(0, 229, 255, 0.08)");
-      axisGrad.addColorStop(0.8, "rgba(0, 229, 255, 0.08)");
-      axisGrad.addColorStop(1, "rgba(0, 229, 255, 0.35)");
+      axisGrad.addColorStop(0, "rgba(184, 244, 90, 0.45)");
+      axisGrad.addColorStop(0.2, "rgba(184, 244, 90, 0.08)");
+      axisGrad.addColorStop(0.8, "rgba(184, 244, 90, 0.08)");
+      axisGrad.addColorStop(1, "rgba(184, 244, 90, 0.35)");
 
       ctx.strokeStyle = axisGrad;
       ctx.lineWidth = 1;
@@ -388,8 +378,8 @@ export function PlanetBackground({
       ctx.setLineDash([]);
 
       // Pole beacon tops
-      ctx.fillStyle = "#00E5FF";
-      ctx.shadowColor = "#00E5FF";
+      ctx.fillStyle = "#B8F45A";
+      ctx.shadowColor = "#B8F45A";
       ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(topPoleX, topPoleY, 2.5, 0, Math.PI * 2);
@@ -415,7 +405,7 @@ export function PlanetBackground({
     <div
       aria-hidden="true"
       className={cn(
-        "fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#0A0E1A]",
+        "fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#08090C]",
         className
       )}
     >
@@ -430,9 +420,9 @@ export function PlanetBackground({
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
       {/* Soft atmospheric ambient glow overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(59,156,255,0.06)_0%,transparent_75%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(184,244,90,0.06)_0%,transparent_75%)] pointer-events-none" />
       {/* Soft bottom edge fade for footer */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0A0E1A] via-[#0A0E1A]/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#08090C] via-[#08090C]/80 to-transparent pointer-events-none" />
     </div>
   );
 }
