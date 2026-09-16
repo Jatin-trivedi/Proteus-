@@ -43,7 +43,9 @@ function clearStoredSession() {
 
 function isJwtExpired(token: string) {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1])) as { exp?: number };
+    const part = token.split(".")[1];
+    if (!part) return true;
+    const payload = JSON.parse(atob(part)) as { exp?: number };
     return typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now();
   } catch {
     return true;
@@ -89,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setToken(storedToken);
         try {
-          const payload = JSON.parse(atob(storedToken.split(".")[1])) as { exp: number };
+          const part = storedToken.split(".")[1];
+          if (!part) throw new Error("Invalid token format");
+          const payload = JSON.parse(atob(part)) as { exp: number };
           expiryTimer = window.setTimeout(handleAuthExpired, Math.max(0, payload.exp * 1000 - Date.now()));
         } catch {
           handleAuthExpired();
