@@ -81,7 +81,7 @@ function OperatorAuthButton() {
       className="h-8 rounded-full border-white/[0.08] bg-[#08090C]/65 hover:bg-white/10 text-[11px] font-semibold text-[#F5F7F2] px-3.5 transition-colors"
     >
       <Link to="/login" className="flex items-center gap-1.5">
-        <KeyRound className="h-3 w-3 text-[#B8F45A]" />
+        <KeyRound className="h-3 w-3 text-[#A855F7]" />
         <span>SIGN IN</span>
       </Link>
     </Button>

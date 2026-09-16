@@ -97,7 +97,7 @@ function ObfuscationDispatchCard() {
             placeholder="script_name.go"
           />
           <div className="flex items-center gap-1.5 bg-white/[0.06] border border-white/[0.08] rounded-full px-2.5 py-1 shrink-0">
-            <span className="text-[11px] font-semibold text-[#B8F45A] font-mono">Go / LLVM</span>
+            <span className="text-[11px] font-semibold text-[#A855F7] font-mono">Go / LLVM</span>
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@ function ObfuscationDispatchCard() {
             setTargetArch(nextArch);
             toast.info(`Target Architecture: ${nextArch}`);
           }}
-          className="relative h-7 w-7 rounded-full bg-[#1C1F24] border border-white/[0.12] flex items-center justify-center text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-[#B8F45A] hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
+          className="relative h-7 w-7 rounded-full bg-[#1C1F24] border border-white/[0.12] flex items-center justify-center text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-[#A855F7] hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
           title="Switch Target Architecture"
         >
           <ArrowDownUp className="h-3.5 w-3.5" />
@@ -139,17 +139,17 @@ function ObfuscationDispatchCard() {
       {/* Status & Entropy */}
       <div className="flex items-center justify-between text-[11px] font-mono text-[#9B9E9A] mb-5 pt-1.5 border-t border-white/[0.06]">
         <span>Entropy: 7.94 / 8.0</span>
-        <span className="text-[#B8F45A] font-semibold flex items-center gap-1">
+        <span className="text-[#A855F7] font-semibold flex items-center gap-1">
           Zero Detection <Check className="h-3 w-3" />
         </span>
       </div>
 
-      {/* Full Width Neon Lime Submit Button */}
+      {/* Full Width Ultraviolet Submit Button */}
       <button
         type="button"
         onClick={handleDeploy}
         disabled={isDeploying}
-        className="w-full py-3.5 px-5 rounded-full bg-[#B8F45A] text-[#08090C] font-bold text-xs uppercase tracking-wider hover:bg-[#C8FF65] hover:shadow-[0_0_35px_rgba(184,244,90,0.35)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+        className="w-full py-3.5 px-5 rounded-full bg-[#A855F7] text-[#08090C] font-bold text-xs uppercase tracking-wider hover:bg-[#C084FC] hover:shadow-[0_0_35px_rgba(168,85,247,0.45)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
       >
         <span>{isDeploying ? "Mutating Binary..." : "Deploy to Fleet"}</span>
         <ArrowRight className="h-4 w-4 stroke-[2.5]" />
@@ -169,8 +169,8 @@ function FleetTelemetryCard({ online, total }: { online: number; total: number }
         <span className="text-[10px] font-mono font-semibold tracking-wider text-[#9B9E9A] uppercase">
           FLEET TELEMETRY
         </span>
-        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#B8F45A] font-bold">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#B8F45A] pulse-dot" />
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#A855F7] font-bold">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#A855F7] pulse-dot" />
           <span>Live</span>
         </div>
       </div>
@@ -186,11 +186,11 @@ function FleetTelemetryCard({ online, total }: { online: number; total: number }
       {/* Stacked Node Badges + 25K Badge */}
       <div className="flex items-center -space-x-2">
         {[
-          { color: "bg-emerald-800", text: "N1" },
-          { color: "bg-teal-800", text: "N2" },
-          { color: "bg-indigo-800", text: "N3" },
-          { color: "bg-amber-800", text: "N4" },
-          { color: "bg-rose-800", text: "N5" },
+          { color: "bg-purple-900", text: "N1" },
+          { color: "bg-fuchsia-900", text: "N2" },
+          { color: "bg-indigo-900", text: "N3" },
+          { color: "bg-violet-800", text: "N4" },
+          { color: "bg-pink-900", text: "N5" },
         ].map((node, idx) => (
           <div
             key={idx}
@@ -199,7 +199,7 @@ function FleetTelemetryCard({ online, total }: { online: number; total: number }
             {node.text}
           </div>
         ))}
-        <div className="h-8 px-2.5 rounded-full bg-[#B8F45A] text-[#08090C] border-2 border-[#15171C] flex items-center justify-center text-[10px] font-extrabold font-mono shadow-sm">
+        <div className="h-8 px-2.5 rounded-full bg-[#A855F7] text-[#08090C] border-2 border-[#15171C] flex items-center justify-center text-[10px] font-extrabold font-mono shadow-sm">
           +25K
         </div>
       </div>
@@ -295,12 +295,12 @@ function Dashboard() {
           {/* Wallpaper Image */}
           <img
             src="/home-bg.png"
-            alt="Globe Network Wallpaper"
-            className="w-full h-full object-cover object-center scale-105 opacity-80 brightness-95 contrast-110"
+            alt="Ultraviolet Globe Network Wallpaper"
+            className="w-full h-full object-cover object-[center_60%] scale-105 opacity-90 brightness-105 contrast-105"
           />
           {/* Atmospheric Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#08090C]/60 via-[#08090C]/35 to-[#08090C]/90" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(184,244,90,0.10)_0%,transparent_65%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#08090C]/50 via-[#08090C]/20 to-[#08090C]/90" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_45%_at_50%_0%,rgba(168,85,247,0.15)_0%,transparent_65%)]" />
         </div>
       }
     >
@@ -313,14 +313,14 @@ function Dashboard() {
       >
         {/* Top Pill Tag */}
         <div className="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#15171C]/70 border border-white/[0.08] text-xs font-mono tracking-widest text-[#F5F7F2] mb-6 md:mb-8 backdrop-blur-md shadow-md">
-          <span className="h-2 w-2 rounded-full bg-[#B8F45A] pulse-dot" />
-          <span className="font-semibold uppercase text-[#B8F45A]">NEXT-GENERATION FORENSIC FRAMEWORK</span>
+          <span className="h-2 w-2 rounded-full bg-[#A855F7] pulse-dot" />
+          <span className="font-semibold uppercase text-[#A855F7]">NEXT-GENERATION FORENSIC FRAMEWORK</span>
         </div>
 
         {/* Main Hero Heading */}
         <h1
           ref={titleRef}
-          className="text-6xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#F5F7F2] to-[#B8F45A] drop-shadow-[0_0_60px_rgba(184,244,90,0.35)] font-heading uppercase tracking-[0.22em] select-none leading-none mb-6 md:mb-8"
+          className="text-6xl sm:text-8xl md:text-9xl lg:text-[9.5rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#F5F7F2] to-[#A855F7] drop-shadow-[0_0_60px_rgba(168,85,247,0.40)] font-heading uppercase tracking-[0.22em] select-none leading-none mb-6 md:mb-8"
         >
           JOCKY
         </h1>
@@ -328,7 +328,7 @@ function Dashboard() {
         {/* Subtitle */}
         <p
           ref={subtitleRef}
-          className="max-w-4xl text-sm sm:text-base md:text-lg leading-relaxed text-[#9B9E9A] font-normal px-4 sm:px-8 mb-8 md:mb-10 font-sans tracking-wide"
+          className="max-w-3xl text-base sm:text-lg md:text-xl leading-relaxed text-[#F1F5F9] font-medium px-4 sm:px-8 mb-8 md:mb-10 font-sans tracking-normal drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)]"
         >
           A proprietary programming language framework engineered to exceed detection boundaries — enabling deep forensic system analysis through polymorphic execution, kernel-level subversion, and CI/CD-driven obfuscation.
         </p>
@@ -341,7 +341,7 @@ function Dashboard() {
           <Button
             asChild
             size="lg"
-            className="w-full sm:w-auto h-12 px-7 rounded-full bg-[#B8F45A] text-[#08090C] hover:bg-[#C8FF65] font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_35px_rgba(184,244,90,0.35)] hover:scale-105 active:scale-95 flex items-center justify-center gap-2 border border-[#B8F45A]/40"
+            className="w-full sm:w-auto h-12 px-7 rounded-full bg-[#A855F7] text-[#08090C] hover:bg-[#C084FC] font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_35px_rgba(168,85,247,0.40)] hover:scale-105 active:scale-95 flex items-center justify-center gap-2 border border-[#A855F7]/40"
           >
             <Link to="/scripts">
               <Play className="h-4 w-4 fill-current" />
@@ -356,7 +356,7 @@ function Dashboard() {
             className="w-full sm:w-auto h-12 px-7 rounded-full border-white/[0.08] bg-white/[0.06] hover:bg-white/10 text-xs font-bold text-[#F5F7F2] uppercase tracking-widest transition-all duration-300 backdrop-blur-md hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
           >
             <Link to="/results">
-              <FileText className="h-4 w-4 text-[#B8F45A]" />
+              <FileText className="h-4 w-4 text-[#A855F7]" />
               <span>INSPECT FORENSICS LOG</span>
             </Link>
           </Button>
@@ -367,13 +367,13 @@ function Dashboard() {
           <div className="p-4 rounded-2xl bg-[#15171C]/75 border border-white/[0.08] backdrop-blur-md shadow-md">
             <div className="text-[10px] uppercase font-mono text-[#9B9E9A]">OBFUSCATION PASS</div>
             <div className="text-sm sm:text-base font-bold text-[#F5F7F2] font-mono mt-1 flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-[#B8F45A]" /> Polymorphic JIT
+              <Zap className="h-3.5 w-3.5 text-[#A855F7]" /> Polymorphic JIT
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-[#15171C]/75 border border-white/[0.08] backdrop-blur-md shadow-md">
             <div className="text-[10px] uppercase font-mono text-[#9B9E9A]">AGENT FLEET SYNC</div>
             <div className="text-sm sm:text-base font-bold text-[#F5F7F2] font-mono mt-1 flex items-center gap-1.5">
-              <Wifi className="h-3.5 w-3.5 text-[#B8F45A]" /> {online} / {agents.length} Online
+              <Wifi className="h-3.5 w-3.5 text-[#A855F7]" /> {online} / {agents.length} Online
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-[#15171C]/75 border border-white/[0.08] backdrop-blur-md shadow-md">
@@ -385,7 +385,7 @@ function Dashboard() {
           <div className="p-4 rounded-2xl bg-[#15171C]/75 border border-white/[0.08] backdrop-blur-md shadow-md">
             <div className="text-[10px] uppercase font-mono text-[#9B9E9A]">SECURITY STANDARD</div>
             <div className="text-sm sm:text-base font-bold text-[#F5F7F2] font-mono mt-1 flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5 text-[#B8F45A]" /> ISO 27001 / SOC 2
+              <Shield className="h-3.5 w-3.5 text-[#A855F7]" /> ISO 27001 / SOC 2
             </div>
           </div>
         </div>
@@ -418,8 +418,8 @@ function Dashboard() {
           <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
             <div>
               {/* Pre-header badge */}
-              <div className="flex items-center gap-2.5 text-xs font-mono font-bold tracking-[0.2em] text-[#B8F45A] uppercase mb-4">
-                <span className="w-5 h-[2px] bg-[#B8F45A] rounded-full inline-block shadow-[0_0_8px_rgba(184,244,90,0.7)]" />
+              <div className="flex items-center gap-2.5 text-xs font-mono font-bold tracking-[0.2em] text-[#A855F7] uppercase mb-4">
+                <span className="w-5 h-[2px] bg-[#A855F7] rounded-full inline-block shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
                 <span>BACKGROUND</span>
               </div>
 
@@ -456,7 +456,7 @@ function Dashboard() {
               ].map((tag) => (
                 <span
                   key={tag}
-                  className="px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold border border-white/[0.08] bg-[#15171C]/75 text-[#F5F7F2] hover:border-[#B8F45A]/40 hover:text-[#B8F45A] transition-all duration-300 shadow-sm"
+                  className="px-3.5 py-1.5 rounded-full text-xs font-mono font-semibold border border-white/[0.08] bg-[#15171C]/75 text-[#F5F7F2] hover:border-[#A855F7]/40 hover:text-[#A855F7] transition-all duration-300 shadow-sm"
                 >
                   {tag}
                 </span>
@@ -466,8 +466,8 @@ function Dashboard() {
 
           {/* Right Column: 4 Stat Cards */}
           <div className="lg:col-span-5 flex flex-col gap-4">
-            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#B8F45A]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-              <div className="text-3xl sm:text-4xl font-black font-mono text-[#B8F45A] tracking-tight mb-1.5">
+            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#A855F7]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-[#A855F7] tracking-tight mb-1.5">
                 0%
               </div>
               <p className="text-xs sm:text-sm text-[#9B9E9A] leading-relaxed">
@@ -475,8 +475,8 @@ function Dashboard() {
               </p>
             </div>
 
-            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#B8F45A]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-              <div className="text-3xl sm:text-4xl font-black font-mono text-[#B8F45A] tracking-tight mb-1.5">
+            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#A855F7]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-[#A855F7] tracking-tight mb-1.5">
                 ∞
               </div>
               <p className="text-xs sm:text-sm text-[#9B9E9A] leading-relaxed">
@@ -484,8 +484,8 @@ function Dashboard() {
               </p>
             </div>
 
-            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#B8F45A]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-              <div className="text-3xl sm:text-4xl font-black font-mono text-[#B8F45A] tracking-tight mb-1.5">
+            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#A855F7]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-[#A855F7] tracking-tight mb-1.5">
                 4+
               </div>
               <p className="text-xs sm:text-sm text-[#9B9E9A] leading-relaxed">
@@ -493,8 +493,8 @@ function Dashboard() {
               </p>
             </div>
 
-            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#B8F45A]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#B8F45A]/10 border border-[#B8F45A]/40 text-[#B8F45A] mb-3">
+            <div className="p-6 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#A855F7]/30 transition-all duration-300 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-medium bg-[#A855F7]/10 border border-[#A855F7]/40 text-[#A855F7] mb-3">
                 LLVM Frontend
               </div>
               <p className="text-xs sm:text-sm text-[#9B9E9A] leading-relaxed">
@@ -510,8 +510,8 @@ function Dashboard() {
       {/* ======================================================== */}
       <section className="relative w-full max-w-7xl mx-auto py-12 md:py-16 px-4 sm:px-6">
         <div className="mb-10 sm:mb-12">
-          <div className="flex items-center gap-2.5 text-xs font-mono font-bold tracking-[0.2em] text-[#B8F45A] uppercase mb-3">
-            <span className="w-5 h-[2px] bg-[#B8F45A] rounded-full inline-block shadow-[0_0_8px_rgba(184,244,90,0.7)]" />
+          <div className="flex items-center gap-2.5 text-xs font-mono font-bold tracking-[0.2em] text-[#A855F7] uppercase mb-3">
+            <span className="w-5 h-[2px] bg-[#A855F7] rounded-full inline-block shadow-[0_0_8px_rgba(168,85,247,0.7)]" />
             <span>CORE MODULES</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#F5F7F2] mb-3">
@@ -563,20 +563,20 @@ function Dashboard() {
           ].map((card, i) => (
             <div
               key={i}
-              className="p-7 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#B8F45A]/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:-translate-y-1"
+              className="p-7 rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] hover:border-[#A855F7]/40 transition-all duration-300 backdrop-blur-md flex flex-col justify-between group shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:-translate-y-1"
             >
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-[#B8F45A]/10 border border-[#B8F45A]/30 flex items-center justify-center text-[#B8F45A] mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-[#A855F7]/10 border border-[#A855F7]/30 flex items-center justify-center text-[#A855F7] mb-6 group-hover:scale-110 transition-transform shadow-sm">
                   <card.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-[#F5F7F2] mb-3 group-hover:text-[#B8F45A] transition-colors">
+                <h3 className="text-lg sm:text-xl font-bold text-[#F5F7F2] mb-3 group-hover:text-[#A855F7] transition-colors">
                   {card.title}
                 </h3>
                 <p className="text-sm text-[#9B9E9A] leading-relaxed mb-6 font-normal">
                   {card.desc}
                 </p>
               </div>
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[#B8F45A] font-mono text-[11px] tracking-wide self-start mt-auto">
+              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-[#A855F7] font-mono text-[11px] tracking-wide self-start mt-auto">
                 {card.tag}
               </div>
             </div>
@@ -597,18 +597,18 @@ function Dashboard() {
           {error && <div className="text-sm text-destructive font-mono">{error}</div>}
           <div className="h-4 w-px bg-white/[0.08]" />
           <div className="flex items-center gap-2 text-sm">
-            <Shield className="h-4 w-4 text-[#B8F45A]" />
+            <Shield className="h-4 w-4 text-[#A855F7]" />
             <span className="text-[#9B9E9A]">Stealth Obfuscation</span>
-            <Badge className="bg-[#B8F45A]/15 text-[#B8F45A] border-[#B8F45A]/30 font-mono text-[10px]">
+            <Badge className="bg-[#A855F7]/15 text-[#A855F7] border-[#A855F7]/30 font-mono text-[10px]">
               ACTIVE
             </Badge>
           </div>
           <div className="h-4 w-px bg-white/[0.08] hidden md:block" />
           <div className="hidden md:flex items-center gap-2 text-xs font-mono text-[#9B9E9A]">
             <span>Polymorphic Engine:</span>
-            <span className="text-[#B8F45A] font-bold">a7f4c9…</span>
+            <span className="text-[#A855F7] font-bold">a7f4c9…</span>
             <ChevronRight className="h-3 w-3" />
-            <span className="text-[#B8F45A] font-bold">9e1b3d…</span>
+            <span className="text-[#A855F7] font-bold">9e1b3d…</span>
           </div>
           <div className="ml-auto text-xs font-mono text-[#9B9E9A]">
             Session Duration · <span className="text-[#F5F7F2] font-bold">42h 11m</span>
@@ -658,7 +658,7 @@ function Dashboard() {
               </div>
               <div className="flex items-center gap-3 text-xs font-mono">
                 <span className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#B8F45A]" />
+                  <span className="h-2 w-2 rounded-full bg-[#A855F7]" />
                   Ops
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -672,8 +672,8 @@ function Dashboard() {
                 <AreaChart data={activity}>
                   <defs>
                     <linearGradient id="gOps" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#B8F45A" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#B8F45A" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#A855F7" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#A855F7" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gAlerts" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#22D3EE" stopOpacity={0.35} />
@@ -694,7 +694,7 @@ function Dashboard() {
                   <Area
                     type="monotone"
                     dataKey="ops"
-                    stroke="#B8F45A"
+                    stroke="#A855F7"
                     fill="url(#gOps)"
                     strokeWidth={2}
                   />
@@ -717,14 +717,14 @@ function Dashboard() {
                 <h3 className="text-sm font-semibold text-[#F5F7F2]">Latest Findings</h3>
                 <p className="text-xs text-[#9B9E9A]">Newest alerts across the fleet</p>
               </div>
-              <Link to="/results" className="text-xs text-[#B8F45A] font-mono hover:underline">
+              <Link to="/results" className="text-xs text-[#A855F7] font-mono hover:underline">
                 View all →
               </Link>
             </div>
             <ul className="divide-y divide-white/[0.08]">
               {results.slice(0, 5).map((result) => (
                 <li key={result.result_id} className="py-3.5 flex items-start gap-3">
-                  <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-[#B8F45A] border-[#B8F45A]/30 bg-[#B8F45A]/10">
+                  <span className="shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-[#A855F7] border-[#A855F7]/30 bg-[#A855F7]/10">
                     RESULT
                   </span>
                   <div className="min-w-0 flex-1">

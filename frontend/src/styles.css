@@ -62,7 +62,7 @@
 :root {
   --radius: 1rem;
 
-  /* Primary Palette */
+  /* Primary Palette - Ultraviolet */
   --background: #08090C;
   --background-secondary: #0D0F14;
 
@@ -73,13 +73,13 @@
   --text-secondary: #9B9E9A;
   --text-muted: #666A66;
 
-  --accent: #B8F45A;
-  --accent-bright: #C8FF65;
-  --accent-dark: #496B24;
+  --accent: #A855F7;
+  --accent-bright: #C084FC;
+  --accent-dark: #581C87;
 
   --border: rgba(255, 255, 255, 0.10);
   --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-highlight: rgba(184, 244, 90, 0.25);
+  --border-highlight: rgba(168, 85, 247, 0.30);
 
   /* Tailwind Component Aliases */
   --foreground: #F5F7F2;
@@ -88,7 +88,7 @@
   --popover: #15171C;
   --popover-foreground: #F5F7F2;
 
-  --primary: #B8F45A;
+  --primary: #A855F7;
   --primary-foreground: #08090C;
 
   --secondary: #0D0F14;
@@ -100,10 +100,10 @@
   --panel: #15171C;
   --panel-foreground: #F5F7F2;
 
-  --cyber: #B8F45A;
+  --cyber: #A855F7;
   --cyber-foreground: #08090C;
 
-  --success: #B8F45A;
+  --success: #A855F7;
   --success-foreground: #08090C;
   --warning: #FBBF24;
   --warning-foreground: #08090C;
@@ -111,16 +111,16 @@
   --destructive-foreground: #F5F7F2;
 
   --input: #15171C;
-  --ring: #B8F45A;
+  --ring: #A855F7;
 
   --sidebar: #08090C;
   --sidebar-foreground: #9B9E9A;
-  --sidebar-primary: #B8F45A;
+  --sidebar-primary: #A855F7;
   --sidebar-primary-foreground: #08090C;
   --sidebar-accent: #15171C;
   --sidebar-accent-foreground: #F5F7F2;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #B8F45A;
+  --sidebar-ring: #A855F7;
 }
 
 /* ================================================================== */
@@ -138,6 +138,11 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background: #A855F7;
+    color: #08090C;
   }
 
   h1,
@@ -160,7 +165,7 @@
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.005) 35%, transparent 65%),
       linear-gradient(225deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.005) 35%, transparent 65%),
-      radial-gradient(ellipse 60% 30% at 50% -5%, rgba(184, 244, 90, 0.08) 0%, transparent 60%);
+      radial-gradient(ellipse 60% 30% at 50% -5%, rgba(168, 85, 247, 0.12) 0%, transparent 60%);
     z-index: 0;
   }
 
@@ -173,7 +178,7 @@
     transform: translateX(-50%);
     width: 1000px;
     height: 480px;
-    background: radial-gradient(ellipse, rgba(184, 244, 90, 0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(168, 85, 247, 0.08) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -205,8 +210,9 @@
 .gradient-accent {
   background: linear-gradient(
     90deg,
-    #ffffff,
-    #B8F45A
+    #ffffff 0%,
+    #C084FC 55%,
+    #E879F9 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -229,25 +235,29 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
-/* Green glow utilities */
+/* Ultraviolet glow utilities */
+@utility glow-violet {
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.22);
+}
+
 @utility glow-green {
-  box-shadow: 0 0 40px rgba(184, 244, 90, 0.18);
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.22);
 }
 
 @utility glow-cyber {
   box-shadow:
-    0 0 0 1px rgba(184, 244, 90, 0.25),
-    0 0 35px -5px rgba(184, 244, 90, 0.35);
+    0 0 0 1px rgba(168, 85, 247, 0.30),
+    0 0 35px -5px rgba(168, 85, 247, 0.40);
 }
 
 @utility glow-lime {
   box-shadow:
-    0 0 0 1px rgba(184, 244, 90, 0.35),
-    0 0 40px -4px rgba(184, 244, 90, 0.40);
+    0 0 0 1px rgba(168, 85, 247, 0.40),
+    0 0 40px -4px rgba(168, 85, 247, 0.45);
 }
 
 @utility text-glow {
-  text-shadow: 0 0 18px rgba(184, 244, 90, 0.55);
+  text-shadow: 0 0 18px rgba(168, 85, 247, 0.60);
 }
 
 /* ================================================================== */
@@ -320,5 +330,5 @@
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  border-left: 4px solid #B8F45A !important;
+  border-left: 4px solid #A855F7 !important;
 }

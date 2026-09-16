@@ -207,9 +207,9 @@ export function PlanetBackground({
         centerY,
         radius * 1.55
       );
-      glowGrad.addColorStop(0, "rgba(184, 244, 90, 0.22)");
-      glowGrad.addColorStop(0.45, "rgba(200, 255, 101, 0.10)");
-      glowGrad.addColorStop(0.75, "rgba(73, 107, 36, 0.04)");
+      glowGrad.addColorStop(0, "rgba(168, 85, 247, 0.25)");
+      glowGrad.addColorStop(0.45, "rgba(192, 132, 252, 0.12)");
+      glowGrad.addColorStop(0.75, "rgba(88, 28, 135, 0.05)");
       glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
@@ -273,14 +273,14 @@ export function PlanetBackground({
         const pulse = Math.sin(currentTime * 0.003 + pt.pulseOffset) * 0.5 + 0.5;
 
         // Color & sizing
-        let color = "#B8F45A";
+        let color = "#A855F7";
         let size = pt.baseSize;
 
         if (pt.colorType === "beacon") {
-          color = "#C8FF65";
+          color = "#E879F9";
           size = (pt.baseSize + pulse * 1.5) * persp;
         } else if (pt.colorType === "grid") {
-          color = isFront ? "#B8F45A" : "#496B24";
+          color = isFront ? "#A855F7" : "#581C87";
           size = pt.baseSize * persp;
         } else if (pt.colorType === "ring") {
           color = isFront ? "#F5F7F2" : "#666A66";
@@ -290,7 +290,7 @@ export function PlanetBackground({
           color = isFront
             ? depthNormalized > 0.7
               ? "#F5F7F2"
-              : "#B8F45A"
+              : "#C084FC"
             : "#1C1F24";
           size = pt.baseSize * persp;
         }
@@ -317,14 +317,14 @@ export function PlanetBackground({
 
         if (dot.isBeacon && dot.z > 0) {
           // Glowing beacon halo
-          ctx.shadowColor = "#B8F45A";
+          ctx.shadowColor = "#A855F7";
           ctx.shadowBlur = 12;
           ctx.beginPath();
           ctx.arc(dot.screenX, dot.screenY, dot.size + 1, 0, Math.PI * 2);
           ctx.fill();
 
           // Outer beacon radar pulse ring
-          ctx.strokeStyle = "rgba(184, 244, 90, 0.45)";
+          ctx.strokeStyle = "rgba(168, 85, 247, 0.45)";
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(dot.screenX, dot.screenY, dot.size * 2.8, 0, Math.PI * 2);
@@ -346,8 +346,8 @@ export function PlanetBackground({
         centerX + radius,
         centerY + radius
       );
-      rimGrad.addColorStop(0, "rgba(184, 244, 90, 0.18)");
-      rimGrad.addColorStop(0.5, "rgba(184, 244, 90, 0.04)");
+      rimGrad.addColorStop(0, "rgba(168, 85, 247, 0.20)");
+      rimGrad.addColorStop(0.5, "rgba(168, 85, 247, 0.04)");
       rimGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.strokeStyle = rimGrad;
       ctx.lineWidth = 1.5;
@@ -363,10 +363,10 @@ export function PlanetBackground({
       const btmPoleY = centerY + Math.cos(tiltZ) * poleLen;
 
       const axisGrad = ctx.createLinearGradient(topPoleX, topPoleY, btmPoleX, btmPoleY);
-      axisGrad.addColorStop(0, "rgba(184, 244, 90, 0.45)");
-      axisGrad.addColorStop(0.2, "rgba(184, 244, 90, 0.08)");
-      axisGrad.addColorStop(0.8, "rgba(184, 244, 90, 0.08)");
-      axisGrad.addColorStop(1, "rgba(184, 244, 90, 0.35)");
+      axisGrad.addColorStop(0, "rgba(168, 85, 247, 0.50)");
+      axisGrad.addColorStop(0.2, "rgba(168, 85, 247, 0.08)");
+      axisGrad.addColorStop(0.8, "rgba(168, 85, 247, 0.08)");
+      axisGrad.addColorStop(1, "rgba(168, 85, 247, 0.40)");
 
       ctx.strokeStyle = axisGrad;
       ctx.lineWidth = 1;
@@ -378,8 +378,8 @@ export function PlanetBackground({
       ctx.setLineDash([]);
 
       // Pole beacon tops
-      ctx.fillStyle = "#B8F45A";
-      ctx.shadowColor = "#B8F45A";
+      ctx.fillStyle = "#C084FC";
+      ctx.shadowColor = "#A855F7";
       ctx.shadowBlur = 8;
       ctx.beginPath();
       ctx.arc(topPoleX, topPoleY, 2.5, 0, Math.PI * 2);
@@ -420,7 +420,7 @@ export function PlanetBackground({
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
       {/* Soft atmospheric ambient glow overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(184,244,90,0.06)_0%,transparent_75%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(168,85,247,0.08)_0%,transparent_75%)] pointer-events-none" />
       {/* Soft bottom edge fade for footer */}
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#08090C] via-[#08090C]/80 to-transparent pointer-events-none" />
     </div>

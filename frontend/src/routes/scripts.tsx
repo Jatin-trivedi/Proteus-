@@ -355,7 +355,7 @@ function ScriptsPage() {
                       className={cn(
                         "px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer select-none border",
                         isActive
-                          ? "bg-[#15171C] border-[#B8F45A] text-[#B8F45A] font-bold shadow-[0_0_20px_rgba(184,244,90,0.25)]"
+                          ? "bg-[#15171C] border-[#A855F7] text-[#A855F7] font-bold shadow-[0_0_20px_rgba(168,85,247,0.30)]"
                           : "bg-[#15171C]/75 border-white/[0.08] text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-white/20 hover:bg-[#1C1F24]"
                       )}
                     >
@@ -376,7 +376,7 @@ function ScriptsPage() {
                 value={scriptIdentifier}
                 onChange={(e) => setScriptIdentifier(e.target.value)}
                 placeholder="e.g. System_Fingerprint_Collect"
-                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#B8F45A] focus:ring-1 focus:ring-[#B8F45A] transition-colors"
+                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#A855F7] focus:ring-1 focus:ring-[#A855F7] transition-colors"
               />
             </div>
 
@@ -389,7 +389,7 @@ function ScriptsPage() {
                 <button
                   type="button"
                   onClick={handleSelectAllAgents}
-                  className="text-xs font-medium text-[#B8F45A] hover:text-[#C8FF65] transition-colors cursor-pointer"
+                  className="text-xs font-medium text-[#A855F7] hover:text-[#C084FC] transition-colors cursor-pointer"
                 >
                   Select All Available
                 </button>
@@ -400,7 +400,7 @@ function ScriptsPage() {
                 value={targetAgentIds}
                 onChange={(e) => setTargetAgentIds(e.target.value)}
                 placeholder="e.g. local-agent-70882f39, local-agent-93074f1e"
-                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#B8F45A] focus:ring-1 focus:ring-[#B8F45A] transition-colors"
+                className="w-full h-12 rounded-xl bg-[#15171C]/85 border border-white/[0.08] px-4 text-sm font-mono text-[#F5F7F2] focus:outline-none focus:border-[#A855F7] focus:ring-1 focus:ring-[#A855F7] transition-colors"
               />
 
               {/* Agent Chips */}
@@ -415,7 +415,7 @@ function ScriptsPage() {
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-mono transition-all duration-200 cursor-pointer flex items-center gap-1.5 border",
                         isSelected
-                          ? "bg-[#15171C] border-[#B8F45A] text-[#B8F45A] font-bold shadow-[0_0_15px_rgba(184,244,90,0.2)]"
+                          ? "bg-[#15171C] border-[#A855F7] text-[#A855F7] font-bold shadow-[0_0_15px_rgba(168,85,247,0.25)]"
                           : "bg-[#15171C]/60 border-white/[0.08] text-[#9B9E9A] hover:text-[#F5F7F2] hover:border-white/20"
                       )}
                     >
@@ -433,7 +433,7 @@ function ScriptsPage() {
                 type="button"
                 onClick={handleDispatch}
                 disabled={deploying}
-                className="w-full h-12 rounded-full bg-[#B8F45A] hover:bg-[#C8FF65] active:scale-[0.99] text-[#08090C] font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_35px_rgba(184,244,90,0.35)] flex items-center justify-center gap-2.5 cursor-pointer"
+                className="w-full h-12 rounded-full bg-[#A855F7] hover:bg-[#C084FC] active:scale-[0.99] text-[#08090C] font-bold text-xs uppercase tracking-widest transition-all duration-200 shadow-[0_0_35px_rgba(168,85,247,0.40)] flex items-center justify-center gap-2.5 cursor-pointer"
               >
                 <Play className="h-4 w-4 fill-current" />
                 <span>{deploying ? "Dispatching Payload..." : "Dispatch Payload to Agents"}</span>
@@ -450,7 +450,7 @@ function ScriptsPage() {
               <h3 className="text-lg sm:text-xl font-bold tracking-tight text-[#F5F7F2] flex items-center gap-2 font-heading">
                 JOCKY DSL Source
               </h3>
-              <Badge className="bg-[#15171C] border border-[#B8F45A]/30 text-[#B8F45A] text-xs font-mono font-medium px-3 py-1 rounded-full shadow-sm">
+              <Badge className="bg-[#15171C] border border-[#A855F7]/30 text-[#A855F7] text-xs font-mono font-medium px-3 py-1 rounded-full shadow-sm">
                 Polymorphic Ready
               </Badge>
             </div>
@@ -463,7 +463,7 @@ function ScriptsPage() {
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-[#EF4444] inline-block shadow-[0_0_6px_rgba(239,68,68,0.4)]" />
                   <span className="w-3 h-3 rounded-full bg-[#F59E0B] inline-block shadow-[0_0_6px_rgba(245,158,11,0.4)]" />
-                  <span className="w-3 h-3 rounded-full bg-[#B8F45A] inline-block shadow-[0_0_6px_rgba(184,244,90,0.4)]" />
+                  <span className="w-3 h-3 rounded-full bg-[#A855F7] inline-block shadow-[0_0_6px_rgba(168,85,247,0.4)]" />
                 </div>
 
                 {/* Center Title */}
@@ -480,8 +480,8 @@ function ScriptsPage() {
                 >
                   {copied ? (
                     <>
-                      <Check className="h-3.5 w-3.5 text-[#B8F45A]" />
-                      <span className="text-[#B8F45A] font-semibold">Copied</span>
+                      <Check className="h-3.5 w-3.5 text-[#A855F7]" />
+                      <span className="text-[#A855F7] font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
@@ -507,7 +507,7 @@ function ScriptsPage() {
                   ))}
                 </div>
 
-                {/* Responsive, bug-free direct textarea */}
+                {/* Responsive direct textarea */}
                 <textarea
                   ref={textareaRef}
                   value={code}
@@ -517,7 +517,7 @@ function ScriptsPage() {
                   spellCheck={false}
                   autoCorrect="off"
                   autoCapitalize="off"
-                  className="w-full flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-[#F5F7F2] placeholder:text-[#666A66] font-mono text-[13px] leading-6 caret-[#B8F45A] overflow-y-auto selection:bg-[#B8F45A]/30 selection:text-white"
+                  className="w-full flex-1 resize-none bg-transparent border-0 outline-none p-5 pl-4 text-[#F5F7F2] placeholder:text-[#666A66] font-mono text-[13px] leading-6 caret-[#A855F7] overflow-y-auto selection:bg-[#A855F7]/30 selection:text-white"
                   style={{
                     tabSize: 4,
                   }}
@@ -538,8 +538,8 @@ function ScriptsPage() {
       <Dialog open={dispatchModalOpen} onOpenChange={setDispatchModalOpen}>
         <DialogContent className="sm:max-w-md bg-[#15171C] border-white/[0.08] text-[#F5F7F2] shadow-[0_20px_60px_rgba(0,0,0,0.85)]">
           <DialogHeader>
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#B8F45A]/10 border border-[#B8F45A]/30 text-[#B8F45A] shadow-[0_0_20px_rgba(184,244,90,0.25)]">
-              <CheckCircle2 className="h-7 w-7 text-[#B8F45A]" />
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#A855F7]/10 border border-[#A855F7]/30 text-[#A855F7] shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              <CheckCircle2 className="h-7 w-7 text-[#A855F7]" />
             </div>
             <DialogTitle className="text-center text-xl font-bold tracking-tight text-[#F5F7F2] font-heading">
               Payload Dispatched Successfully!
@@ -553,7 +553,7 @@ function ScriptsPage() {
             <div className="rounded-2xl bg-[#08090C]/60 border border-white/[0.08] p-3.5 space-y-2 font-mono">
               <div className="flex items-center justify-between">
                 <span className="text-[#666A66]">SCRIPT IDENTIFIER</span>
-                <span className="text-[#B8F45A] font-semibold truncate max-w-[200px]">{dispatchedInfo.identifier}</span>
+                <span className="text-[#A855F7] font-semibold truncate max-w-[200px]">{dispatchedInfo.identifier}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[#666A66]">FILENAME</span>
@@ -561,7 +561,7 @@ function ScriptsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[#666A66]">RELAY ENCRYPTION</span>
-                <span className="text-[#B8F45A]">AES-256-GCM (Polymorphic)</span>
+                <span className="text-[#A855F7]">AES-256-GCM (Polymorphic)</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[#666A66]">DISPATCH TIME</span>
@@ -596,7 +596,7 @@ function ScriptsPage() {
             </Button>
             <Button
               asChild
-              className="w-full sm:w-1/2 rounded-full bg-[#B8F45A] text-[#08090C] hover:bg-[#C8FF65] font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(184,244,90,0.35)]"
+              className="w-full sm:w-1/2 rounded-full bg-[#A855F7] text-[#08090C] hover:bg-[#C084FC] font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(168,85,247,0.35)]"
             >
               <Link to="/results">
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
