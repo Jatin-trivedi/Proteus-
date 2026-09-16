@@ -13,7 +13,8 @@ from api.report_routes import report_bp
 # Initialize Migrate after db
 migrate = Migrate()
 
-def create_app():
+def create_app():..
+
     app = Flask(__name__)
     app.config.from_object(Config)
 

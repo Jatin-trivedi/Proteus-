@@ -113,7 +113,7 @@ function ReportsPage() {
       if (repData.status === "fulfilled" && repData.value) {
         setReports(repData.value);
         if (repData.value.length > 0 && !activeReport) {
-          setActiveReport(repData.value[0]);
+          setActiveReport(repData.value[0] ?? null);
         }
       }
     } catch (err: unknown) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface Point3D {
   x: number;
@@ -9,7 +10,17 @@ interface Point3D {
   pulseOffset: number;
 }
 
-export function PlanetBackground() {
+export interface PlanetBackgroundProps {
+  className?: string;
+  opacity?: number;
+  blur?: number;
+}
+
+export function PlanetBackground({
+  className,
+  opacity = 0.38,
+  blur = 3.5,
+}: PlanetBackgroundProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -403,11 +414,25 @@ export function PlanetBackground() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none"
+      className={cn(
+        "fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#06080D]",
+        className
+      )}
     >
-      <canvas ref={canvasRef} className="w-full h-full block" />
+      <div
+        className="w-full h-full transform-gpu scale-105 will-change-transform"
+        style={{
+          opacity,
+          filter: `blur(${blur}px)`,
+          WebkitFilter: `blur(${blur}px)`,
+        }}
+      >
+        <canvas ref={canvasRef} className="w-full h-full block" />
+      </div>
+      {/* Soft atmospheric overlay for extra depth and contrast */}
+      <div className="absolute inset-0 bg-[#06080D]/25 pointer-events-none" />
       {/* Soft bottom edge fade for footer */}
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#030408]/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#06080D] via-[#06080D]/80 to-transparent pointer-events-none" />
     </div>
   );
 }

@@ -412,12 +412,16 @@ export function AppLayout({
   actions,
   children,
   fullscreenBackground,
+  backgroundOpacity = 0.38,
+  backgroundBlur = 3.5,
 }: {
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
   fullscreenBackground?: ReactNode;
+  backgroundOpacity?: number;
+  backgroundBlur?: number;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isHome = pathname === "/";
@@ -437,7 +441,9 @@ export function AppLayout({
   return (
     <div className={cn("relative z-10 flex min-h-screen flex-col selection:bg-primary/20 selection:text-primary", (fullscreenBackground || !isHome) ? "bg-transparent" : "bg-background")}>
       {fullscreenBackground}
-      {!isHome && !fullscreenBackground && <PlanetBackground />}
+      {!isHome && !fullscreenBackground && (
+        <PlanetBackground opacity={backgroundOpacity} blur={backgroundBlur} />
+      )}
       {/* Top Navbar */}
       <header
         className={cn(

@@ -135,9 +135,9 @@ const DEFAULT_AGENTS = [
 ];
 
 function ScriptsPage() {
-  const [activePreset, setActivePreset] = useState<ScriptPreset>(PREDEFINED_SCRIPTS[0]);
-  const [scriptIdentifier, setScriptIdentifier] = useState(PREDEFINED_SCRIPTS[0].identifier);
-  const [code, setCode] = useState(PREDEFINED_SCRIPTS[0].code);
+  const [activePreset, setActivePreset] = useState<ScriptPreset>(PREDEFINED_SCRIPTS[0]!);
+  const [scriptIdentifier, setScriptIdentifier] = useState(PREDEFINED_SCRIPTS[0]!.identifier);
+  const [code, setCode] = useState(PREDEFINED_SCRIPTS[0]!.code);
   const [copied, setCopied] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
