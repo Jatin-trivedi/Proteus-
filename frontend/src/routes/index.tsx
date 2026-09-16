@@ -158,8 +158,8 @@ function Dashboard() {
             <source src="/hero-bg.mp4" type="video/mp4" />
           </video>
           {/* Subtle dark gradient overlays covering the entire display */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#06080D]/75 via-[#06080D]/85 to-[#06080D]/95" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,156,255,0.12)_0%,transparent_75%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E1A]/65 via-[#0A0E1A]/75 to-[#0A0E1A]/90" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,156,255,0.14)_0%,transparent_75%)]" />
         </div>
       }
     >

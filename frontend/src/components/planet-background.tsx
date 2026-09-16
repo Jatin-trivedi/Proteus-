@@ -18,7 +18,7 @@ export interface PlanetBackgroundProps {
 
 export function PlanetBackground({
   className,
-  opacity = 0.38,
+  opacity = 0.46,
   blur = 3.5,
 }: PlanetBackgroundProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -177,9 +177,9 @@ export function PlanetBackground({
         height * 0.5,
         Math.max(width, height)
       );
-      bgGrad.addColorStop(0, "#080c14");
-      bgGrad.addColorStop(0.6, "#05070c");
-      bgGrad.addColorStop(1, "#030408");
+      bgGrad.addColorStop(0, "#131D2F");
+      bgGrad.addColorStop(0.55, "#0E1626");
+      bgGrad.addColorStop(1, "#0A0E1A");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
@@ -207,9 +207,9 @@ export function PlanetBackground({
         centerY,
         radius * 1.55
       );
-      glowGrad.addColorStop(0, "rgba(59, 156, 255, 0.16)");
-      glowGrad.addColorStop(0.45, "rgba(0, 229, 255, 0.07)");
-      glowGrad.addColorStop(0.75, "rgba(14, 165, 233, 0.02)");
+      glowGrad.addColorStop(0, "rgba(59, 156, 255, 0.22)");
+      glowGrad.addColorStop(0.45, "rgba(0, 229, 255, 0.10)");
+      glowGrad.addColorStop(0.75, "rgba(14, 165, 233, 0.04)");
       glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
@@ -415,7 +415,7 @@ export function PlanetBackground({
     <div
       aria-hidden="true"
       className={cn(
-        "fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#06080D]",
+        "fixed inset-0 pointer-events-none -z-10 overflow-hidden select-none bg-[#0A0E1A]",
         className
       )}
     >
@@ -429,10 +429,10 @@ export function PlanetBackground({
       >
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
-      {/* Soft atmospheric overlay for extra depth and contrast */}
-      <div className="absolute inset-0 bg-[#06080D]/25 pointer-events-none" />
+      {/* Soft atmospheric ambient glow overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(59,156,255,0.06)_0%,transparent_75%)] pointer-events-none" />
       {/* Soft bottom edge fade for footer */}
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#06080D] via-[#06080D]/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#0A0E1A] via-[#0A0E1A]/80 to-transparent pointer-events-none" />
     </div>
   );
 }

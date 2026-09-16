@@ -412,7 +412,7 @@ export function AppLayout({
   actions,
   children,
   fullscreenBackground,
-  backgroundOpacity = 0.38,
+  backgroundOpacity = 0.46,
   backgroundBlur = 3.5,
 }: {
   title?: string;
@@ -541,7 +541,7 @@ export function AppLayout({
       </div>
 
       {/* Professional Enterprise Footer */}
-      <footer className={cn("mt-auto border-t border-white/10 relative overflow-hidden text-xs text-muted-foreground", (fullscreenBackground || !isHome) ? "bg-[#06080D]/85 backdrop-blur-md" : "bg-background")}>
+      <footer className={cn("mt-auto border-t border-white/10 relative overflow-hidden text-xs text-muted-foreground", (fullscreenBackground || !isHome) ? "bg-[#0A0E1A]/90 backdrop-blur-md" : "bg-background")}>
         {/* Subtle background glow accents */}
         <div className="absolute top-0 left-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute top-0 right-1/4 w-96 h-32 bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
