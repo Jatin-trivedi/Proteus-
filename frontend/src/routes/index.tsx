@@ -158,54 +158,7 @@ function ObfuscationDispatchCard() {
   );
 }
 
-/* ================================================================== */
-/* Left Floating Metric Card (Fleet Telemetry & Active Endpoints)     */
-/* ================================================================== */
-function FleetTelemetryCard({ online, total }: { online: number; total: number }) {
-  return (
-    <div className="w-full max-w-[280px] rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] p-5 sm:p-6 backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.45)] text-left relative z-20">
-      {/* Header with Live Indicator */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-mono font-semibold tracking-wider text-[#9B9E9A] uppercase">
-          FLEET TELEMETRY
-        </span>
-        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#A855F7] font-bold">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#A855F7] pulse-dot" />
-          <span>Live</span>
-        </div>
-      </div>
 
-      {/* Metric Number */}
-      <div className="text-3xl sm:text-4xl font-extrabold font-sans text-[#F5F7F2] tracking-tight mb-1">
-        {total > 0 ? `${online}/${total}` : "148.2K+"}
-      </div>
-      <p className="text-xs text-[#9B9E9A] mb-5 font-normal">
-        Synchronized stealth endpoints
-      </p>
-
-      {/* Stacked Node Badges + 25K Badge */}
-      <div className="flex items-center -space-x-2">
-        {[
-          { color: "bg-purple-900", text: "N1" },
-          { color: "bg-fuchsia-900", text: "N2" },
-          { color: "bg-indigo-900", text: "N3" },
-          { color: "bg-violet-800", text: "N4" },
-          { color: "bg-pink-900", text: "N5" },
-        ].map((node, idx) => (
-          <div
-            key={idx}
-            className={`h-8 w-8 rounded-full ${node.color} border-2 border-[#15171C] flex items-center justify-center text-[10px] font-bold text-white shadow-sm`}
-          >
-            {node.text}
-          </div>
-        ))}
-        <div className="h-8 px-2.5 rounded-full bg-[#A855F7] text-[#08090C] border-2 border-[#15171C] flex items-center justify-center text-[10px] font-extrabold font-mono shadow-sm">
-          +25K
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ================================================================== */
 /* Main Dashboard Page Component                                      */
@@ -390,22 +343,9 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Floating Dual Cards Layout */}
-        <div className="w-full max-w-7xl px-2 sm:px-4 relative mb-6">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative z-20">
-            {/* Left Card */}
-            <div className="w-full lg:w-auto flex justify-center lg:justify-start lg:translate-y-2">
-              <FleetTelemetryCard online={online} total={agents.length} />
-            </div>
-
-            {/* Empty Center Spacing for Globe Wallpaper View */}
-            <div className="hidden lg:block flex-1 min-h-[140px]" />
-
-            {/* Right Card */}
-            <div className="w-full lg:w-auto flex justify-center lg:justify-end lg:translate-y-2">
-              <ObfuscationDispatchCard />
-            </div>
-          </div>
+        {/* Obfuscation & Dispatch Console */}
+        <div className="w-full max-w-7xl px-2 sm:px-4 relative mb-6 flex justify-center">
+          <ObfuscationDispatchCard />
         </div>
       </section>
 
