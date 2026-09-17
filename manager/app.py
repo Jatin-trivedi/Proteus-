@@ -33,15 +33,18 @@ def create_app():
     def add_api_cors_headers(response):
         if request.path.startswith("/api/"):
             origin = request.headers.get("Origin")
-            if origin in app.config["CORS_ALLOWED_ORIGINS"]:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Vary"] = "Origin"
-                response.headers["Access-Control-Allow-Headers"] = (
-                    "Content-Type, Authorization"
-                )
-                response.headers["Access-Control-Allow-Methods"] = (
-                    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-                )
+            allowed = app.config.get("CORS_ALLOWED_ORIGINS", ())
+            if origin:
+                if "*" in allowed or origin in allowed or origin.endswith(".vercel.app") or origin.startswith("http://localhost"):
+                    response.headers["Access-Control-Allow-Origin"] = origin
+                    response.headers["Vary"] = "Origin"
+                    response.headers["Access-Control-Allow-Headers"] = (
+                        "Content-Type, Authorization, Accept"
+                    )
+                    response.headers["Access-Control-Allow-Methods"] = (
+                        "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+                    )
+                    response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
     @app.errorhandler(404)

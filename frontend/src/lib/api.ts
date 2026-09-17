@@ -51,10 +51,31 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+// In-memory cache for high-speed client routing (0ms latency on navigation)
+const apiCache = new Map<string, { data: unknown; timestamp: number }>();
+const CACHE_TTL_MS = 15000; // 15 seconds fresh TTL
+
+export function clearApiCache(pathPrefix?: string) {
+  if (!pathPrefix) {
+    apiCache.clear();
+    return;
+  }
+  for (const key of apiCache.keys()) {
+    if (key.startsWith(pathPrefix)) {
+      apiCache.delete(key);
+    }
+  }
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options?: RequestInit & { bypassCache?: boolean }
+): Promise<T> {
+  const method = (options?.method || "GET").toUpperCase();
   const token = localStorage.getItem("access_token");
   const headers = new Headers(options?.headers);
   headers.set("Accept", "application/json");
+
   if (options?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -62,8 +83,37 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     headers.set("Authorization", "Bearer " + token);
   }
 
+  const isGet = method === "GET";
+  const cacheKey = `${path}?${token || ""}`;
+
+  // If GET and cache exists and is fresh and not bypassed, return instantly
+  if (isGet && !options?.bypassCache) {
+    const cached = apiCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      // Return cached copy immediately (0ms)
+      // Background revalidate if older than 3 seconds
+      if (Date.now() - cached.timestamp > 3000) {
+        fetch(`${API_BASE_URL}${path}`, { ...options, headers })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((newData) => {
+            if (newData) {
+              apiCache.set(cacheKey, { data: newData, timestamp: Date.now() });
+            }
+          })
+          .catch(() => {});
+      }
+      return cached.data as T;
+    }
+  }
+
+  // Mutating requests invalidate cache
+  if (!isGet) {
+    clearApiCache();
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   const body = await response.json().catch(() => null);
+
   if (!response.ok) {
     if (response.status === 401) {
       window.dispatchEvent(new Event("proteus:auth-expired"));
@@ -72,5 +122,18 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
       body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
     throw new ApiError(message, response.status);
   }
+
+  if (isGet) {
+    apiCache.set(cacheKey, { data: body, timestamp: Date.now() });
+  }
+
   return body as T;
+}
+
+// Prefetch core endpoints into memory cache
+export function prefetchCoreData() {
+  apiFetch("/agent/list").catch(() => {});
+  apiFetch("/result/list").catch(() => {});
+  apiFetch("/script/list").catch(() => {});
+  apiFetch("/script/deployments").catch(() => {});
 }

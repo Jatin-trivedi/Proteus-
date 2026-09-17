@@ -27,12 +27,15 @@ const statusMeta = {
 
 function OpsPage() {
   const [operations, setOperations] = useState<Deployment[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
 
   useEffect(() => {
+    setLoading(true);
     apiFetch<Deployment[]>("/script/deployments")
       .then(setOperations)
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const active = operations.filter((operation) => ["pending", "in_progress", "obfuscated"].includes(operation.status));
@@ -53,7 +56,27 @@ function OpsPage() {
       {error && <div className="text-sm text-destructive">{error}</div>}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {operations.map((op) => {
+        {loading && operations.length === 0 ? (
+          [1, 2].map((i) => (
+            <div key={i} className="panel p-6 animate-pulse space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-3 w-3 rounded-full bg-white/20" />
+                <div className="h-5 w-48 bg-white/10 rounded" />
+              </div>
+              <div className="h-2 w-full bg-white/5 rounded" />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-12 bg-white/5 rounded" />
+                <div className="h-12 bg-white/5 rounded" />
+                <div className="h-12 bg-white/5 rounded" />
+              </div>
+            </div>
+          ))
+        ) : operations.length === 0 ? (
+          <div className="col-span-full py-12 text-center text-xs text-muted-foreground">
+            No active operations currently queued or executing.
+          </div>
+        ) : (
+          operations.map((op) => {
           const status = op.status === "completed" ? "complete" : op.status === "failed" ? "warning" : "executing";
           const m = statusMeta[status];
           const progress = op.status === "completed" ? 100 : op.status === "pending" ? 0 : 50;
@@ -93,7 +116,7 @@ function OpsPage() {
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
     </AppLayout>
   );

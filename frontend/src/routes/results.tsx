@@ -241,7 +241,23 @@ function ResultsPage() {
             </div>
 
             <TabsContent value="overview" className="mt-4">
-              {results.length === 0 ? (
+              {loading && results.length === 0 ? (
+                <div className="py-6 space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 rounded-xl bg-white/[0.03] border border-white/[0.06] animate-pulse flex items-center px-4 gap-3"
+                    >
+                      <div className="h-6 w-16 rounded bg-white/10" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="h-4 w-40 rounded bg-white/10" />
+                        <div className="h-3 w-64 rounded bg-white/5" />
+                      </div>
+                      <div className="h-8 w-24 rounded bg-white/10" />
+                    </div>
+                  ))}
+                </div>
+              ) : results.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
                   <Terminal className="h-10 w-10 text-muted-foreground opacity-40" />
                   <div className="text-sm font-semibold text-zinc-300">No results recorded yet</div>
