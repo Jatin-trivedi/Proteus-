@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
+import uuid
+from sqlalchemy.exc import SQLAlchemyError
 from models import db, Agent, Deploy, Script, Finding, Result
+from middleware.auth import jwt_required
 
 agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 
@@ -47,7 +50,7 @@ def register_agent():
 @agent_bp.route('/heartbeat', methods=['POST'])
 def heartbeat():
     """
-    Agent heartbeat – updates last_seen and returns pending deployments.
+    Agent heartbeat ? updates last_seen and returns pending deployments.
     Expected JSON: { "agent_id": "..." }
     """
     data = request.get_json()
@@ -76,6 +79,8 @@ def heartbeat():
     if pending:
         script = Script.query.get(pending.script_id)
         if script:
+            if script.code == '__exit__':
+                agent.status = 'decommissioning'
             response['deployment'] = {
                 'deploy_id': pending.deploy_id,
                 'script_id': script.script_id,
@@ -120,6 +125,65 @@ def list_agents():
         'status': a.status,
         'last_seen': a.last_seen.isoformat() if a.last_seen else None
     } for a in agents]), 200
+
+
+@agent_bp.route('/<agent_id>/decommission', methods=['POST'])
+@jwt_required
+def decommission_agent(agent_id):
+    """Queue the kill switch for an agent without deleting its audit record."""
+    agent = Agent.query.get(agent_id)
+    if not agent:
+        return jsonify({'error': 'Agent not found'}), 404
+
+    existing = (
+        Deploy.query
+        .join(Script)
+        .filter(
+            Deploy.agent_id == agent_id,
+            Deploy.status == 'pending',
+            Script.name == 'kill-switch',
+            Script.code == '__exit__'
+        )
+        .first()
+    )
+    if existing:
+        agent.status = 'decommissioning'
+        db.session.commit()
+        return jsonify({
+            'status': 'already_queued',
+            'agent_id': agent_id,
+            'script_id': existing.script_id,
+            'deploy_id': existing.deploy_id
+        }), 200
+
+    script = Script(
+        script_id=str(uuid.uuid4()),
+        name='kill-switch',
+        code='__exit__',
+        created_at=datetime.utcnow()
+    )
+    deployment = Deploy(
+        deploy_id=str(uuid.uuid4()),
+        agent_id=agent_id,
+        script_id=script.script_id,
+        status='pending'
+    )
+    agent.status = 'decommissioning'
+
+    try:
+        db.session.add(script)
+        db.session.add(deployment)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        return jsonify({'error': 'Failed to queue agent decommission'}), 500
+
+    return jsonify({
+        'status': 'queued',
+        'agent_id': agent_id,
+        'script_id': script.script_id,
+        'deploy_id': deployment.deploy_id
+    }), 202
 
 
 @agent_bp.route('/<agent_id>', methods=['DELETE'])

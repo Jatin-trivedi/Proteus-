@@ -76,6 +76,7 @@ class LLVMCodeGenerator:
             'system': ([ir.PointerType(ir.IntType(8))], ir.IntType(32)),
             'printf': ([ir.PointerType(ir.IntType(8))], ir.IntType(32)),
             'jocky_int_to_str': ([ir.IntType(64)], ir.PointerType(ir.IntType(8))),
+            'jocky_external_call': ([ir.PointerType(ir.IntType(8))], ir.PointerType(ir.IntType(8))),
         }
         for name, (args, ret) in func_types.items():
             func_type = ir.FunctionType(ret, args, var_arg=(name == 'printf'))
@@ -496,9 +497,20 @@ class LLVMCodeGenerator:
         return ir.Constant(ir.IntType(32), 0)
     
     def _emit_external_call(self, node):
-        func_type = ir.FunctionType(ir.VoidType(), [])
-        func = ir.Function(self.module, func_type, name=node.name)
-        return self.builder.call(func, [])
+        func = self._get_function("jocky_external_call")
+        if not func:
+            func_type = ir.FunctionType(
+                ir.PointerType(ir.IntType(8)),
+                [ir.PointerType(ir.IntType(8))],
+            )
+            func = ir.Function(self.module, func_type, name="jocky_external_call")
+
+        # Keep unsupported operations representable as result values so they
+        # can be assigned, returned, or passed to another operation.
+        for arg in node.args:
+            self._generate_expression(arg)
+        operation = self._generate_string(node.name)
+        return self.builder.call(func, [operation])
     
     def _compile_to_native(self, ir_code, output_file):
         print(f"   🔧 Compiling to {output_file}...")
@@ -594,6 +606,7 @@ char* jocky_get_processes() {{ char* result = malloc(200); sprintf(result, "[{{\
 char* jocky_collect_registry(const char* hive) {{ char* result = malloc(300); sprintf(result, "{{\\"OneDrive\\":\\"C:\\\\Users\\\\user\\\\OneDrive\\",\\"Teams\\":\\"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Microsoft\\\\Teams\\"}}"); return result; }}
 char* jocky_scan_network() {{ char* result = malloc(300); sprintf(result, "{{\\"output\\":\\"Windows IP Configuration\\\\n   IPv4 Address: 192.168.1.100\\\\n   Subnet Mask: 255.255.255.0\\"}}"); return result; }}
 char* jocky_get_open_windows() {{ char* result = malloc(500); sprintf(result, "[{{\\"title\\":\\"JOCKY - Hackathon\\",\\"class\\":\\"Chrome_WidgetWin_1\\",\\"hwnd\\":123456}},{{\\"title\\":\\"Visual Studio Code\\",\\"class\\":\\"Chrome_WidgetWin_1\\",\\"hwnd\\":789012}}]"); return result; }}
+char* jocky_external_call(const char* operation) {{ char* result = malloc(256); snprintf(result, 256, "{{\\"status\\":\\"unsupported\\",\\"operation\\":\\"%s\\"}}", operation ? operation : "unknown"); return result; }}
 
 int main() {{
     srand((unsigned int)time(NULL));

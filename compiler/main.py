@@ -11,6 +11,7 @@ import tempfile
 from lexer.tokenizer import Lexer
 from parser.parser import Parser
 from codegen.llvm_gen import generate_llvm_ir, get_jocky_c_runtime
+from syntax.nodes import AgentDeclaration
 
 def compile_to_bytes(source_code: str) -> bytes:
     # 1. Lexical analysis
@@ -24,11 +25,14 @@ def compile_to_bytes(source_code: str) -> bytes:
     print("[Compiler] Parsed: AST generated")
 
     # Extract agent name
-    agent_name = "jocky_main"
-    for stmt in ast.body:
-        if hasattr(stmt, 'name'):
-            agent_name = stmt.name
-            break
+    agent_name = next(
+        (
+            stmt.name
+            for stmt in ast.body
+            if isinstance(stmt, AgentDeclaration)
+        ),
+        "jocky_main",
+    )
 
     # 3. Generate LLVM IR
     with tempfile.TemporaryDirectory() as tmpdir:

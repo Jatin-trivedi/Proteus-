@@ -51,7 +51,7 @@ deploy_resp = requests.post(
     }
 )
 
-if deploy_resp.status_code == 200:
+if deploy_resp.status_code in (200, 201):
     data = deploy_resp.json()
     print(f"   ✅ Script deployed!")
     print(f"   Script ID: {data['script_id']}")
