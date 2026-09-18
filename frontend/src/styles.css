@@ -294,6 +294,15 @@
   animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@keyframes ios-spinner-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.15;
+  }
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
