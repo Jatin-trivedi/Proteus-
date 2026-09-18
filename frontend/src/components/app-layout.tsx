@@ -39,7 +39,6 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { KeyRound, LogOut, UserCheck } from "lucide-react";
-import { prefetchCoreData } from "@/lib/api";
 
 function OperatorAuthButton() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -382,7 +381,6 @@ export function AppLayout({
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    prefetchCoreData();
     const handleScroll = () => {
       setScrolled(window.scrollY > 25);
     };
@@ -668,4 +666,3 @@ export function StatusDot({ status }: { status: "online" | "offline" | "executin
 }
 
 export { Shield, ShieldOff } from "lucide-react";
-

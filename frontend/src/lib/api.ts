@@ -53,6 +53,7 @@ export class ApiError extends Error {
 
 // In-memory cache for high-speed client routing (0ms latency on navigation)
 const apiCache = new Map<string, { data: unknown; timestamp: number }>();
+const pendingGets = new Map<string, Promise<unknown>>();
 const CACHE_TTL_MS = 15000; // 15 seconds fresh TTL
 
 export function clearApiCache(pathPrefix?: string) {
@@ -104,6 +105,8 @@ export async function apiFetch<T>(
       }
       return cached.data as T;
     }
+    const pending = pendingGets.get(cacheKey);
+    if (pending) return pending as Promise<T>;
   }
 
   // Mutating requests invalidate cache
@@ -111,29 +114,30 @@ export async function apiFetch<T>(
     clearApiCache();
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
-  const body = await response.json().catch(() => null);
+  const request = (async () => {
+    const response = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+    const body = await response.json().catch(() => null);
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      window.dispatchEvent(new Event("proteus:auth-expired"));
+    if (!response.ok) {
+      if (response.status === 401) {
+        window.dispatchEvent(new Event("proteus:auth-expired"));
+      }
+      const message =
+        body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
+      throw new ApiError(message, response.status);
     }
-    const message =
-      body && typeof body.error === "string" ? body.error : `Request failed (${response.status})`;
-    throw new ApiError(message, response.status);
+
+    if (isGet) {
+      apiCache.set(cacheKey, { data: body, timestamp: Date.now() });
+    }
+
+    return body as T;
+  })();
+
+  if (isGet && !options?.bypassCache) {
+    pendingGets.set(cacheKey, request);
+    request.finally(() => pendingGets.delete(cacheKey)).catch(() => {});
   }
 
-  if (isGet) {
-    apiCache.set(cacheKey, { data: body, timestamp: Date.now() });
-  }
-
-  return body as T;
-}
-
-// Prefetch core endpoints into memory cache
-export function prefetchCoreData() {
-  apiFetch("/agent/list").catch(() => {});
-  apiFetch("/result/list").catch(() => {});
-  apiFetch("/script/list").catch(() => {});
-  apiFetch("/script/deployments").catch(() => {});
+  return request;
 }
