@@ -3,6 +3,7 @@ import io
 import json
 from flask import Blueprint, jsonify, request, send_file
 from models import db, Finding, Report, Result, Agent
+from middleware.auth import jwt_required
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
@@ -70,6 +71,17 @@ def get_report(report_id):
     if not report:
         return jsonify({"error": "Report not found"}), 404
     return jsonify(report.to_dict()), 200
+
+
+@report_bp.delete("/<report_id>")
+@jwt_required
+def delete_report(report_id):
+    report = Report.query.get(report_id)
+    if not report:
+        return jsonify({"error": "Report not found"}), 404
+    db.session.delete(report)
+    db.session.commit()
+    return jsonify({"status": "deleted", "report_id": report_id}), 200
 
 
 @report_bp.get("/<report_id>/export")

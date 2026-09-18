@@ -65,10 +65,18 @@ def create_app():
             return jsonify({"error": "Internal server error"}), 500
         return error
 
-    # Register blueprints
-    app.register_blueprint(agent_bp, url_prefix="/api/v1/agent")
-    app.register_blueprint(script_bp, url_prefix="/api/v1/script")
-    app.register_blueprint(result_bp, url_prefix="/api/v1/result")
+    @app.route("/api/v1", strict_slashes=False)
+    def api_root():
+        return jsonify({
+            "service": "Proteus manager API",
+            "version": "v1",
+            "health": "/health",
+        })
+
+    # The API blueprints already define their complete url_prefix values.
+    app.register_blueprint(agent_bp)
+    app.register_blueprint(script_bp)
+    app.register_blueprint(result_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(finding_bp)

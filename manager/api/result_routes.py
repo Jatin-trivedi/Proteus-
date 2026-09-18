@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from datetime import datetime
 from models import db, Result, Deploy, Finding
+from middleware.auth import jwt_required
 import uuid
 import io
 import json
@@ -132,3 +133,19 @@ def list_results():
         "submitted_at": r.submitted_at.isoformat(),
         "data_encrypted": r.data_encrypted[:50] + "..." if r.data_encrypted and len(r.data_encrypted) > 50 else r.data_encrypted
     } for r in results]), 200
+
+
+@result_bp.route("/<result_id>", methods=["DELETE"])
+@jwt_required
+def delete_result(result_id):
+    result = Result.query.get(result_id)
+    if not result:
+        return jsonify({"error": "Result not found"}), 404
+
+    Finding.query.filter_by(result_id=result_id).delete(synchronize_session=False)
+    Deploy.query.filter_by(result_id=result_id).update(
+        {"result_id": None}, synchronize_session=False
+    )
+    db.session.delete(result)
+    db.session.commit()
+    return jsonify({"status": "deleted", "result_id": result_id}), 200
