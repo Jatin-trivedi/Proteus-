@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 import uuid
-from models import db, Script, Deploy, Agent
+from models import db, Script, Deploy, Agent, Result, Finding
+from middleware.auth import jwt_required
 
 script_bp = Blueprint('script', __name__, url_prefix='/api/v1/script')
 
@@ -169,3 +170,30 @@ def list_deployments():
         "script_name": deployment.script.name if deployment.script else None,
         "hostname": deployment.agent.hostname if deployment.agent else None,
     } for deployment in deployments]), 200
+
+
+@script_bp.route('/<script_id>', methods=['DELETE'])
+@jwt_required
+def delete_script(script_id):
+    script = Script.query.get(script_id)
+    if not script:
+        return jsonify({'error': 'Script not found'}), 404
+
+    result_ids = [
+        result.result_id
+        for result in Result.query.filter_by(script_id=script_id).all()
+    ]
+    if result_ids:
+        Finding.query.filter(Finding.result_id.in_(result_ids)).delete(
+            synchronize_session=False
+        )
+        Deploy.query.filter(Deploy.result_id.in_(result_ids)).update(
+            {'result_id': None}, synchronize_session=False
+        )
+        Result.query.filter(Result.result_id.in_(result_ids)).delete(
+            synchronize_session=False
+        )
+    Deploy.query.filter_by(script_id=script_id).delete(synchronize_session=False)
+    db.session.delete(script)
+    db.session.commit()
+    return jsonify({'status': 'deleted', 'script_id': script_id}), 200

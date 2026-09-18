@@ -666,4 +666,3 @@ export function StatusDot({ status }: { status: "online" | "offline" | "executin
 }
 
 export { Shield, ShieldOff } from "lucide-react";
-

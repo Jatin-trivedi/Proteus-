@@ -33,17 +33,20 @@ function AgentsPage() {
   const [selected, setSelected] = useState<Agent>();
   const [filter, setFilter] = useState("");
   const [error, setError] = useState<string>();
+  const [loading, setLoading] = useState(false);
   const [agentToDecommission, setAgentToDecommission] = useState<Agent | null>(null);
   const [isDecommissioning, setIsDecommissioning] = useState(false);
 
   const loadAgents = () => {
+    setLoading(true);
     setError(undefined);
     apiFetch<Agent[]>("/agent/list")
       .then((data) => {
         setAgents(data);
         setSelected((current) => data.find((agent) => agent.agent_id === current?.agent_id) ?? data[0]);
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { loadAgents(); }, []);
@@ -133,7 +136,22 @@ function AgentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredAgents.map((a) => {
+                {loading && agents.length === 0 ? (
+                  [1, 2, 3].map((i) => (
+                    <tr key={i} className="border-t border-border animate-pulse">
+                      <td className="px-5 py-4">
+                        <div className="h-4 w-28 bg-white/10 rounded mb-1.5" />
+                        <div className="h-3 w-36 bg-white/5 rounded" />
+                      </td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-white/5 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-24 bg-white/5 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-16 bg-white/5 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-20 bg-white/5 rounded" /></td>
+                      <td className="px-5 py-4"><div className="h-4 w-12 bg-white/5 rounded" /></td>
+                      <td className="px-5 py-4 text-right"><div className="h-7 w-7 bg-white/5 rounded ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : filteredAgents.map((a) => {
                   const active = selected?.agent_id === a.agent_id;
                   return (
                     <tr

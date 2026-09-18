@@ -43,13 +43,19 @@ function clearStoredSession() {
 
 function isJwtExpired(token: string) {
   try {
-    const part = token.split(".")[1];
-    if (!part) return true;
-    const payload = JSON.parse(atob(part)) as { exp?: number };
+    const payload = decodeJwtPayload(token);
     return typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now();
   } catch {
     return true;
   }
+}
+
+function decodeJwtPayload(token: string): { exp?: number } {
+  const part = token.split(".")[1];
+  if (!part) throw new Error("Invalid token format");
+  const base64 = part.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+  return JSON.parse(atob(padded)) as { exp?: number };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -90,10 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       } else {
         setToken(storedToken);
+        const storedUser = localStorage.getItem(SESSION_USER_KEY);
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser) as User);
+          } catch {
+            localStorage.removeItem(SESSION_USER_KEY);
+          }
+        }
         try {
-          const part = storedToken.split(".")[1];
-          if (!part) throw new Error("Invalid token format");
-          const payload = JSON.parse(atob(part)) as { exp: number };
+          const payload = decodeJwtPayload(storedToken);
+          if (typeof payload.exp !== "number") throw new Error("Token expiry is missing");
           expiryTimer = window.setTimeout(handleAuthExpired, Math.max(0, payload.exp * 1000 - Date.now()));
         } catch {
           handleAuthExpired();
