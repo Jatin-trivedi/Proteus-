@@ -118,7 +118,6 @@ function RootShell({ children }: { children: ReactNode }) {
 
 import { AuthProvider } from "@/lib/auth-context";
 import { SmoothScroll } from "@/components/smooth-scroll";
-import { IOSLoadingScreen } from "@/components/ios-loader";
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
@@ -126,7 +125,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <IOSLoadingScreen />
         <SmoothScroll>
           <Outlet />
         </SmoothScroll>
