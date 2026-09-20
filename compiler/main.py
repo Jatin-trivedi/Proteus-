@@ -1,95 +1,146 @@
 #!/usr/bin/env python3
 """
-JOCKY Compiler – Main Entry Point
-Universal Edition - Supports all features via `run()` and `system()`
+JOCKY Compiler – Command Line Interface
+Forensic Scripting Language Compiler & Diagnostic Tool.
 """
-import sys
 import argparse
+import json
 import os
-import subprocess
-import tempfile
-from lexer.tokenizer import Lexer
-from parser.parser import Parser
-from codegen.llvm_gen import generate_llvm_ir, get_jocky_c_runtime
-from syntax.nodes import AgentDeclaration
+import sys
+from pathlib import Path
 
-def compile_to_bytes(source_code: str) -> bytes:
-    # 1. Lexical analysis
-    lexer = Lexer(source_code)
-    tokens = lexer.tokenize()
-    print(f"[Compiler] Tokenized: {len(tokens)} tokens")
+# Support running directly or as a module
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-    # 2. Parsing
-    parser = Parser(tokens)
-    ast = parser.parse()
-    print("[Compiler] Parsed: AST generated")
+from compiler.compiler import Compiler, compile as jocky_compile, check as jocky_check
 
-    # Extract agent name
-    agent_name = next(
-        (
-            stmt.name
-            for stmt in ast.body
-            if isinstance(stmt, AgentDeclaration)
-        ),
-        "jocky_main",
-    )
 
-    # 3. Generate LLVM IR
-    with tempfile.TemporaryDirectory() as tmpdir:
-        ll_file = os.path.join(tmpdir, "output.ll")
-        obj_file = os.path.join(tmpdir, "output.o")
-        c_file = os.path.join(tmpdir, "output_runtime.c")
-        c_obj = os.path.join(tmpdir, "output_runtime.o")
-        exe_file = os.path.join(tmpdir, "output.exe")
+def print_banner():
+    print("====================================")
+    print("          JOCKY COMPILER            ")
+    print("====================================\n")
 
-        # Generate LLVM IR
-        ir_code = generate_llvm_ir(ast)
-        with open(ll_file, 'w') as f:
-            f.write(ir_code)
 
-        # 4. Compile LLVM to object file
-        subprocess.run(["llc", "-mtriple", "x86_64-pc-windows-gnu", "-filetype=obj", ll_file, "-o", obj_file], check=True, capture_output=True, text=True)
+def cmd_compile(args):
+    filepath = args.file
+    if not os.path.isfile(filepath):
+        print(f"Error: File not found: {filepath}", file=sys.stderr)
+        sys.exit(1)
 
-        # 5. Create C runtime (Universal Bridge)
-        c_code = get_jocky_c_runtime(agent_name)
-        with open(c_file, 'w') as f:
-            f.write(c_code)
-
-        # 6. Compile C runtime to object
-        subprocess.run(["gcc", "-c", c_file, "-o", c_obj], check=True, capture_output=True, text=True)
-
-        # 7. Link
-        subprocess.run(["gcc", "-mconsole", "-o", exe_file, obj_file, c_obj], check=True, capture_output=True, text=True)
-
-        # 8. Return bytes
-        with open(exe_file, 'rb') as f:
-            exe_bytes = f.read()
-
-    print(f"[Compiler] Compiled .exe size: {len(exe_bytes)} bytes")
-    return exe_bytes
-
-def compile_file(filepath: str, output_file: str = None) -> bytes:
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         source = f.read()
-    exe_bytes = compile_to_bytes(source)
 
-    if not output_file:
-        basename = os.path.splitext(filepath)[0]
-        output_file = f"{basename}.exe" if os.name == 'nt' else basename
+    print_banner()
+    print(f"Source:\n{filepath}\n")
 
-    with open(output_file, 'wb') as f:
-        f.write(exe_bytes)
-    print(f"[Compiler] Written to {output_file}")
-    return exe_bytes
+    compiler = Compiler()
+    result = compiler.compile(source, filename=filepath)
+
+    if not result.success:
+        print(result.format_diagnostics(), file=sys.stderr)
+        print("\nCompilation failed.", file=sys.stderr)
+        sys.exit(1)
+
+    print("✓ Lexical analysis")
+    print("✓ Parsing")
+    print("✓ AST generation")
+    print("✓ Semantic validation")
+    print("✓ IR generation")
+
+    ir_data = result.ir or {}
+    analysis_name = ir_data.get("investigation") or ir_data.get("name", "Unknown")
+    operations = ir_data.get("operations", [])
+
+    print(f"\nAnalysis:\n{analysis_name}")
+    print(f"\nOperations:\n{len(operations)}")
+    print("\nCompilation successful.")
+
+    # Determine output path
+    if args.output:
+        out_path = Path(args.output)
+    else:
+        basename = Path(filepath).stem
+        build_dir = Path("build")
+        build_dir.mkdir(parents=True, exist_ok=True)
+        out_path = build_dir / f"{basename}.ir.json"
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(ir_data, f, indent=2)
+
+    print(f"\nGenerated:\n{out_path}")
+
+    # Inspect flags
+    if args.ast and result.ast:
+        print("\n---------------- AST ----------------")
+        print(json.dumps(result.ast.to_dict(), indent=2))
+        print("-------------------------------------")
+
+    if args.ir and result.ir:
+        print("\n---------------- IR -----------------")
+        print(json.dumps(result.ir, indent=2))
+        print("-------------------------------------")
+
+
+def cmd_check(args):
+    filepath = args.file
+    if not os.path.isfile(filepath):
+        print(f"Error: File not found: {filepath}", file=sys.stderr)
+        sys.exit(1)
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        source = f.read()
+
+    print_banner()
+    print(f"Source:\n{filepath}\n")
+
+    result = jocky_check(source, filename=filepath)
+
+    if not result.success:
+        print(result.format_diagnostics(), file=sys.stderr)
+        print("\nCheck failed with errors.", file=sys.stderr)
+        sys.exit(1)
+
+    print("✓ Lexical analysis")
+    print("✓ Parsing")
+    print("✓ AST generation")
+    print("✓ Semantic validation")
+    print("\nCompilation successful.")
+
+    if args.ast and result.ast:
+        print("\n---------------- AST ----------------")
+        print(json.dumps(result.ast.to_dict(), indent=2))
+        print("-------------------------------------")
+
 
 def main():
-    parser = argparse.ArgumentParser(description='JOCKY Compiler')
-    parser.add_argument('command', choices=['compile'])
-    parser.add_argument('file')
-    parser.add_argument('--output', '-o')
+    parser = argparse.ArgumentParser(
+        prog="jocky",
+        description="JOCKY Forensic Scripting Language Compiler",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # compile subcommand
+    compile_parser = subparsers.add_parser("compile", help="Compile JOCKY source to Forensic IR")
+    compile_parser.add_argument("file", help="Path to .jocky source file")
+    compile_parser.add_argument("--output", "-o", help="Custom output path for generated IR JSON")
+    compile_parser.add_argument("--ast", action="store_true", help="Print readable AST JSON to stdout")
+    compile_parser.add_argument("--ir", action="store_true", help="Print generated IR JSON to stdout")
+
+    # check subcommand
+    check_parser = subparsers.add_parser("check", help="Verify syntax and semantics without generating IR")
+    check_parser.add_argument("file", help="Path to .jocky source file")
+    check_parser.add_argument("--ast", action="store_true", help="Print readable AST JSON to stdout")
+
     args = parser.parse_args()
-    if args.command == 'compile':
-        compile_file(args.file, args.output)
+
+    if args.command == "compile":
+        cmd_compile(args)
+    elif args.command == "check":
+        cmd_check(args)
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,15 @@
+analysis "System Investigation" {
+
+    system.info();
+
+    system.users();
+
+    processes.list();
+
+    network.interfaces();
+
+    network.connections();
+
+    filesystem.hash("./evidence");
+
+}

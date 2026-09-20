@@ -1,0 +1,6 @@
+analysis "System Investigation" {
+
+    system.info();
+
+    system.users();
+}

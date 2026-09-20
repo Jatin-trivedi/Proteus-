@@ -1,0 +1,6 @@
+analysis "Process Investigation" {
+
+    processes.list();
+
+    processes.details(1234);
+}

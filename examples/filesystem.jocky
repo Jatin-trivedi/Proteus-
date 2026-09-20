@@ -1,0 +1,6 @@
+analysis "Filesystem Investigation" {
+
+    filesystem.metadata("./evidence");
+
+    filesystem.hash("./evidence");
+}

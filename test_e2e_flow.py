@@ -12,7 +12,10 @@ sys.path.insert(0, './compiler')
 from lexer.tokenizer import Lexer
 from parser.parser import Parser
 import json
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 import hashlib
 
 # Step 1: JOCKY Script (as submitted by analyst)

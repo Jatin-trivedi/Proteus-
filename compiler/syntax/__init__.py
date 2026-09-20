@@ -1,38 +1,4 @@
-from .nodes import (
-    ASTNode, 
-    Program, 
-    AgentDeclaration, 
-    FunctionDeclaration,
-    StructDeclaration, 
-    LetStatement, 
-    ReturnStatement, 
-    PrintStatement,
-    IfStatement, 
-    WhileStatement, 
-    ForStatement,
-    BinaryOperation, 
-    StringLiteral, 
-    NumberLiteral, 
-    Identifier,
-    ArrayIndex, 
-    StructLiteral, 
-    StructField, 
-    StructFieldAccess,
-    ArrayLiteral, 
-    CallExpression
-)
-
-__all__ = [
-    "ASTNode", "Program", "AgentDeclaration",
-    "LetStatement", "ReturnStatement", "CallExpression",
-    "StringLiteral", "NumberLiteral", "Identifier", "BinaryOperation"
-]
-
-"""
-JOCKY Compiler – Package exports
-"""
-
-#from main import compile_to_bytes, compile_file
-from codegen.llvm_gen import generate_llvm_ir, compile_to_llvm
-
-__all__ = ['compile_to_bytes', 'compile_file', 'generate_llvm_ir', 'compile_to_llvm']
+try:
+    from compiler.parser.ast import *
+except (ImportError, ModuleNotFoundError):
+    from parser.ast import *

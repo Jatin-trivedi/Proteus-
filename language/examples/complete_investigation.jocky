@@ -1,0 +1,20 @@
+analysis "Complete System Investigation" {
+
+    system.info();
+
+    system.users();
+
+    processes.list();
+
+    network.interfaces();
+
+    network.connections();
+
+    network.routes();
+
+    network.dns();
+
+    filesystem.metadata("./evidence");
+
+    filesystem.hash("./evidence");
+}

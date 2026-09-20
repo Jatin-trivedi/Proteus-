@@ -1,0 +1,11 @@
+analysis "Network Investigation" {
+
+    network.interfaces();
+
+    network.connections();
+
+    network.routes();
+
+    network.dns();
+
+}

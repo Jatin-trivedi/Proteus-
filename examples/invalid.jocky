@@ -1,0 +1,9 @@
+analysis "Invalid Investigation" {
+
+    system.fakeFunction();
+
+    network.connections(123);
+
+    processes.details();
+
+}
