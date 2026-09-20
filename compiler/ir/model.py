@@ -157,6 +157,18 @@ class IRDocument:
             raise IRValidationError(f"Invalid JSON string: {e}")
         return cls.from_dict(data)
 
+    def to_file(self, filepath: str, indent: int = 2) -> None:
+        """Serializes the IRDocument to a JSON file."""
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(self.to_json(indent=indent))
+
+    @classmethod
+    def from_file(cls, filepath: str) -> "IRDocument":
+        """Deserializes an IRDocument from a JSON file."""
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        return cls.from_json(content)
+
 
 # ==============================================================================
 # Legacy IR Models preserved for intermediate compatibility

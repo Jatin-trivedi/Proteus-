@@ -7,6 +7,7 @@ from .model import (
     ForensicIRDocument,
 )
 from .generator import IRGenerator
+from .validator import IRValidator, ValidationResult, validate_ir
 
 __all__ = [
     "IRDocument",
@@ -16,4 +17,7 @@ __all__ = [
     "ForensicIRAnalysis",
     "ForensicIRDocument",
     "IRGenerator",
+    "IRValidator",
+    "ValidationResult",
+    "validate_ir",
 ]

@@ -1,4 +1,4 @@
-analysis "Complete Investigation" {
+analysis "Forensic Baseline" {
 
     system.info();
 
@@ -16,5 +16,5 @@ analysis "Complete Investigation" {
 
     filesystem.metadata("./evidence");
 
-    filesystem.hash("./evidence");
+    filesystem.hash("./evidence/sample.txt");
 }

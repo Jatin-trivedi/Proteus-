@@ -1,5 +1,5 @@
 """
-End-to-End Compiler Pipeline Tests for Priority 3.3
+End-to-End Compiler Pipeline Tests for Priority 2
 """
 import unittest
 from compiler import compile, check
@@ -9,7 +9,7 @@ from compiler.diagnostics import DiagnosticCode
 class TestCompiler(unittest.TestCase):
     def test_compiler_complete_investigation(self):
         source = '''
-        analysis "Complete System Investigation" {
+        analysis "Complete Investigation" {
             system.info();
             system.users();
             processes.list();
@@ -26,7 +26,7 @@ class TestCompiler(unittest.TestCase):
         self.assertEqual(len(result.diagnostics), 0)
         self.assertIsNotNone(result.ast)
         self.assertIsNotNone(result.ir)
-        self.assertEqual(result.ir["investigation"], "Complete System Investigation")
+        self.assertEqual(result.ir["investigation"], "Complete Investigation")
         self.assertEqual(result.ir["ir_type"], "jocky_forensic_ir")
         self.assertEqual(len(result.ir["operations"]), 9)
 

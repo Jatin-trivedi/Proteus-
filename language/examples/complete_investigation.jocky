@@ -1,4 +1,4 @@
-analysis "Complete System Investigation" {
+analysis "Complete Investigation" {
 
     system.info();
 

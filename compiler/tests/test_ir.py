@@ -147,6 +147,7 @@ class TestIRGenerator(unittest.TestCase):
         result = self.compiler.compile(source)
         self.assertTrue(result.success)
         self.assertEqual(result.ir["investigation"], "Complete System Investigation")
+        self.assertEqual(result.ir["ir_type"], "jocky_forensic_ir")
         self.assertEqual(len(result.ir["operations"]), 9)
 
         # Validate deserialization into IRDocument model
