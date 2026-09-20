@@ -4,6 +4,7 @@ import uuid
 from sqlalchemy.exc import SQLAlchemyError
 from models import db, Agent, Deploy, Script, Finding, Result
 from middleware.auth import jwt_required
+from agent_registry import AgentRegistry
 
 agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 
@@ -12,119 +13,84 @@ agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 def register_agent():
     """
     Register a new agent or update an existing one.
-    Expected JSON: { "agent_id": "...", "hostname": "...", "os": "...", "ip": "...", "arch": "..." }
+    Accepts formal AgentRegistrationRequest or legacy payload.
+    Expected JSON:
+    {
+      "hostname": "...",
+      "os": "windows|linux",
+      "architecture": "...",
+      "version": "...",
+      "capabilities": [...]
+    }
     """
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid JSON'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid JSON: expected JSON object'}), 400
 
-    agent_id = data.get('agent_id')
-    hostname = data.get('hostname', 'unknown')
-    os_type = data.get('os', 'unknown')
-    ip = data.get('ip', '0.0.0.0')
-    arch = data.get('arch', 'unknown')
+    resp_data, status_code = AgentRegistry.register_agent(data)
+    return jsonify(resp_data), status_code
 
-    if not agent_id:
-        return jsonify({'error': 'agent_id required'}), 400
 
-    agent = Agent.query.get(agent_id)
-    if not agent:
-        agent = Agent(
-            agent_id=agent_id,
-            hostname=hostname,
-            os=os_type,
-            ip=ip,
-            arch=arch
-        )
-        db.session.add(agent)
-    else:
-        agent.hostname = hostname or agent.hostname
-        agent.os = os_type or agent.os
-        agent.ip = ip or agent.ip
-        agent.arch = arch or agent.arch
+@agent_bp.route('/', methods=['GET'], strict_slashes=False)
+@agent_bp.route('/list', methods=['GET'])
+def list_agents():
+    """List all registered agents."""
+    status_filter = request.args.get("status")
+    agents = AgentRegistry.list_agents(status_filter=status_filter)
+    return jsonify(agents), 200
 
-    db.session.commit()
-    return jsonify({'status': 'registered', 'agent_id': agent_id}), 200
+
+@agent_bp.route('/<agent_id>', methods=['GET'])
+@agent_bp.route('/status/<agent_id>', methods=['GET'])
+def get_agent_status(agent_id):
+    """Get details/status of a specific agent."""
+    agent_dict = AgentRegistry.get_agent(agent_id)
+    if not agent_dict:
+        return jsonify({'error': 'Agent not found'}), 404
+    return jsonify(agent_dict), 200
 
 
 @agent_bp.route('/heartbeat', methods=['POST'])
 def heartbeat():
     """
-    Agent heartbeat ? updates last_seen and returns pending deployments.
-    Expected JSON: { "agent_id": "..." }
+    Agent heartbeat – validates agent identity, updates last_heartbeat/status,
+    records current_job, and returns heartbeat response.
+    Expected JSON: { "agent_id": "...", "status": "online|busy|error|offline", "current_job": "..." }
     """
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid JSON'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Invalid JSON: expected JSON object'}), 400
+
+    resp_data, status_code = AgentRegistry.update_heartbeat(data)
+    if status_code != 200:
+        return jsonify(resp_data), status_code
 
     agent_id = data.get('agent_id')
-    if not agent_id:
-        return jsonify({'error': 'agent_id required'}), 400
+    # Backward compatibility: attach pending deploy if one exists
+    try:
+        pending = Deploy.query.filter_by(
+            agent_id=agent_id,
+            status='pending'
+        ).first()
 
-    agent = Agent.query.get(agent_id)
-    if not agent:
-        return jsonify({'error': 'Agent not found'}), 404
+        if pending:
+            script = Script.query.get(pending.script_id)
+            if script:
+                agent = db.session.get(Agent, agent_id)
+                if agent and script.code == '__exit__':
+                    agent.status = 'decommissioning'
+                resp_data['deployment'] = {
+                    'deploy_id': pending.deploy_id,
+                    'script_id': script.script_id,
+                    'code': script.code,
+                    'hash_before': script.hash_before
+                }
+                pending.status = 'in_progress'
+                db.session.commit()
+    except Exception:
+        pass
 
-    agent.last_seen = datetime.utcnow()
-    agent.status = 'online'
-    db.session.commit()
-
-    pending = Deploy.query.filter_by(
-        agent_id=agent_id,
-        status='pending'
-    ).first()
-
-    response = {'status': 'ok'}
-
-    if pending:
-        script = Script.query.get(pending.script_id)
-        if script:
-            if script.code == '__exit__':
-                agent.status = 'decommissioning'
-            response['deployment'] = {
-                'deploy_id': pending.deploy_id,
-                'script_id': script.script_id,
-                'code': script.code,
-                'hash_before': script.hash_before
-            }
-            pending.status = 'in_progress'
-            db.session.commit()
-
-    return jsonify(response), 200
-
-
-@agent_bp.route('/status/<agent_id>', methods=['GET'])
-def get_agent_status(agent_id):
-    """Get status of a specific agent."""
-    agent = Agent.query.get(agent_id)
-    if not agent:
-        return jsonify({'error': 'Agent not found'}), 404
-
-    return jsonify({
-        'agent_id': agent.agent_id,
-        'hostname': agent.hostname,
-        'os': agent.os,
-        'ip': agent.ip,
-        'arch': agent.arch,
-        'status': agent.status,
-        'last_seen': agent.last_seen.isoformat() if agent.last_seen else None
-    }), 200
-
-
-# ==================== NEW ENDPOINT ====================
-@agent_bp.route('/list', methods=['GET'])
-def list_agents():
-    """List all registered agents."""
-    agents = Agent.query.all()
-    return jsonify([{
-        'agent_id': a.agent_id,
-        'hostname': a.hostname,
-        'os': a.os,
-        'ip': a.ip,
-        'arch': a.arch,
-        'status': a.status,
-        'last_seen': a.last_seen.isoformat() if a.last_seen else None
-    } for a in agents]), 200
+    return jsonify(resp_data), 200
 
 
 @agent_bp.route('/<agent_id>/decommission', methods=['POST'])

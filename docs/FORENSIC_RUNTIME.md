@@ -98,3 +98,29 @@ Allowlisted Forensic Collectors
 2. **Zero Arbitrary Execution**: The runtime does not evaluate arbitrary strings, spawn arbitrary shell commands, or perform dynamic reflection based on operation names.
 3. **Resilient Sequential Execution**: If an individual collector encounters an error (e.g., non-existent PID, missing file, permission denial), the failure is isolated to that specific `OperationResult`. The `OperationDispatcher` continues executing all subsequent operations in the investigation without halting or crashing.
 4. **Read-Only Forensics**: All collectors operate strictly in read-only mode, without file modification, process manipulation, memory modification, persistence, or bypass mechanisms.
+
+---
+
+## 5. Cross-Platform ForensicProvider Architecture (Priority 5)
+
+To ensure seamless forensic collection across Windows, Linux, and macOS without modifying JOCKY scripts, the runtime employs a decoupled **ForensicProvider** strategy:
+
+```
+OperationDispatcher
+       ↓
+OperationRegistry
+       ↓
+Forensic Collectors (e.g. SystemInfoCollector, ProcessesListCollector)
+       ↓ (delegates)
+Platform Providers (ForensicProvider Layer)
+       ├── PsutilProvider (Cross-platform, preferred for processes & network)
+       ├── LinuxProvider (Linux/Unix: /proc, pwd, ps, ip route, resolv.conf)
+       └── WindowsProvider (Windows: Win32 APIs, tasklist, ipconfig, route print)
+```
+
+### Provider Domain Interfaces
+- **`SystemProvider`**: Hostname, OS, architecture, kernel, uptime, user accounts.
+- **`ProcessProvider`**: Process enumeration and per-PID detail inspection.
+- **`NetworkProvider`**: Network interfaces, socket connections, routing table, DNS resolver info.
+- **`FilesystemProvider`**: Metadata and SHA-256 cryptographic hashing.
+

@@ -15,7 +15,15 @@ from .deploy import Deploy
 from .user import User
 from .finding import Finding
 from .report import Report
+from .job import Job, JobStatus, JobTransitionError
+from .investigation import Investigation, InvestigationStatus
+from .evidence import Evidence
 
 # Export everything
-__all__ = ['db', 'Agent', 'Script', 'Result', 'Deploy', 'User', 'Finding', 'Report']
+__all__ = [
+    'db', 'Agent', 'Script', 'Result', 'Deploy', 'User', 'Finding', 'Report',
+    'Job', 'JobStatus', 'JobTransitionError',
+    'Investigation', 'InvestigationStatus',
+    'Evidence',
+]
 

@@ -1,3 +1,11 @@
+import os
+import sys
+
+# Ensure manager directory is on sys.path
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from flask import Flask, jsonify, request
 from config import Config
 from models import db
@@ -9,6 +17,8 @@ from api.health_routes import health_bp
 from api.auth_routes import auth_bp
 from api.finding_routes import finding_bp
 from api.report_routes import report_bp
+from api.job_routes import job_bp
+from api.investigation_routes import investigation_bp
 
 # Initialize Migrate after db
 migrate = Migrate()
@@ -22,6 +32,23 @@ def create_app():
     migrate.init_app(app, db)   # <-- This enables 'flask db' commands
     with app.app_context():
         db.create_all()
+        # Ensure schema additions for existing SQLite database
+        try:
+            with db.engine.connect() as conn:
+                inspector = db.inspect(db.engine)
+                if "agents" in inspector.get_table_names():
+                    cols = [c["name"] for c in inspector.get_columns("agents")]
+                    for col_name, col_type in [
+                        ("version", "VARCHAR(32) DEFAULT '1.0.0'"),
+                        ("capabilities", "TEXT DEFAULT '[]'"),
+                        ("registered_at", "DATETIME"),
+                        ("current_job", "VARCHAR(64)"),
+                    ]:
+                        if col_name not in cols:
+                            conn.execute(db.text(f"ALTER TABLE agents ADD COLUMN {col_name} {col_type}"))
+                    conn.commit()
+        except Exception:
+            pass
 
     @app.before_request
     def handle_api_options():
@@ -75,12 +102,15 @@ def create_app():
 
     # The API blueprints already define their complete url_prefix values.
     app.register_blueprint(agent_bp)
+    app.register_blueprint(agent_bp, url_prefix="/api/v1/agents", name="agents")
     app.register_blueprint(script_bp)
     app.register_blueprint(result_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(finding_bp)
     app.register_blueprint(report_bp)
+    app.register_blueprint(job_bp)
+    app.register_blueprint(investigation_bp)
 
     @app.route("/")
     @app.route("/dashboard")
