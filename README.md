@@ -20,7 +20,7 @@ a uniquely-hashed binary on every single build.**
 
 <br/>
 
-🌐 **Live Dashboard:** [https://proteus-zeta.vercel.app](https://proteus-zeta.vercel.app) &nbsp;|&nbsp;
+🌐 **Live Dashboard:** [https://jocky-snowy.vercel.app/](https://jocky-snowy.vercel.app/) &nbsp;|&nbsp;
 📦 **Repo:** [github.com/Jatin-trivedi/Proteus-](https://github.com/Jatin-trivedi/Proteus-)
 
 </div>
