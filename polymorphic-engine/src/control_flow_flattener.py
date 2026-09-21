@@ -33,6 +33,7 @@ class ControlFlowFlattener:
             
             # Convert back to code
             import astor
+            ast.fix_missing_locations(transformed)
             flattened_code = astor.to_source(transformed)
             
             # Add dispatcher preamble
@@ -100,12 +101,9 @@ class ControlFlowTransformer(ast.NodeTransformer):
         # Split body into basic blocks
         blocks = self._split_into_blocks(body)
         
-        # Assign unique IDs to blocks
-        block_ids = {}
-        for i, block in enumerate(blocks):
-            block_id = self._rng.randint(1000, 9999)
-            block_ids[block_id] = block
-            self._blocks[block_id] = block
+        # Use deterministic state IDs so the initial state reaches the first block.
+        block_ids = {index: block for index, block in enumerate(blocks)}
+        self._blocks.update(block_ids)
             
         # Create dispatcher while loop
         dispatch_var = ast.Name(id=self.state_var, ctx=ast.Store())
@@ -155,23 +153,28 @@ class ControlFlowTransformer(ast.NodeTransformer):
             comparators=[ast.Constant(value=0)]
         )
         
-        # For simplicity, just handle first block
-        first_block = list(block_ids.items())[0]
-        first_body = first_block[1]
-        
-        # Add state update at end of block
-        update_state = ast.Assign(
-            targets=[ast.Name(id=self.state_var, ctx=ast.Store())],
-            value=ast.Constant(value=1)  # Next state
-        )
-        
-        # Return statement to exit dispatcher
-        return_stmt = ast.Return(value=ast.Constant(value=None))
-        
-        body = first_body + [update_state, return_stmt]
-        
-        return ast.If(
-            test=test,
-            body=body,
-            orelse=[]
-        )
+        block_items = list(block_ids.items())
+
+        def build_chain(index: int) -> ast.If:
+            block_id, block = block_items[index]
+            block_body = list(block)
+
+            if index + 1 < len(block_items):
+                block_body.append(ast.Assign(
+                    targets=[ast.Name(id=self.state_var, ctx=ast.Store())],
+                    value=ast.Constant(value=block_items[index + 1][0])
+                ))
+                orelse = [build_chain(index + 1)]
+            else:
+                # A function without an explicit return still exits normally.
+                block_body.append(ast.Break())
+                orelse = []
+
+            dispatch_test = ast.Compare(
+                left=ast.Name(id=self.state_var, ctx=ast.Load()),
+                ops=[ast.Eq()],
+                comparators=[ast.Constant(value=block_id)]
+            )
+            return ast.If(test=dispatch_test, body=block_body, orelse=orelse)
+
+        return build_chain(0)

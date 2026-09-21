@@ -65,6 +65,11 @@ class PolymorphicObfuscator:
         Rename all identifiers (variables, functions, etc.)
         to random names that change every run
         """
+        # Regex-based identifier replacement is not safe for Go package names,
+        # imports, or selectors, so leave Go source unchanged.
+        if re.match(r'^\s*package\s+[A-Za-z_][A-Za-z0-9_]*\b', code):
+            return code
+
         # Pattern to match identifiers (simplified for demo)
         # In production, you'd parse the AST properly
         identifier_pattern = r'\b[a-zA-Z_][a-zA-Z0-9_]*\b'
