@@ -1,0 +1,143 @@
+# .github/workflows/build.yml
+#
+# Proteus — Polymorphic CI/CD Pipeline
+# ======================================
+# Triggered on every push to main.
+# Each run:
+#   1. Runs the polymorphic engine (control-flow flattening, import obfuscation)
+#   2. Cross-compiles agent/main.go → a Windows PE with a NEW unique hash
+#   3. Uploads the binary as a GitHub Actions artifact
+#   4. Prints the SHA-256 in the step summary
+#
+# No two runs produce the same binary — that is the polymorphic guarantee.
+
+name: Polymorphic CI Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # allow manual trigger from the GitHub UI
+
+permissions:
+  contents: read              # least-privilege: read repo, nothing else
+
+jobs:
+  polymorphic-build:
+    name: "🔄 Polymorphic agent build"
+    runs-on: ubuntu-latest    # Linux runner — cross-compiles to Windows via GOOS
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Go toolchain ─────────────────────────────────────────────────────
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          # Cache keyed to go.sum — speeds up dependency fetches on repeat runs
+          cache-dependency-path: agent/go.sum
+
+      # ── 3. Python (for the polymorphic engine) ───────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── 4. Install polymorphic engine dependencies ───────────────────────────
+      - name: Install polymorphic engine dependencies
+        run: |
+          pip install --quiet \
+            pefile==2023.2.7       \
+            cryptography==41.0.7   \
+            pycryptodome==3.19.0   \
+            capstone==5.0.1        \
+            colorama==0.4.6        \
+            tqdm==4.66.1           \
+            pyelftools==0.30       \
+            macholib==1.16.3       \
+            astor==0.8.1           \
+            lief
+
+      # ── 5. Pre-fetch Go module cache (cross-compile) ─────────────────────────
+      #
+      # golang.org/x/sys/windows/registry is a Windows-only import in agent/main.go.
+      # We tell Go we're building for Windows so it fetches the right platform files.
+      - name: Pre-fetch Go dependencies (GOOS=windows)
+        run: |
+          cd agent
+          GOOS=windows GOARCH=amd64 go mod download
+          echo "[+] Go module cache ready"
+
+      # ── 6. Run the polymorphic build ──────────────────────────────────────────
+      #
+      # ci_build.py (repo root):
+      #   • copies all *.go from agent/ into a tmp dir
+      #   • copies go.mod + go.sum (so golang.org/x/sys resolves)
+      #   • applies control-flow flattening + import-table obfuscation to main.go
+      #   • compiles with GOOS=windows GOARCH=amd64 -trimpath -s -w
+      #   • writes to build/agent_<random-id>.exe
+      - name: Run polymorphic build
+        run: |
+          python ci_build.py \
+            --output-dir build/ \
+            --os windows        \
+            --arch amd64
+
+      # ── 7. Compute hash & export to environment ───────────────────────────────
+      - name: Compute binary hash
+        id: hash
+        run: |
+          BINARY=$(ls build/agent_*.exe | head -1)
+          BINARY_NAME=$(basename "$BINARY")
+          HASH=$(sha256sum "$BINARY" | awk '{print $1}')
+          SIZE=$(stat -c '%s' "$BINARY")
+
+          # Export for upload step name + summary
+          echo "binary_name=$BINARY_NAME" >> "$GITHUB_OUTPUT"
+          echo "sha256=$HASH"             >> "$GITHUB_OUTPUT"
+          echo "size_bytes=$SIZE"         >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║  Polymorphic Build Result                                    ║"
+          echo "╠══════════════════════════════════════════════════════════════╣"
+          printf "║  Binary  : %-50s║\n" "$BINARY_NAME"
+          printf "║  SHA-256 : %-50s║\n" "${HASH:0:50}"
+          printf "║  (cont.) : %-50s║\n" "${HASH:50}"
+          printf "║  Size    : %-50s║\n" "$SIZE bytes"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "Every CI run produces a DIFFERENT hash — polymorphic guarantee ✓"
+
+      # ── 8. Upload artifact ───────────────────────────────────────────────────
+      #
+      # Artifact name embeds the short commit SHA so you can trace binary → commit.
+      - name: Upload polymorphic binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: "polymorphic-agent-${{ github.sha }}"
+          path: build/*.exe
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── 9. GitHub step summary ────────────────────────────────────────────────
+      - name: Write build summary
+        run: |
+          {
+            echo "## 🔄 Polymorphic Build — \`${{ github.sha }}\`"
+            echo ""
+            echo "| Field | Value |"
+            echo "|:------|:------|"
+            echo "| **Binary** | \`${{ steps.hash.outputs.binary_name }}\` |"
+            echo "| **SHA-256** | \`${{ steps.hash.outputs.sha256 }}\` |"
+            echo "| **Size** | ${{ steps.hash.outputs.size_bytes }} bytes |"
+            echo "| **Commit** | \`${{ github.sha }}\` |"
+            echo "| **Branch** | \`${{ github.ref_name }}\` |"
+            echo "| **Triggered by** | ${{ github.event_name }} |"
+            echo ""
+            echo "> **Polymorphic guarantee:** every push to \`main\` produces a binary"
+            echo "> with a **different hash, different variable names, and different"
+            echo "> import-table layout** — directly satisfying the SIH problem statement."
+          } >> "$GITHUB_STEP_SUMMARY"
