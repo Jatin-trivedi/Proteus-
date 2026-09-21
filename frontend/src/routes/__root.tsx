@@ -2,8 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
+  Navigate,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -116,7 +118,7 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-import { AuthProvider } from "@/lib/auth-context";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { SmoothScroll } from "@/components/smooth-scroll";
 
 function RootComponent() {
@@ -126,10 +128,36 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SmoothScroll>
-          <Outlet />
+          <AuthenticationGate>
+            <Outlet />
+          </AuthenticationGate>
         </SmoothScroll>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthenticationGate({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { pathname } = useLocation();
+  const isPublicRoute = pathname === "/" || pathname === "/login";
+
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+        Verifying operator session…
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
 }

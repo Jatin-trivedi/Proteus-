@@ -126,14 +126,6 @@ export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
   },
 ];
 
-const DEFAULT_AGENTS = [
-  "local-agent-70882f39",
-  "local-agent-93074f1e",
-  "live-test-agent",
-  "local-agent-ba4b4e4a",
-  "agent-test-001",
-];
-
 function ScriptsPage() {
   const [activePreset, setActivePreset] = useState<ScriptPreset>(PREDEFINED_SCRIPTS[0]!);
   const [scriptIdentifier, setScriptIdentifier] = useState(PREDEFINED_SCRIPTS[0]!.identifier);
@@ -154,25 +146,25 @@ function ScriptsPage() {
   });
 
   // Target Agent IDs
-  const [targetAgentIds, setTargetAgentIds] = useState("local-agent-70882f39");
-  const [availableAgents, setAvailableAgents] = useState<string[]>(DEFAULT_AGENTS);
+  const [targetAgentIds, setTargetAgentIds] = useState("");
+  const [availableAgents, setAvailableAgents] = useState<string[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lineGutterRef = useRef<HTMLDivElement>(null);
 
-  // Load live agents from backend if available
+  // Agent IDs must come from the manager; never dispatch to placeholder nodes.
   useEffect(() => {
-    apiFetch<Agent[]>("/agent/list")
-      .then((data) => {
-        if (data && data.length > 0) {
-          const ids = data.map((a) => a.agent_id);
-          setAvailableAgents(ids);
-          setTargetAgentIds(ids[0] ?? "");
-        }
-      })
-      .catch(() => {
-        // Fallback to default presets
+    apiFetch<Agent[]>("/agent/list").then((data) => {
+      const ids = data.map((a) => a.agent_id);
+      setAvailableAgents(ids);
+      setTargetAgentIds(ids[0] ?? "");
+    }).catch((err: Error) => {
+      setAvailableAgents([]);
+      setTargetAgentIds("");
+      toast.error("Unable to Load Agents", {
+        description: err.message,
       });
+    });
   }, []);
 
   // When preset changes, update identifier and code
@@ -277,7 +269,7 @@ function ScriptsPage() {
 
     setDeploying(true);
     try {
-      await apiFetch("/script/deploy", {
+      const deployment = await apiFetch<{ script_id: string; deploy_ids: string[] }>("/script/deploy", {
         method: "POST",
         body: JSON.stringify({
           name: scriptIdentifier,
@@ -285,6 +277,9 @@ function ScriptsPage() {
           code,
         }),
       });
+      if (deployment.deploy_ids.length === 0) {
+        throw new Error("The manager accepted the script but created no deployments. Verify that the selected agents are registered.");
+      }
       setDispatchedInfo({
         identifier: scriptIdentifier,
         filename: activePreset.filename,
@@ -292,19 +287,18 @@ function ScriptsPage() {
         timestamp: new Date().toLocaleTimeString(),
       });
       setDispatchModalOpen(true);
-      toast.success("Script Dispatched Successfully", {
-        description: `Dispatched ${scriptIdentifier} to ${targets.length} agent(s).`,
-      });
+      const skippedCount = targets.length - deployment.deploy_ids.length;
+      toast.success(
+        skippedCount > 0 ? "Script Partially Dispatched" : "Script Dispatched Successfully",
+        {
+          description: skippedCount > 0
+            ? `${deployment.deploy_ids.length} of ${targets.length} selected agent(s) received a deployment.`
+            : `Dispatched ${scriptIdentifier} to ${deployment.deploy_ids.length} agent(s).`,
+        },
+      );
     } catch (err: unknown) {
-      setDispatchedInfo({
-        identifier: scriptIdentifier,
-        filename: activePreset.filename,
-        targets,
-        timestamp: new Date().toLocaleTimeString(),
-      });
-      setDispatchModalOpen(true);
-      toast.success("Script Dispatched Successfully", {
-        description: `Dispatched ${scriptIdentifier} to ${targets.length} agent(s).`,
+      toast.error("Script Dispatch Failed", {
+        description: err instanceof Error ? err.message : "The manager API could not create the deployment.",
       });
     } finally {
       setDeploying(false);

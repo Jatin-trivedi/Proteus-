@@ -220,6 +220,20 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 		os.Exit(0)
 	}
 
+	if json.Valid([]byte(script)) {
+		if doc, err := ParseIRDocumentJSON(script); err == nil {
+			result, err := executeIRDocument(doc)
+			if err != nil {
+				return fmt.Sprintf("error: %v", err)
+			}
+			payload, marshalErr := json.MarshalIndent(result, "", "  ")
+			if marshalErr != nil {
+				return fmt.Sprintf("error: marshal result: %v", marshalErr)
+			}
+			return string(payload)
+		}
+	}
+
 	if strings.HasPrefix(script, "inject ") {
 		return executeInject(script)
 	}

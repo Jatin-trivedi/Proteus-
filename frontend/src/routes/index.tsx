@@ -69,17 +69,6 @@ export const Route = createFileRoute("/")({
 function ObfuscationDispatchCard() {
   const [scriptName, setScriptName] = useState<string>("recon_beacon.go");
   const [targetArch, setTargetArch] = useState<"x86_64" | "arm64" | "win64">("x86_64");
-  const [isDeploying, setIsDeploying] = useState(false);
-
-  const handleDeploy = () => {
-    setIsDeploying(true);
-    setTimeout(() => {
-      setIsDeploying(false);
-      toast.success("Polymorphic Artifact Compiled", {
-        description: `Deployed mutated ${scriptName} (${targetArch}) to grid with 0% signature rate.`,
-      });
-    }, 800);
-  };
 
   return (
     <div className="w-full max-w-[340px] rounded-[20px] bg-[#15171C]/85 border border-white/[0.08] p-5 sm:p-6 backdrop-blur-[20px] shadow-[0_20px_60px_rgba(0,0,0,0.45)] text-left relative z-20">
@@ -145,15 +134,13 @@ function ObfuscationDispatchCard() {
       </div>
 
       {/* Full Width Ultraviolet Submit Button */}
-      <button
-        type="button"
-        onClick={handleDeploy}
-        disabled={isDeploying}
+      <Link
+        to="/scripts"
         className="w-full py-3.5 px-5 rounded-full bg-[#A855F7] text-[#08090C] font-bold text-xs uppercase tracking-wider hover:bg-[#C084FC] hover:shadow-[0_0_35px_rgba(168,85,247,0.45)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
       >
-        <span>{isDeploying ? "Mutating Binary..." : "Deploy to Fleet"}</span>
+        <span>Open Script Studio</span>
         <ArrowRight className="h-4 w-4 stroke-[2.5]" />
-      </button>
+      </Link>
     </div>
   );
 }
