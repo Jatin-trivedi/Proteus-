@@ -33,7 +33,7 @@ int inject_process(InjectionConfig* config) {
         return JOCKEY_ERR_INVALID_PARAM;
     }
 
-    LOG_INFO("Injection method: %d | Target PID: %lu | Direct Syscalls: %d | Unhook: %d",
+    LOG_INFO("Injection method: %d | Target PID: %lu | Dynamic NT: %d | Unhook: %d",
              (int)config->method, (unsigned long)config->targetPid,
              config->useDirectSyscalls, config->unhookApi);
 

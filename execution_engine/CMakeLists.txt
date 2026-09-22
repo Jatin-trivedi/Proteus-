@@ -31,7 +31,7 @@ if(HARDEN AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         -static-libgcc                   # no libgcc_s_seh-1.dll
         -static-libstdc++
     )
-    # Deterministic builds ? strip source paths from debug info
+    # Deterministic builds — strip source paths from debug info
     add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
     add_compile_options(-ffile-prefix-map=${CMAKE_BINARY_DIR}=.)
 endif()
@@ -48,11 +48,18 @@ set(COMMON_SOURCES
 )
 
 if(WIN32)
-    list(APPEND COMMON_SOURCES src/pal/pal_win.c src/syscalls/syscalls_win.c)
+    # Windows uses dynamic NT resolution via GetProcAddress in pal_win.c.
+    # No separate syscall stub file — the deprecated stub was removed.
+    list(APPEND COMMON_SOURCES
+        src/pal/pal_win.c
+    )
     set(PLATFORM_LIBS psapi setupapi advapi32)
     add_definitions(-D_WIN32_WINNT=0x0A00 -DWIN32_LEAN_AND_MEAN -D_WIN64)
 else()
-    list(APPEND COMMON_SOURCES src/pal/pal_linux.c src/syscalls/syscalls_linux.c)
+    list(APPEND COMMON_SOURCES
+        src/pal/pal_linux.c
+        src/syscalls/syscalls_linux.c
+    )
     set(PLATFORM_LIBS dl pthread)
     add_definitions(-D_GNU_SOURCE)
 endif()

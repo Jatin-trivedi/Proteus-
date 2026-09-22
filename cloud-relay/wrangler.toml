@@ -2,11 +2,12 @@ name = "jockey-relay"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# C2_AUTH is set as a Wrangler secret (not committed to source):
+#   npx wrangler secret put C2_AUTH
+
 [vars]
-C2_AUTH = "supersecret123"
 BACKEND_URL = "https://jockey-framework.onrender.com"
 
-# Bind the KV Namespace you created in the Cloudflare Dashboard
 [[kv_namespaces]]
 binding = "PAYLOAD_KV"
 id = "71a44eca334945f9933fe2dae116a8d0"
