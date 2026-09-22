@@ -105,6 +105,24 @@ class Lexer:
                 self.tokens.append(Token(TokenType.NOT_EQUALS, "!=", start_line, start_col, start_pos, 2))
                 continue
 
+            if char == "&" and self._peek() == "&":
+                start_line = self.line
+                start_col = self.column
+                start_pos = self.position
+                self.position += 2
+                self.column += 2
+                self.tokens.append(Token(TokenType.AND, "&&", start_line, start_col, start_pos, 2))
+                continue
+
+            if char == "|" and self._peek() == "|":
+                start_line = self.line
+                start_col = self.column
+                start_pos = self.position
+                self.position += 2
+                self.column += 2
+                self.tokens.append(Token(TokenType.OR, "||", start_line, start_col, start_pos, 2))
+                continue
+
             if char in self.single_char:
                 start_line = self.line
                 start_col = self.column

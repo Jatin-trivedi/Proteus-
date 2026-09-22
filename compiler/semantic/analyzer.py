@@ -2,14 +2,14 @@
 Semantic Analyzer for JOCKY.
 Validates namespaces, forensic functions, argument counts, and argument types against the ForensicFunctionRegistry.
 """
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 
 try:
-    from compiler.parser.ast import Program, AnalysisBlock, FunctionCall, Argument
+    from compiler.parser.ast import Program, AnalysisBlock, FunctionCall, Argument, LetStatement, BinaryOperation, Identifier
     from compiler.semantic.registry import ForensicFunctionRegistry, DEFAULT_REGISTRY
     from compiler.diagnostics.diagnostics import DiagnosticReporter, DiagnosticCode
 except (ImportError, ModuleNotFoundError):
-    from parser.ast import Program, AnalysisBlock, FunctionCall, Argument
+    from parser.ast import Program, AnalysisBlock, FunctionCall, Argument, LetStatement, BinaryOperation, Identifier
     from semantic.registry import ForensicFunctionRegistry, DEFAULT_REGISTRY
     from diagnostics.diagnostics import DiagnosticReporter, DiagnosticCode
 
@@ -38,11 +38,17 @@ class SemanticAnalyzer:
         return not self.reporter.has_errors()
 
     def _analyze_analysis_block(self, decl: AnalysisBlock):
+        scope: Dict[str, Tuple[Any, str]] = {}
         for stmt in decl.statements:
-            if isinstance(stmt, FunctionCall):
-                self._analyze_function_call(stmt)
+            if isinstance(stmt, LetStatement):
+                value = self._resolve_expression(stmt.value, scope)
+                if value is not None:
+                    scope[stmt.name] = value
+            elif isinstance(stmt, FunctionCall):
+                self._analyze_function_call(stmt, scope)
 
-    def _analyze_function_call(self, call: FunctionCall):
+    def _analyze_function_call(self, call: FunctionCall, scope: Optional[Dict[str, Tuple[Any, str]]] = None):
+        scope = scope or {}
         namespace = call.namespace
         function = call.function
 
@@ -112,7 +118,24 @@ class SemanticAnalyzer:
 
         # 5. Validate Argument Types (JOCKY-E2005)
         for idx, (arg_node, expected_arg_spec) in enumerate(zip(call.arguments, spec.arguments), start=1):
-            if arg_node.arg_type != expected_arg_spec.type:
+            if arg_node.arg_type == "identifier":
+                resolved = scope.get(str(arg_node.value))
+                if resolved is None:
+                    self.reporter.error(
+                        code=DiagnosticCode.UNKNOWN_IDENTIFIER,
+                        message=f"Unknown variable '{arg_node.value}'.",
+                        line=arg_node.line,
+                        column=arg_node.column,
+                        offset=arg_node.offset,
+                        length=len(str(arg_node.value)),
+                        help_text="Define the variable with `let` before using it as an argument.",
+                    )
+                    continue
+                arg_node.resolved_value, arg_node.resolved_type = resolved
+                actual_type = arg_node.resolved_type
+            else:
+                actual_type = arg_node.arg_type
+            if actual_type != expected_arg_spec.type:
                 self.reporter.error(
                     code=DiagnosticCode.WRONG_ARGUMENT_TYPE,
                     message=f"Invalid argument type for '{namespace}.{function}'.",
@@ -120,5 +143,34 @@ class SemanticAnalyzer:
                     column=arg_node.column,
                     offset=arg_node.offset,
                     length=len(str(arg_node.value)),
-                    help_text=f"Expected:\n{expected_arg_spec.type}\n\nReceived:\n{arg_node.arg_type}",
+                    help_text=f"Expected:\n{expected_arg_spec.type}\n\nReceived:\n{actual_type}",
                 )
+
+    def _resolve_expression(self, expression: Any, scope: Dict[str, Tuple[Any, str]]) -> Optional[Tuple[Any, str]]:
+        if isinstance(expression, Identifier):
+            resolved = scope.get(expression.name)
+            if resolved is None:
+                self.reporter.error(
+                    code=DiagnosticCode.UNKNOWN_IDENTIFIER,
+                    message=f"Unknown variable '{expression.name}'.",
+                    line=expression.line,
+                    column=expression.column,
+                    offset=expression.offset,
+                    length=len(expression.name),
+                    help_text="Define the variable with `let` before using it.",
+                )
+            return resolved
+        if isinstance(expression, BinaryOperation):
+            left = self._resolve_expression(expression.left, scope)
+            right = self._resolve_expression(expression.right, scope)
+            if left is None or right is None:
+                return None
+            if expression.op in ("&&", "||"):
+                return (bool(left[0]) and bool(right[0]), "boolean") if expression.op == "&&" else (bool(left[0]) or bool(right[0]), "boolean")
+            return None
+        if isinstance(expression, bool):
+            return expression, "boolean"
+        if hasattr(expression, "value"):
+            value = expression.value
+            return value, "number" if isinstance(value, (int, float)) else "string"
+        return None

@@ -77,6 +77,33 @@ class TestParser(unittest.TestCase):
         self.assertIs(args[2].value, False)
         self.assertEqual(args[2].arg_type, "boolean")
 
+    def test_parser_identifier_argument(self):
+        source = '''
+        analysis "Variable Argument" {
+            let pid = 1234;
+            processes.details(pid);
+        }
+        '''
+        reporter = DiagnosticReporter(source)
+        tokens = Lexer(source, reporter=reporter).tokenize()
+        ast = Parser(tokens, source=source, reporter=reporter).parse()
+
+        self.assertFalse(reporter.has_errors())
+        argument = ast.body[0].statements[1].arguments[0]
+        self.assertEqual(argument.value, "pid")
+        self.assertEqual(argument.arg_type, "identifier")
+
+    def test_parser_logical_operators(self):
+        source = 'function check() { let result = true && false || true }'
+        reporter = DiagnosticReporter(source)
+        tokens = Lexer(source, reporter=reporter).tokenize()
+        ast = Parser(tokens, source=source, reporter=reporter).parse()
+
+        self.assertFalse(reporter.has_errors())
+        expression = ast.body[0].body[0].value
+        self.assertEqual(expression.op, "||")
+        self.assertEqual(expression.left.op, "&&")
+
     def test_parser_missing_semicolon(self):
         source = '''
         analysis "Test" {

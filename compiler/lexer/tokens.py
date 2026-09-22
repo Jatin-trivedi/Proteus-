@@ -35,6 +35,8 @@ class TokenType(Enum):
     DIVIDE = auto()
     EQUALS = auto()
     NOT_EQUALS = auto()
+    AND = auto()
+    OR = auto()
     LESS_THAN = auto()
     GREATER_THAN = auto()
     DOT = auto()

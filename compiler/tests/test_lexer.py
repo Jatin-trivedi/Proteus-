@@ -56,7 +56,7 @@ class TestLexer(unittest.TestCase):
         self.assertIs(tokens[5].value, False)
 
     def test_lexer_punctuation_and_operators(self):
-        source = ". ; , ( ) { } = == != < > + - * /"
+        source = ". ; , ( ) { } = == != && || < > + - * /"
         lexer = Lexer(source)
         tokens = lexer.tokenize()
 
@@ -71,6 +71,8 @@ class TestLexer(unittest.TestCase):
             TokenType.ASSIGN,
             TokenType.EQUALS,
             TokenType.NOT_EQUALS,
+            TokenType.AND,
+            TokenType.OR,
             TokenType.LESS_THAN,
             TokenType.GREATER_THAN,
             TokenType.PLUS,

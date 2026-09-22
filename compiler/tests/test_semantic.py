@@ -102,6 +102,29 @@ class TestSemantic(unittest.TestCase):
         self.assertIn("number", err.help_text)
         self.assertIn("string", err.help_text)
 
+    def test_semantic_resolves_identifier_argument(self):
+        source = '''
+        analysis "Resolved Variable" {
+            let pid = 1024;
+            processes.details(pid);
+        }
+        '''
+        result = Compiler().compile(source)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.ir["operations"][0]["parameters"], {"pid": 1024})
+
+    def test_semantic_reports_unknown_identifier(self):
+        source = '''
+        analysis "Unknown Variable" {
+            processes.details(pid);
+        }
+        '''
+        result = Compiler().compile(source)
+
+        self.assertFalse(result.success)
+        self.assertTrue(any(d.code == DiagnosticCode.UNKNOWN_IDENTIFIER for d in result.diagnostics))
+
 
 if __name__ == "__main__":
     unittest.main()

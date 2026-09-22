@@ -147,7 +147,7 @@ class Parser:
 
         self._consume(TokenType.LBRACE)
 
-        statements: List[FunctionCall] = []
+        statements: List[ASTNode] = []
         while self.current_token.type != TokenType.RBRACE and self.current_token.type != TokenType.EOF:
             stmt = self._parse_analysis_statement()
             if stmt:
@@ -170,6 +170,9 @@ class Parser:
         return AnalysisDeclaration(name=name, statements=statements, line=start_tok.line, column=start_tok.column, offset=start_tok.offset)
 
     def _parse_analysis_statement(self) -> Optional[FunctionCall]:
+        if self.current_token.type == TokenType.LET:
+            return self._parse_let()
+
         call = self._parse_forensic_function_call()
         
         # Check for semicolon
@@ -301,6 +304,9 @@ class Parser:
         elif tok.type == TokenType.BOOLEAN:
             self._consume(TokenType.BOOLEAN)
             return Argument(value=tok.value, arg_type="boolean", line=tok.line, column=tok.column, offset=tok.offset)
+        elif tok.type == TokenType.IDENTIFIER:
+            self._consume(TokenType.IDENTIFIER)
+            return Argument(value=tok.value, arg_type="identifier", line=tok.line, column=tok.column, offset=tok.offset)
         else:
             self.reporter.error(
                 code=DiagnosticCode.SYNTAX_ERROR,
@@ -309,7 +315,7 @@ class Parser:
                 column=tok.column,
                 offset=tok.offset,
                 length=tok.length,
-                help_text="Forensic function arguments must be literals (e.g. \"./evidence\", 100, true).",
+                help_text="Forensic function arguments must be literals or variables (e.g. \"./evidence\", 100, true, pid).",
             )
             raise ParseError("Expected literal argument", tok)
 
@@ -509,7 +515,23 @@ class Parser:
         return None
 
     def _parse_expression(self):
-        return self._parse_equality()
+        return self._parse_logical_or()
+
+    def _parse_logical_or(self):
+        left = self._parse_logical_and()
+        while self.current_token.type == TokenType.OR:
+            op = self.current_token.value
+            self._advance()
+            left = BinaryOperation(left, op, self._parse_logical_and())
+        return left
+
+    def _parse_logical_and(self):
+        left = self._parse_equality()
+        while self.current_token.type == TokenType.AND:
+            op = self.current_token.value
+            self._advance()
+            left = BinaryOperation(left, op, self._parse_equality())
+        return left
 
     def _parse_equality(self):
         left = self._parse_primary()
@@ -528,6 +550,9 @@ class Parser:
         elif tok.type == TokenType.STRING:
             self._advance()
             return StringLiteral(tok.value, tok.line, tok.column, tok.offset)
+        elif tok.type == TokenType.BOOLEAN:
+            self._advance()
+            return tok.value
         elif tok.type == TokenType.IDENTIFIER:
             name = tok.value
             self._advance()

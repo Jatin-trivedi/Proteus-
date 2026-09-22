@@ -29,7 +29,9 @@ class Argument(ASTNode):
     ):
         super().__init__(line, column, offset)
         self.value = value
-        self.arg_type = arg_type  # 'string', 'number', 'boolean'
+        self.arg_type = arg_type  # 'string', 'number', 'boolean', or 'identifier'
+        self.resolved_value = None
+        self.resolved_type = None
 
     def to_dict(self) -> dict:
         return {

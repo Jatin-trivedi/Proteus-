@@ -186,6 +186,21 @@ class TestIRGenerator(unittest.TestCase):
             json.dumps(res2.ir, sort_keys=True),
         )
 
+    def test_variable_argument_is_emitted_as_resolved_value(self):
+        source = '''
+        analysis "Variable IR" {
+            let path = "./evidence";
+            filesystem.hash(path);
+        }
+        '''
+        result = self.compiler.compile(source)
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            result.ir["operations"][0]["parameters"],
+            {"path": "./evidence"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
