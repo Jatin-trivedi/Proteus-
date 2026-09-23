@@ -172,6 +172,7 @@ class AgentRegistry:
 
         return {
             "agent_id": agent.agent_id,
+            "agent_token": agent.token,
             "status": "registered",
             "heartbeat_interval": DEFAULT_HEARTBEAT_INTERVAL_SEC,
         }, 200

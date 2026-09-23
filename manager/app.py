@@ -10,6 +10,7 @@ from flask import Flask, jsonify, request
 from config import Config
 from models import db
 from flask_migrate import Migrate
+from flask_socketio import SocketIO
 from api.agent_routes import agent_bp
 from api.script_routes import script_bp
 from api.result_routes import result_bp
@@ -22,6 +23,7 @@ from api.investigation_routes import investigation_bp
 
 # Initialize Migrate after db
 migrate = Migrate()
+socketio = SocketIO(cors_allowed_origins="*")
 
 def create_app():
     app = Flask(__name__)
@@ -30,6 +32,7 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)   # <-- This enables 'flask db' commands
+    socketio.init_app(app)
     with app.app_context():
         db.create_all()
         # Ensure schema additions for existing SQLite database
@@ -129,4 +132,4 @@ app = create_app()
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    socketio.run(app, host="0.0.0.0", port=port, debug=True)

@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "ir_type": "jocky_forensic_ir",
+  "investigation": "Network Investigation",
+  "operations": [
+    {
+      "id": "op-001",
+      "type": "network.interfaces",
+      "parameters": {}
+    },
+    {
+      "id": "op-002",
+      "type": "network.connections",
+      "parameters": {}
+    },
+    {
+      "id": "op-003",
+      "type": "network.routes",
+      "parameters": {}
+    },
+    {
+      "id": "op-004",
+      "type": "network.dns",
+      "parameters": {}
+    }
+  ]
+}

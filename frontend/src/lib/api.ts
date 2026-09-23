@@ -1,3 +1,5 @@
+import { io, type Socket } from "socket.io-client";
+
 export type Agent = {
   agent_id: string;
   hostname: string | null;
@@ -40,6 +42,26 @@ export type Result = {
 const API_BASE_URL = (
   (import.meta.env as Record<string, string | undefined>)["VITE_API_BASE_URL"] || "/api/v1"
 ).replace(/\/$/, "");
+
+export type AuditEvent = {
+  timestamp: string;
+  event_type: string;
+  agent_id?: string;
+  job_id?: string;
+  investigation_id?: string;
+  detail?: string;
+  extra?: Record<string, unknown>;
+};
+
+export function connectRealtime(onEvent: (event: AuditEvent) => void): () => void {
+  const apiUrl = new URL(API_BASE_URL, window.location.origin);
+  const socket: Socket = io(apiUrl.origin, {
+    path: `${apiUrl.pathname.replace(/\/api\/v1$/, "")}/socket.io`,
+    transports: ["websocket", "polling"],
+  });
+  socket.on("audit_event", onEvent);
+  return () => socket.disconnect();
+}
 
 export class ApiError extends Error {
   constructor(

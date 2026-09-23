@@ -30,7 +30,7 @@ import { AppLayout, StatusDot } from "@/components/app-layout";
 import { MetricCard } from "@/components/metric-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { apiFetch, type Agent, type Deployment, type Result } from "@/lib/api";
+import { apiFetch, clearApiCache, connectRealtime, type Agent, type Deployment, type Result } from "@/lib/api";
 import { useEffect, useState, useRef } from "react";
 import {
   ResponsiveContainer,
@@ -175,6 +175,24 @@ function Dashboard() {
       })
       .catch((err: Error) => setError(err.message));
 
+    const disconnectRealtime = connectRealtime((event) => {
+      if (event.event_type !== "AGENT_HEARTBEAT" && event.event_type !== "JOB_COMPLETED") {
+        return;
+      }
+      clearApiCache();
+      Promise.all([
+        apiFetch<Agent[]>("/agent/list", { bypassCache: true }),
+        apiFetch<Deployment[]>("/script/deployments", { bypassCache: true }),
+        apiFetch<Result[]>("/result/list", { bypassCache: true }),
+      ])
+        .then(([agentData, deploymentData, resultData]) => {
+          setAgents(agentData);
+          setDeployments(deploymentData);
+          setResults(resultData);
+        })
+        .catch((err: Error) => setError(err.message));
+    });
+
     // Staggered entrance animation
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
@@ -203,7 +221,10 @@ function Dashboard() {
         );
     }, heroRef);
 
-    return () => ctx.revert();
+    return () => {
+      disconnectRealtime();
+      ctx.revert();
+    };
   }, []);
 
   const activity = results

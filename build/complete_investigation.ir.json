@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "ir_type": "jocky_forensic_ir",
+  "investigation": "Complete Investigation",
+  "operations": [
+    {
+      "id": "op-001",
+      "type": "system.info",
+      "parameters": {}
+    },
+    {
+      "id": "op-002",
+      "type": "system.users",
+      "parameters": {}
+    },
+    {
+      "id": "op-003",
+      "type": "processes.list",
+      "parameters": {}
+    },
+    {
+      "id": "op-004",
+      "type": "network.interfaces",
+      "parameters": {}
+    },
+    {
+      "id": "op-005",
+      "type": "network.connections",
+      "parameters": {}
+    },
+    {
+      "id": "op-006",
+      "type": "network.routes",
+      "parameters": {}
+    },
+    {
+      "id": "op-007",
+      "type": "network.dns",
+      "parameters": {}
+    },
+    {
+      "id": "op-008",
+      "type": "filesystem.metadata",
+      "parameters": {
+        "path": "./evidence"
+      }
+    },
+    {
+      "id": "op-009",
+      "type": "filesystem.hash",
+      "parameters": {
+        "path": "./evidence"
+      }
+    }
+  ]
+}

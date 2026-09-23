@@ -277,15 +277,17 @@ git push → GitHub Actions (ubuntu-latest)
               ├─ 1. Checkout repo
               ├─ 2. Setup Go 1.25 + Python 3.11
               ├─ 3. Install polymorphic engine deps
-              ├─ 4. go mod download (GOOS=windows, cross-compile)
-              ├─ 5. python ci_build.py
+              ├─ 4. Build execution_engine as a Windows DLL with MinGW
+              ├─ 5. go mod download (GOOS=windows, cross-compile)
+              ├─ 6. python ci_build.py
+              │       ├─ Encrypt libjockey.dll with the generated XOR key
               │       ├─ Copy all *.go from agent/
               │       ├─ Copy real go.mod + go.sum
               │       ├─ apply_obfuscations(main.go)
               │       └─ go build -trimpath -s -w → build/agent_<id>.exe
-              ├─ 6. sha256sum → printed to log
-              ├─ 7. Upload artifact (30-day retention)
-              └─ 8. Build summary written to GitHub step summary
+              ├─ 7. sha256sum → printed to log
+              ├─ 8. Upload artifact (30-day retention)
+              └─ 9. Build summary written to GitHub step summary
 ```
 
 ### What the Step Summary Looks Like
@@ -513,7 +515,11 @@ pip install -r polymorphic-engine/requirements.txt
 cd agent
 .\build.ps1
 
-# Or: polymorphic build via Python wrapper (cross-platform)
+# Or: build the native DLL, then create an embedded payload and agent
+cd ..\execution_engine
+cmake -S . -B build -DBUILD_SHARED=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --target jockey_shared
+Copy-Item (Get-ChildItem build -Filter jockey.dll -Recurse | Select-Object -First 1).FullName ..\agent\libjockey.dll
 cd ..
 python ci_build.py --os windows --arch amd64 --output-dir build/
 ```
@@ -549,7 +555,7 @@ python -m pytest -q
 python -m pytest runtime/tests/ -v
 
 # Integration
-python test_e2e_flow.py
+python -m pytest -q test_e2e_flow.py
 ```
 
 ---
@@ -565,6 +571,7 @@ cp .env.example .env
 | Variable | Default | Description |
 |:---|:---:|:---|
 | `PROTEUS_SERVER_URL` | `http://localhost:5000` | Manager API base URL |
+| `JWT_SECRET` | *(set in deployment)* | Secret used to sign manager login tokens |
 | `HEARTBEAT_INTERVAL` | `30` | Seconds between agent heartbeats |
 | `POLL_INTERVAL` | `15` | Seconds between task polls |
 | `JOB_TIMEOUT` | `300` | Max seconds a job may run |
@@ -574,6 +581,12 @@ cp .env.example .env
 | `AGENT_VERSION` | `1.0.0` | Agent version string |
 
 > **Never commit `.env` or secrets.** The `.gitignore` excludes `.env` and all `.env.*` variants except `.env.example`.
+
+For the Render.com manager service, set `JWT_SECRET` to a long random value before using
+protected API routes. The manager accepts `SECRET_KEY` as a backwards-compatible local
+override, but deployments should use `JWT_SECRET` explicitly. The dashboard connects to
+the manager's Socket.IO endpoint and refreshes on `AGENT_HEARTBEAT` and `JOB_COMPLETED`
+audit events.
 
 ---
 
