@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import json
 import logging
 from typing import Any, Optional
+from flask import current_app, has_app_context
 
 _audit_logger = logging.getLogger("proteus.audit")
 
@@ -87,3 +88,7 @@ def log_event(
         record["extra"] = _sanitize(extra)
 
     _audit_logger.info(json.dumps(record))
+    if has_app_context():
+        socketio = current_app.extensions.get("socketio")
+        if socketio:
+            socketio.emit("audit_event", record)

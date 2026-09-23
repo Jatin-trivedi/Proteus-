@@ -7,7 +7,10 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "jocky_sih_2024_dev")
+    # JWT_SECRET is the deployment-facing setting. SECRET_KEY remains as a
+    # backwards-compatible local override for existing installations.
+    JWT_SECRET = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY", "jocky_sih_2024_dev")
+    SECRET_KEY = JWT_SECRET
     db_url = os.getenv("DATABASE_URL")
     
     if not db_url:

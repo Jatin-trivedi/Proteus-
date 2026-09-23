@@ -549,7 +549,7 @@ python -m pytest -q
 python -m pytest runtime/tests/ -v
 
 # Integration
-python test_e2e_flow.py
+python -m pytest -q test_e2e_flow.py
 ```
 
 ---
@@ -565,6 +565,7 @@ cp .env.example .env
 | Variable | Default | Description |
 |:---|:---:|:---|
 | `PROTEUS_SERVER_URL` | `http://localhost:5000` | Manager API base URL |
+| `JWT_SECRET` | *(set in deployment)* | Secret used to sign manager login tokens |
 | `HEARTBEAT_INTERVAL` | `30` | Seconds between agent heartbeats |
 | `POLL_INTERVAL` | `15` | Seconds between task polls |
 | `JOB_TIMEOUT` | `300` | Max seconds a job may run |
@@ -574,6 +575,12 @@ cp .env.example .env
 | `AGENT_VERSION` | `1.0.0` | Agent version string |
 
 > **Never commit `.env` or secrets.** The `.gitignore` excludes `.env` and all `.env.*` variants except `.env.example`.
+
+For the Render.com manager service, set `JWT_SECRET` to a long random value before using
+protected API routes. The manager accepts `SECRET_KEY` as a backwards-compatible local
+override, but deployments should use `JWT_SECRET` explicitly. The dashboard connects to
+the manager's Socket.IO endpoint and refreshes on `AGENT_HEARTBEAT` and `JOB_COMPLETED`
+audit events.
 
 ---
 

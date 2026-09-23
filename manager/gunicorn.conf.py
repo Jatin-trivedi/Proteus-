@@ -4,8 +4,9 @@ import os
 bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
 
 # Keep the default conservative for deployments with limited database connections.
-workers = int(os.getenv("WEB_CONCURRENCY", "3"))
-worker_class = "sync"
+workers = int(os.getenv("WEB_CONCURRENCY", "1"))
+worker_class = "gthread"
+threads = int(os.getenv("GUNICORN_THREADS", "100"))
 timeout = 120
 graceful_timeout = 30
 max_requests = 1000

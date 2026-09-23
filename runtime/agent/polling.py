@@ -51,7 +51,7 @@ def _http_request(
     """Performs a simple HTTP request and returns parsed JSON."""
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if token:
-        headers["Authorization"] = f"Bearer {token}"
+        headers["Authorization"] = "Bearer " + token
 
     data = json.dumps(payload).encode("utf-8") if payload is not None else None
     req = urllib.request.Request(url, data=data, headers=headers, method=method)

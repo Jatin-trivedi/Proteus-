@@ -5,6 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import db, Agent, Deploy, Script, Finding, Result
 from middleware.auth import jwt_required
 from agent_registry import AgentRegistry
+from audit_logger import log_event, AuditEvent
 
 agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 
@@ -64,6 +65,13 @@ def heartbeat():
     resp_data, status_code = AgentRegistry.update_heartbeat(data)
     if status_code != 200:
         return jsonify(resp_data), status_code
+
+    log_event(
+        AuditEvent.AGENT_HEARTBEAT,
+        agent_id=data.get("agent_id"),
+        detail="Agent heartbeat received",
+        extra={"status": data.get("status"), "current_job": data.get("current_job")},
+    )
 
     agent_id = data.get('agent_id')
     # Backward compatibility: attach pending deploy if one exists
