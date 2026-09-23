@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "type": "forensic_analysis",
+  "name": "System Investigation",
+  "operations": [
+    {
+      "id": 1,
+      "namespace": "system",
+      "function": "info",
+      "arguments": []
+    },
+    {
+      "id": 2,
+      "namespace": "system",
+      "function": "users",
+      "arguments": []
+    },
+    {
+      "id": 3,
+      "namespace": "processes",
+      "function": "list",
+      "arguments": []
+    },
+    {
+      "id": 4,
+      "namespace": "network",
+      "function": "interfaces",
+      "arguments": []
+    },
+    {
+      "id": 5,
+      "namespace": "network",
+      "function": "connections",
+      "arguments": []
+    },
+    {
+      "id": 6,
+      "namespace": "filesystem",
+      "function": "hash",
+      "arguments": [
+        "./evidence"
+      ]
+    }
+  ]
+}
