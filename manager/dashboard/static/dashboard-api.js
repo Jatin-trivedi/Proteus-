@@ -5,7 +5,7 @@
     'use strict';
 
     let isFetching = false;
-    let pollInterval = null;
+    let realtimeSocket = null;
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -360,17 +360,42 @@
 
     window.loadFleetDashboard = loadFleetDashboard;
 
+    function connectRealtime() {
+        if (typeof io !== 'function') {
+            console.error('[Dashboard API] Socket.IO client is unavailable');
+            return;
+        }
+
+        const apiUrl = new URL(window.MANAGER_BASE_URL || window.location.origin, window.location.origin);
+        const basePath = apiUrl.pathname.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '') || '/';
+        const socketPath = `${basePath === '/' ? '' : basePath}/socket.io`;
+        realtimeSocket = io(apiUrl.origin, {
+            path: socketPath,
+            transports: ['websocket', 'polling'],
+        });
+
+        realtimeSocket.on('connect', () => {
+            loadFleetDashboard();
+        });
+        realtimeSocket.on('audit_event', event => {
+            window.dispatchEvent(new CustomEvent('audit_event', { detail: event }));
+            loadFleetDashboard();
+        });
+        realtimeSocket.on('connect_error', error => {
+            console.error('[Dashboard API] Socket.IO connection failed:', error.message);
+        });
+    }
+
     // Boot
     function init() {
         loadFleetDashboard();
+        connectRealtime();
         const evidenceButton = document.getElementById('evidence-load-btn');
         const evidenceInput = document.getElementById('evidence-job-id');
         if (evidenceButton) evidenceButton.addEventListener('click', loadEvidenceDashboard);
         if (evidenceInput) evidenceInput.addEventListener('keydown', event => {
             if (event.key === 'Enter') loadEvidenceDashboard();
         });
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(loadFleetDashboard, 6000);
     }
 
     if (document.readyState === 'loading') {
