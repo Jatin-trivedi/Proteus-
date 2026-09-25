@@ -1,13 +1,71 @@
 import csv
 import io
 import json
+from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, send_file
 from models import db, Finding, Report, Result, Agent
 from middleware.auth import jwt_required
+from audit_logger import get_audit_events
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 report_bp = Blueprint("report", __name__, url_prefix="/api/v1/report")
+
+
+def build_siem_document(filters):
+    """Build a JSON-LD security-event document for SIEM ingestion."""
+    query = Finding.query
+    if filters.get("agent_id"):
+        query = query.filter_by(agent_id=filters["agent_id"])
+    if filters.get("severity"):
+        query = query.filter_by(severity=filters["severity"])
+
+    finding_events = []
+    for finding in query.order_by(Finding.created_at.desc()).all():
+        finding_data = finding.to_dict()
+        finding_events.append({
+            "@type": "FindingEvent",
+            "event_type": "finding",
+            "event_id": finding.finding_id,
+            "timestamp": finding_data["created_at"],
+            "severity": finding.severity,
+            "source": "proteus.manager",
+            "message": finding.title,
+            "finding": finding_data,
+        })
+
+    audit_events = []
+    for event in get_audit_events(
+        agent_id=filters.get("agent_id"),
+        event_type=filters.get("event_type"),
+    ):
+        audit_events.append({
+            "@type": "AuditEvent",
+            "event_type": "audit",
+            "event_id": f"audit:{event['timestamp']}:{event['event_type']}",
+            "timestamp": event["timestamp"],
+            "severity": "info",
+            "source": "proteus.manager",
+            "message": event["event_type"],
+            "audit": event,
+        })
+
+    events = finding_events + audit_events
+    events.sort(key=lambda event: event["timestamp"], reverse=True)
+    return {
+        "@context": {
+            "@vocab": "https://proteus.example/schema/siem#",
+            "event_id": "https://schema.org/identifier",
+            "timestamp": "https://schema.org/dateCreated",
+            "message": "https://schema.org/description",
+        },
+        "@type": "SecurityEventBundle",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": "proteus.manager",
+        "filters": filters,
+        "event_count": len(events),
+        "events": events,
+    }
 
 
 def build_content(filters):
@@ -71,6 +129,23 @@ def get_report(report_id):
     if not report:
         return jsonify({"error": "Report not found"}), 404
     return jsonify(report.to_dict()), 200
+
+
+@report_bp.get("/export/siem")
+def export_siem():
+    """Export findings and recent audit events as a JSON-LD SIEM bundle."""
+    filters = {
+        key: request.args[key]
+        for key in ("agent_id", "severity", "event_type")
+        if request.args.get(key)
+    }
+    document = json.dumps(build_siem_document(filters), ensure_ascii=False, indent=2)
+    return send_file(
+        io.BytesIO(document.encode("utf-8")),
+        mimetype="application/ld+json",
+        as_attachment=True,
+        download_name="proteus_siem_events.jsonld",
+    )
 
 
 @report_bp.delete("/<report_id>")

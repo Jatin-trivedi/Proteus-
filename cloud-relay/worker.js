@@ -42,7 +42,7 @@ export default {
       if (!agentId) return json({ error: "agent_id required" }, 400);
 
       try {
-        const resp = await fetch(`${env.BACKEND_URL}/api/v1/agent/heartbeat`, {
+        const resp = await backendFetch(env, `${env.BACKEND_URL}/api/v1/agent/heartbeat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -74,10 +74,17 @@ export default {
     if (!["GET", "HEAD"].includes(request.method)) {
       init.body = request.body;
     }
-    try { return await fetch(backendUrl, init); }
+    try { return await backendFetch(env, backendUrl, init); }
     catch { return json({ error: "backend unavailable" }, 503); }
   },
 };
+
+function backendFetch(env, resource, init) {
+  if (!env.RELAY_MTLS || typeof env.RELAY_MTLS.fetch !== "function") {
+    throw new Error("RELAY_MTLS binding is not configured");
+  }
+  return env.RELAY_MTLS.fetch(resource, init);
+}
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {

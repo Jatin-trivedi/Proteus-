@@ -257,6 +257,25 @@
        RESULTS / FORENSICS SECTION
     ========================================================= */
     .results-sec{position:relative;z-index:1;background:var(--surf);border-top:1px solid var(--bors);border-bottom:1px solid var(--bors)}
+    .evidence-panel{padding:var(--sp8);}
+    .evidence-toolbar{display:flex;align-items:end;gap:var(--sp3);flex-wrap:wrap;margin-top:var(--sp6);}
+    .evidence-toolbar .form-group{margin-bottom:0;flex:1 1 280px;}
+    .evidence-summary{display:flex;gap:var(--sp3);flex-wrap:wrap;margin-top:var(--sp6);}
+    .evidence-stat{min-width:120px;padding:var(--sp3) var(--sp4);background:var(--surf2);border:1px solid var(--bors);border-radius:var(--r-md);}
+    .evidence-stat strong{display:block;font-size:var(--text-lg);color:var(--tp);}
+    .evidence-stat span{font-size:var(--text-xs);color:var(--tm);}
+    .evidence-list{display:grid;gap:var(--sp3);margin-top:var(--sp6);}
+    .evidence-item{padding:var(--sp4);background:var(--surf2);border:1px solid var(--bors);border-radius:var(--r-md);}
+    .evidence-item.is-verified{border-color:rgba(16,185,129,.45);}
+    .evidence-item.is-mismatch{border-color:rgba(244,63,94,.55);}
+    .evidence-item-head{display:flex;align-items:start;justify-content:space-between;gap:var(--sp3);flex-wrap:wrap;}
+    .evidence-item-meta{display:flex;gap:var(--sp3);flex-wrap:wrap;margin-top:var(--sp2);font-size:var(--text-xs);color:var(--tm);}
+    .evidence-hash{display:block;margin-top:var(--sp3);overflow-wrap:anywhere;font-size:var(--text-xs);line-height:1.6;color:var(--tm);}
+    .evidence-data{margin-top:var(--sp3);max-height:180px;overflow:auto;padding:var(--sp3);background:var(--bg);border:1px solid var(--bors);border-radius:var(--r-sm);font-size:var(--text-xs);white-space:pre-wrap;overflow-wrap:anywhere;color:var(--tp);}
+    .evidence-status{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:var(--r-pill);font:600 var(--text-xs)/1 'JetBrains Mono',monospace;white-space:nowrap;}
+    .evidence-status.is-verified{background:rgba(16,185,129,.12);color:var(--emerald-safe);}
+    .evidence-status.is-mismatch{background:rgba(244,63,94,.12);color:var(--crimson-alert);}
+    .evidence-status.is-unavailable{background:rgba(245,158,11,.12);color:var(--amber-warn);}
     
     .table-container{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--bors);background:var(--surf2)}
     .f-table{width:100%;border-collapse:collapse;text-align:left;font-size:var(--text-sm)}
@@ -409,6 +428,32 @@
   <div class="hero-scroll" aria-hidden="true">
     <span>Scroll</span>
     <svg class="hero-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- ===================== EVIDENCE INTEGRITY ===================== -->
+<section id="evidence-integrity" class="sec results-sec">
+  <div class="ctr">
+    <div class="gc evidence-panel">
+      <span class="slabel">Chain of custody</span>
+      <h2 class="stitle">Evidence Integrity</h2>
+      <p class="ssub">Inspect collected artifacts and verify each SHA-256 digest against its canonical evidence payload.</p>
+
+      <div class="evidence-toolbar">
+        <div class="form-group">
+          <label class="form-label" for="evidence-job-id">Job ID</label>
+          <input id="evidence-job-id" class="form-input" type="text" placeholder="JOB-..." autocomplete="off" spellcheck="false" />
+        </div>
+        <button id="evidence-load-btn" class="btn btn-p" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+          Verify evidence
+        </button>
+      </div>
+
+      <div id="evidence-feedback" class="text-slate-500 dark:text-slate-400 text-xs mt-4" role="status" aria-live="polite">Enter a job ID to inspect its evidence package.</div>
+      <div id="evidence-summary" class="evidence-summary" hidden></div>
+      <div id="evidence-list" class="evidence-list" aria-live="polite"></div>
+    </div>
   </div>
 </section>
 
@@ -750,6 +795,7 @@
 
 <!-- JOCKY Animations: Lenis + GSAP + Spotlight -->
 <script src="/static/animations.js"></script>
+<script src="{{ url_for('static', filename='dashboard-api.js') }}"></script>
 <script>
 (function(){
   // Detect Base URL

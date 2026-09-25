@@ -1,4 +1,5 @@
 import os
+import ssl
 
 # Bind
 bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
@@ -12,6 +13,14 @@ graceful_timeout = 30
 max_requests = 1000
 max_requests_jitter = 100
 preload_app = True
+
+# Gunicorn terminates TLS in production. When mTLS is enabled, only clients
+# signed by the configured relay CA can complete the TLS handshake.
+if os.getenv("MTLS_REQUIRED", "false").lower() in {"1", "true", "yes", "on"}:
+    certfile = os.environ["MTLS_SERVER_CERT"]
+    keyfile = os.environ["MTLS_SERVER_KEY"]
+    ca_certs = os.environ["MTLS_CLIENT_CA"]
+    cert_reqs = ssl.CERT_REQUIRED
 
 # Logging
 accesslog = "-"

@@ -1,4 +1,5 @@
 import os
+import ssl
 import sys
 
 # Ensure manager directory is on sys.path
@@ -25,10 +26,33 @@ from api.investigation_routes import investigation_bp
 migrate = Migrate()
 socketio = SocketIO(cors_allowed_origins="*")
 
+
+def build_ssl_context(config):
+    """Build a server TLS context that requires certificates signed by the relay CA."""
+    tls_values = (
+        config.get("MTLS_SERVER_CERT"),
+        config.get("MTLS_SERVER_KEY"),
+        config.get("MTLS_CLIENT_CA"),
+    )
+    if not any(tls_values):
+        if config.get("MTLS_REQUIRED"):
+            raise RuntimeError("MTLS_REQUIRED is enabled but certificate paths are missing")
+        return None
+    if not all(tls_values):
+        raise RuntimeError("MTLS_SERVER_CERT, MTLS_SERVER_KEY, and MTLS_CLIENT_CA are all required")
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.load_cert_chain(config["MTLS_SERVER_CERT"], config["MTLS_SERVER_KEY"])
+    context.load_verify_locations(cafile=config["MTLS_CLIENT_CA"])
+    context.verify_mode = ssl.CERT_REQUIRED
+    return context
+
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-
+    app.extensions["ssl_context"] = build_ssl_context(app.config)
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)   # <-- This enables 'flask db' commands
@@ -132,4 +156,10 @@ app = create_app()
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", 5000))
-    socketio.run(app, host="0.0.0.0", port=port, debug=True)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        debug=True,
+        ssl_context=app.extensions["ssl_context"],
+    )
