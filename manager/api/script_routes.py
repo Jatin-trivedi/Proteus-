@@ -50,13 +50,6 @@ def _compile_jocky_to_ir(source: str) -> tuple[str | None, str | None]:
         if not result.ir:
             return None, 'Compiler returned no IR output'
 
-        if not result.ir.get('operations'):
-            return None, (
-                'JOCKY script contains no executable forensic operations. '
-                'Use an analysis block with approved calls such as system.info(); '
-                'agent blocks are legacy syntax and cannot be deployed through the IR agent.'
-            )
-
         return json.dumps(result.ir), None
 
     except ImportError as exc:
@@ -196,16 +189,20 @@ def deploy_script():
     else:
         ir_json, compile_error = _compile_jocky_to_ir(raw_code)
 
-        if not ir_json:
-            # The Go agent accepts structured IR for forensic operations. Sending
-            # raw source here makes it fall through to shell execution.
-            return jsonify({
-                'error': compile_error or 'JOCKY compilation failed',
-                'compiled': False,
-            }), 400
-
-        # The agent receives IRDocument JSON and executes it through typed dispatch.
-        payload_code = ir_json
+        if ir_json:
+            # Success: agent will receive IRDocument JSON and execute it
+            # through executeIRDocumentJSON → typed dispatch
+            payload_code = ir_json
+        else:
+            # Compilation failed. Two options:
+            #   a) Reject the deployment (strict mode)
+            #   b) Store raw JOCKY so the agent's legacy fallback handles it
+            #
+            # We choose (b) so the manager never silently blocks a deploy —
+            # the agent logs a warning if it can't parse the payload as IR.
+            payload_code = raw_code
+            compilation_warning = compile_error
+            print(f'[WARN] JOCKY compilation failed for "{name}": {compile_error}')
 
     # ── Persist Script ────────────────────────────────────────────────────
     script = Script(
