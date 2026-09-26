@@ -53,7 +53,6 @@ export default {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-C2-Auth":     request.headers.get("X-C2-Auth") || "",
           },
           body: JSON.stringify({ agent_id: agentId }),
         });
@@ -77,7 +76,10 @@ export default {
     }
 
     const backendUrl = env.BACKEND_URL + url.pathname + url.search;
-    const init = { method: request.method, headers: request.headers };
+    const init = {
+      method: request.method,
+      headers: headersForManager(request.headers),
+    };
     if (!["GET", "HEAD"].includes(request.method)) {
       init.body = request.body;
     }
@@ -91,6 +93,12 @@ function backendFetch(env, resource, init) {
     throw new Error("RELAY_MTLS binding is not configured");
   }
   return env.RELAY_MTLS.fetch(resource, init);
+}
+
+function headersForManager(headers) {
+  const forwarded = new Headers(headers);
+  forwarded.delete("X-C2-Auth");
+  return forwarded;
 }
 
 function json(obj, status = 200) {

@@ -223,7 +223,11 @@ binding = "PAYLOAD_KV"
 id      = "<your-kv-id>"
 ```
 
-Secrets (like `C2_AUTH`) are set via `wrangler secret put C2_AUTH`.
+Secrets (like `C2_AUTH`) are set via `wrangler secret put C2_AUTH`. The relay
+checks `X-C2-Auth` at the edge and does not forward that shared secret to the
+manager. The manager does not validate `C2_AUTH`; its own user and agent routes
+use their configured authentication mechanisms, and mTLS is enforced only when
+`MTLS_REQUIRED` is enabled.
 
 ---
 
