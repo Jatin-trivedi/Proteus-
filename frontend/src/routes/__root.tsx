@@ -14,6 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
+import { AppLoader } from "@/components/app-loader";
 
 function NotFoundComponent() {
   return (
@@ -132,6 +133,7 @@ function RootComponent() {
             <Outlet />
           </AuthenticationGate>
         </SmoothScroll>
+        <AppLoader />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>

@@ -8,6 +8,25 @@ compatibility_date = "2024-01-01"
 [vars]
 BACKEND_URL = "https://jockey-framework.onrender.com"
 
+# Upload the relay client certificate and private key, then replace the
+# certificate_id below with the ID returned by Wrangler. The Worker refuses
+# backend requests when this binding is absent.
+# npx wrangler mtls-certificate upload --cert relay-client.pem --key relay-client.key --name proteus-relay
+# npx wrangler mtls-certificate list
+
+[[mtls_certificates]]
+binding = "RELAY_MTLS"
+certificate_id = "REPLACE_WITH_WRANGLER_MTLS_CERTIFICATE_ID"
+
 [[kv_namespaces]]
 binding = "PAYLOAD_KV"
 id = "71a44eca334945f9933fe2dae116a8d0"
+
+# Replace namespace_id with a unique positive integer for this account.
+[[ratelimits]]
+name = "AGENT_POLL_RATE_LIMITER"
+namespace_id = "1001"
+
+	[ratelimits.simple]
+	limit = 60
+	period = 60

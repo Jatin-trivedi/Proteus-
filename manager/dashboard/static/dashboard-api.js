@@ -5,7 +5,7 @@
     'use strict';
 
     let isFetching = false;
-    let pollInterval = null;
+    let realtimeSocket = null;
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -237,13 +237,165 @@
         }
     };
 
+    function canonicalizeEvidence(value) {
+        if (Array.isArray(value)) {
+            return `[${value.map(canonicalizeEvidence).join(',')}]`;
+        }
+        if (value !== null && typeof value === 'object') {
+            return `{${Object.keys(value).sort().map(key => `${canonicalizeEvidenceString(key)}:${canonicalizeEvidence(value[key])}`).join(',')}}`;
+        }
+        return canonicalizeEvidenceString(value);
+    }
+
+    function canonicalizeEvidenceString(value) {
+        return JSON.stringify(value).replace(/[^\x00-\x7F]/g, character => `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`);
+    }
+
+    async function sha256Hex(value) {
+        const bytes = new TextEncoder().encode(canonicalizeEvidence(value));
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function evidenceStatusMarkup(status) {
+        const labels = {
+            verified: 'Verified',
+            mismatch: 'Hash mismatch',
+            unavailable: 'Unable to verify',
+        };
+        return `<span class="evidence-status is-${status}"><span aria-hidden="true">${status === 'verified' ? '✓' : status === 'mismatch' ? '!' : '?'}</span>${labels[status]}</span>`;
+    }
+
+    function evidenceItemMarkup(item, status, computedHash) {
+        const itemId = escapeHtml(item.evidence_id || 'Unknown artifact');
+        const operation = escapeHtml(item.operation_type || item.operation_id || 'Unknown operation');
+        const collectedAt = item.collected_at ? new Date(item.collected_at).toLocaleString() : 'Unknown time';
+        const expectedHash = escapeHtml(item.sha256 || 'Not provided');
+        const hashDetail = computedHash
+            ? `<span>Computed: <code>${escapeHtml(computedHash)}</code></span>`
+            : '<span>Computed: unavailable</span>';
+
+        return `<article class="evidence-item is-${status}">
+            <div class="evidence-item-head">
+                <div>
+                    <h3 class="font-heading font-bold text-slate-900 dark:text-white text-sm">${itemId}</h3>
+                    <div class="evidence-item-meta">
+                        <span>Operation: <code>${operation}</code></span>
+                        <span>Collected: ${escapeHtml(collectedAt)}</span>
+                    </div>
+                </div>
+                ${evidenceStatusMarkup(status)}
+            </div>
+            <div class="evidence-hash"><span>Expected: <code>${expectedHash}</code></span> ${hashDetail}</div>
+            <pre class="evidence-data">${escapeHtml(JSON.stringify(item.data, null, 2))}</pre>
+        </article>`;
+    }
+
+    async function verifyEvidenceItem(item) {
+        if (!item || item.data === undefined || !item.sha256) {
+            return { item, status: 'unavailable', computedHash: '' };
+        }
+
+        try {
+            const computedHash = await sha256Hex(item.data);
+            return {
+                item,
+                computedHash,
+                status: computedHash === String(item.sha256).toLowerCase() ? 'verified' : 'mismatch',
+            };
+        } catch (error) {
+            console.warn('[Dashboard API] Evidence verification failed:', error);
+            return { item, status: 'unavailable', computedHash: '' };
+        }
+    }
+
+    async function loadEvidenceDashboard() {
+        const input = document.getElementById('evidence-job-id');
+        const button = document.getElementById('evidence-load-btn');
+        const feedback = document.getElementById('evidence-feedback');
+        const summary = document.getElementById('evidence-summary');
+        const list = document.getElementById('evidence-list');
+        const jobId = input ? input.value.trim() : '';
+
+        if (!feedback || !summary || !list || !jobId) {
+            if (feedback && !jobId) feedback.textContent = 'Enter a job ID to inspect its evidence package.';
+            return;
+        }
+
+        if (button) button.disabled = true;
+        feedback.textContent = 'Loading evidence package...';
+        summary.hidden = true;
+        list.innerHTML = '';
+
+        try {
+            const response = await fetch(`/api/v1/jobs/${encodeURIComponent(jobId)}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const job = await response.json();
+            const evidence = Array.isArray(job.evidence) ? job.evidence : [];
+            const results = await Promise.all(evidence.map(verifyEvidenceItem));
+            const counts = results.reduce((total, result) => {
+                total[result.status] += 1;
+                return total;
+            }, { verified: 0, mismatch: 0, unavailable: 0 });
+
+            feedback.textContent = `${job.job_id || jobId} · ${job.status || 'Unknown status'}`;
+            summary.innerHTML = `
+                <div class="evidence-stat"><strong>${evidence.length}</strong><span>Artifacts</span></div>
+                <div class="evidence-stat"><strong>${counts.verified}</strong><span>Verified</span></div>
+                <div class="evidence-stat"><strong>${counts.mismatch}</strong><span>Mismatches</span></div>
+                <div class="evidence-stat"><strong>${counts.unavailable}</strong><span>Unavailable</span></div>`;
+            summary.hidden = false;
+            list.innerHTML = evidence.length
+                ? results.map(result => evidenceItemMarkup(result.item, result.status, result.computedHash)).join('')
+                : '<div class="p-4 rounded-xl border border-dashed border-slate-300 dark:border-white/10 text-slate-500 dark:text-slate-400 text-sm">No evidence artifacts are attached to this job.</div>';
+        } catch (error) {
+            feedback.textContent = `Unable to load evidence: ${error.message}`;
+            list.innerHTML = '';
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
+    window.loadEvidenceDashboard = loadEvidenceDashboard;
+
     window.loadFleetDashboard = loadFleetDashboard;
+
+    function connectRealtime() {
+        if (typeof io !== 'function') {
+            console.error('[Dashboard API] Socket.IO client is unavailable');
+            return;
+        }
+
+        const apiUrl = new URL(window.MANAGER_BASE_URL || window.location.origin, window.location.origin);
+        const basePath = apiUrl.pathname.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '') || '/';
+        const socketPath = `${basePath === '/' ? '' : basePath}/socket.io`;
+        realtimeSocket = io(apiUrl.origin, {
+            path: socketPath,
+            transports: ['websocket', 'polling'],
+        });
+
+        realtimeSocket.on('connect', () => {
+            loadFleetDashboard();
+        });
+        realtimeSocket.on('audit_event', event => {
+            window.dispatchEvent(new CustomEvent('audit_event', { detail: event }));
+            loadFleetDashboard();
+        });
+        realtimeSocket.on('connect_error', error => {
+            console.error('[Dashboard API] Socket.IO connection failed:', error.message);
+        });
+    }
 
     // Boot
     function init() {
         loadFleetDashboard();
-        if (pollInterval) clearInterval(pollInterval);
-        pollInterval = setInterval(loadFleetDashboard, 6000);
+        connectRealtime();
+        const evidenceButton = document.getElementById('evidence-load-btn');
+        const evidenceInput = document.getElementById('evidence-job-id');
+        if (evidenceButton) evidenceButton.addEventListener('click', loadEvidenceDashboard);
+        if (evidenceInput) evidenceInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') loadEvidenceDashboard();
+        });
     }
 
     if (document.readyState === 'loading') {

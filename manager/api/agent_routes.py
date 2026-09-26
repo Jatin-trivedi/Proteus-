@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 import uuid
 from sqlalchemy.exc import SQLAlchemyError
-from models import db, Agent, Deploy, Script, Finding, Result
+from models import db, Agent, Deploy, Script, Finding, Result, Job, Evidence
 from middleware.auth import jwt_required
 from agent_registry import AgentRegistry
 from audit_logger import log_event, AuditEvent
@@ -168,6 +168,16 @@ def delete_agent(agent_id):
         return jsonify({'error': 'Agent not found'}), 404
 
     try:
+        jobs = Job.query.filter_by(agent_id=agent_id).all()
+        job_ids = [job.job_id for job in jobs]
+        if job_ids:
+            Evidence.query.filter(
+                (Evidence.agent_id == agent_id) | (Evidence.job_id.in_(job_ids))
+            ).delete(synchronize_session=False)
+        else:
+            Evidence.query.filter_by(agent_id=agent_id).delete(synchronize_session=False)
+        Job.query.filter_by(agent_id=agent_id).delete(synchronize_session=False)
+
         results = Result.query.filter_by(agent_id=agent_id).all()
         result_ids = [result.result_id for result in results]
 

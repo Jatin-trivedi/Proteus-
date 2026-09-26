@@ -102,7 +102,6 @@ export function ProteusLogo({
           glow={glow}
           {...props}
         />
-        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary pulse-dot" />
       </div>
       <div className="flex flex-col">
         <span className="text-xl sm:text-2xl font-black tracking-[0.18em] text-white font-sans leading-none select-none">

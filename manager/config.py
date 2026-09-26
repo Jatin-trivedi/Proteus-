@@ -23,6 +23,11 @@ class Config:
     DATABASE_URL = db_url
     SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    AUDIT_LOG_PATH = os.getenv("AUDIT_LOG_PATH", os.path.join(BASE_DIR, "audit.log"))
+    MTLS_REQUIRED = os.getenv("MTLS_REQUIRED", "false").lower() in {"1", "true", "yes", "on"}
+    MTLS_SERVER_CERT = os.getenv("MTLS_SERVER_CERT")
+    MTLS_SERVER_KEY = os.getenv("MTLS_SERVER_KEY")
+    MTLS_CLIENT_CA = os.getenv("MTLS_CLIENT_CA")
     JWT_EXPIRATION = 3600  # seconds
     JWT_ALGORITHM = "HS256"
     
