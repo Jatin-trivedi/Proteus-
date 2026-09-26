@@ -41,6 +41,13 @@ export default {
       const agentId = body.agent_id;
       if (!agentId) return json({ error: "agent_id required" }, 400);
 
+      const { success } = await env.AGENT_POLL_RATE_LIMITER.limit({
+        key: String(agentId),
+      });
+      if (!success) {
+        return json({ error: "poll rate limit exceeded" }, 429);
+      }
+
       try {
         const resp = await backendFetch(env, `${env.BACKEND_URL}/api/v1/agent/heartbeat`, {
           method: "POST",

@@ -218,6 +218,129 @@
   -webkit-text-fill-color: transparent;
 }
 
+.app-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #08090c;
+  transition: opacity 450ms ease, visibility 450ms ease;
+}
+
+.app-loader--exit {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.app-loader__aura {
+  position: absolute;
+  width: min(70vw, 520px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.2), rgba(8, 9, 12, 0) 68%);
+  filter: blur(12px);
+  animation: app-loader-aura 2.8s ease-in-out infinite;
+}
+
+.app-loader__mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  animation: app-loader-breathe 2.2s ease-in-out infinite;
+}
+
+.app-loader__ring {
+  position: absolute;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  border-radius: 50%;
+  animation: app-loader-ring 2.2s ease-out infinite;
+}
+
+.app-loader__ring--outer {
+  inset: 0;
+}
+
+.app-loader__ring--inner {
+  inset: 14px;
+  border-color: rgba(255, 255, 255, 0.2);
+  animation-delay: 0.55s;
+}
+
+.app-loader__wordmark {
+  position: relative;
+  margin-top: 22px;
+  color: #f5f7f2;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+
+.app-loader__status {
+  position: relative;
+  margin-top: 10px;
+  color: #9b9e9a;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-loader__progress {
+  position: relative;
+  width: 116px;
+  height: 2px;
+  margin-top: 24px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.app-loader__progress span {
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: #c084fc;
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.8);
+  animation: app-loader-progress 1.4s ease-in-out infinite;
+}
+
+@keyframes app-loader-aura {
+  0%, 100% { transform: scale(0.86); opacity: 0.55; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes app-loader-breathe {
+  0%, 100% { transform: scale(0.96); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes app-loader-ring {
+  0% { transform: scale(0.72); opacity: 0; }
+  28% { opacity: 1; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+
+@keyframes app-loader-progress {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(340%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loader__aura,
+  .app-loader__mark,
+  .app-loader__ring,
+  .app-loader__progress span {
+    animation: none;
+  }
+}
+
 /* Card Shadows & Glass */
 @utility panel {
   background-color: #15171C;
