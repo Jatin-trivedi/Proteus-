@@ -2,25 +2,25 @@
 
 # 🔱 Proteus
 
-### Cross-Platform Forensic Scripting & Analysis Framework
+### Forensic Collection and Analysis Prototype
 
 [![CI — Polymorphic Build](https://img.shields.io/github/actions/workflow/status/Jatin-trivedi/Proteus-/build.yml?label=Polymorphic%20CI&logo=github&style=flat-square)](https://github.com/Jatin-trivedi/Proteus-/actions)
 [![Go](https://img.shields.io/badge/Agent-Go%201.25-00ADD8?style=flat-square&logo=go)](https://go.dev/)
 [![Python](https://img.shields.io/badge/Engine-Python%203.11-3776AB?style=flat-square&logo=python)](https://python.org/)
 [![TypeScript](https://img.shields.io/badge/Frontend-TypeScript-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Cloudflare Workers](https://img.shields.io/badge/Relay-Cloudflare%20Workers-F38020?style=flat-square&logo=cloudflare)](https://workers.cloudflare.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-informational?style=flat-square)](https://github.com/Jatin-trivedi/Proteus-)
+[![Platform](https://img.shields.io/badge/Agent-Windows%20focused-informational?style=flat-square)](https://github.com/Jatin-trivedi/Proteus-)
 [![Status](https://img.shields.io/badge/Status-SIH%20MVP-success?style=flat-square)](https://sih.gov.in/)
 
 <br/>
 
-**Centralized defensive forensic orchestration with cross-platform endpoint analysis,  
-a purpose-built DSL (JOCKY), and a polymorphic CI/CD pipeline that produces  
-a uniquely-hashed binary on every single build.**
+**An authorized forensic-collection prototype combining a manager API, a browser
+dashboard, a Cloudflare relay, a Go endpoint agent, and the JOCKY scripting
+pipeline. This README distinguishes the deployed legacy agent flow from newer
+manager APIs that are not yet wired into that agent.**
 
 <br/>
 
-🌐 **Live Dashboard:** [https://jocky-snowy.vercel.app/](https://jocky-snowy.vercel.app/) &nbsp;|&nbsp;
 📦 **Repo:** [github.com/Jatin-trivedi/Proteus-](https://github.com/Jatin-trivedi/Proteus-)
 
 </div>
@@ -42,7 +42,7 @@ a uniquely-hashed binary on every single build.**
 - [API Reference](#-api-reference)
 - [Setup & Installation](#-setup--installation)
 - [Environment Configuration](#-environment-configuration)
-- [Security Posture](#-security-posture)
+- [Security Posture and Limitations](#-security-posture-and-limitations)
 - [Technology Stack](#-technology-stack)
 - [Project Structure](#-project-structure)
 - [Roadmap](#-roadmap)
@@ -52,51 +52,137 @@ a uniquely-hashed binary on every single build.**
 
 ## 🎯 Executive Summary
 
-**Proteus** is a multi-component, full-stack security operations framework built for the **Smart India Hackathon (SIH)**. It solves the core problem of fragmented, inconsistent forensic collection in incident response by providing:
+Proteus is a multi-component project developed for Smart India Hackathon (SIH)
+2024. It contains a Flask manager, a React/TypeScript dashboard, a Cloudflare
+Worker relay, a Go agent, and Python-based compiler/runtime components.
 
-- A **Go-based endpoint agent** that beacons to a cloud relay, executes JOCKY forensic scripts, and reports structured evidence back to the manager — all without requiring any open inbound port on the target machine.
-- A **purpose-built scripting language (JOCKY)** with a full compiler pipeline (Lexer → Parser → AST → IR → LLVM), giving operators a safe, typed DSL for forensic collection instead of raw shell access.
-- A **polymorphic engine** that applies control-flow flattening, import-table obfuscation, and variable randomization to the agent binary — every build has a different hash, different symbol names, and a different import table.
-- A **CI/CD pipeline** (GitHub Actions) that automatically exercises the polymorphic engine on every push to `main`, proving the requirement end-to-end with a downloadable artifact and SHA-256 proof in the build summary.
-- A **Cloudflare Worker relay** that acts as a domain-fronted C2 bridge with a decoy redirect for unauthenticated requests, serving payloads from KV store.
-- A **real-time web dashboard** (TypeScript/React on Vercel) for operators to dispatch tasks and watch live results.
+The codebase currently has **two task interfaces**:
+
+1. The Go agent's active polling loop uses the legacy script/deployment API
+   (`/api/v1/agent/poll`, `/api/v1/agent/heartbeat`, and related routes).
+2. The manager also exposes a newer job/investigation API under `/api/v1/jobs`
+   and `/api/v1/investigations`. Those routes and their token checks exist in the
+   manager, but the checked-in Go agent does not currently poll that job API.
+
+Treat security, integrity, and platform statements below as implementation
+descriptions—not as a claim of independent security certification or production
+readiness. See the [security notes](#-security-posture-and-limitations) before deployment.
 
 ---
 
 ## 🏛 Architecture
 
-```mermaid
-flowchart TD
-    OPS["👤 Operator / Analyst"]
-    FE["🖥 Frontend Dashboard\nTypeScript · React · Vercel"]
-    MGR["🧠 Manager API\nFastAPI / Flask · PostgreSQL"]
-    RBAC["🔐 Policy & RBAC\nScope · Approvals · Audit Logs"]
-    RELAY["☁️ Cloud Relay\nCloudflare Worker · KV Store"]
-    AGENT["🤖 Go Agent\nWindows x64 · Polymorphic Binary"]
-    POLY["🔄 Polymorphic Engine\nObfuscation · CI/CD Build"]
-    COMPILER["⚙️ JOCKY Compiler\nLexer → AST → IR → LLVM"]
-    COLLECTORS["🔍 Forensic Collectors\n10 Approved Operations"]
-    STORAGE["🗄 Evidence Store\nPostgreSQL · SHA-256 Integrity"]
-    STREAM["📡 Real-time Stream\nWebSocket / SSE"]
-    SIEM["📊 SIEM / SOC\nSplunk · Sentinel · ELK"]
+The deployed path is a **browser-to-manager control plane** plus an
+**agent-to-relay data path**. The Worker authenticates relay requests, applies a
+poll rate limit, and uses its configured mTLS binding for backend requests. It
+is not a queue or a database: pending legacy deployments are stored and selected
+by the manager.
 
-    OPS -->|"Create task"| FE
-    FE -->|"REST API"| MGR
-    MGR -->|"Authorize scope"| RBAC
-    RBAC -->|"Permit"| MGR
-    MGR -->|"Queue job"| RELAY
-    RELAY -->|"Encrypted poll response"| AGENT
-    AGENT -->|"Execute JOCKY script"| COLLECTORS
-    COLLECTORS -->|"Structured evidence"| AGENT
-    AGENT -->|"POST signed result"| RELAY
-    RELAY -->|"Forward to manager"| MGR
-    MGR -->|"Store + hash"| STORAGE
-    MGR -->|"Push live events"| STREAM
-    STREAM -->|"Live updates"| FE
-    MGR -->|"Export alerts"| SIEM
-    POLY -->|"Build obfuscated binary"| AGENT
-    COMPILER -->|"Compile JOCKY DSL → IR"| MGR
+```mermaid
+flowchart LR
+    subgraph People["People and browser"]
+        Analyst["Authorized analyst"]
+        UI["React / TypeScript dashboard"]
+        Analyst --> UI
+    end
+
+    subgraph Cloud["Cloud services"]
+        Worker["Cloudflare Worker<br/>X-C2-Auth gate<br/>poll rate limiter<br/>payload KV"]
+        Manager["Flask manager API<br/>Gunicorn"]
+        DB[("SQLAlchemy database<br/>PostgreSQL in deployment<br/>SQLite local default")]
+        Audit["JSONL audit log<br/>hash-linked records"]
+        Socket["Flask-SocketIO<br/>audit_event"]
+        UI -->|"REST /api/v1<br/>Bearer token when present"| Manager
+        UI <-->|"Socket.IO audit events"| Socket
+        Manager --> DB
+        Manager --> Audit
+        Manager --> Socket
+        Worker -->|"RELAY_MTLS.fetch"| Manager
+    end
+
+    subgraph Endpoint["Endpoint (outbound HTTPS)"]
+        Agent["Go agent<br/>registration and polling loop"]
+        Exec["IR/JOCKY dispatch<br/>and result generation"]
+        Agent --> Exec
+    end
+
+    Agent -->|"HTTPS + X-C2-Auth"| Worker
+    Worker -->|"authorized payload lookup"| KV["Cloudflare KV"]
+    Exec -->|"result and hash submissions"| Worker
+
+    subgraph Build["Build-time components"]
+        Compiler["JOCKY compiler<br/>source → IR"]
+        Poly["Polymorphic engine<br/>build transformations"]
+        CI["GitHub Actions workflow"]
+        Manager -. "invokes during script deploy" .-> Compiler
+        CI --> Poly
+        Poly -->|"build artifact"| Agent
+    end
 ```
+
+### Deployed legacy agent request sequence
+
+This sequence follows the current Go agent and Worker paths. In particular, the
+Worker maps the agent's `/agent/poll` request to the manager's `/agent/heartbeat`
+route; result and hash requests are forwarded to their corresponding manager
+routes. The diagram does **not** imply the separate `/jobs` API is used by this
+agent.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Analyst
+    participant UI as Browser dashboard
+    participant M as Flask manager
+    participant DB as SQL database
+    participant W as Cloudflare Worker
+    participant A as Go agent
+    participant S as Socket.IO
+
+    A->>W: POST /api/v1/agent/register + X-C2-Auth
+    W->>W: Validate shared relay secret
+    W->>M: Forward authorized request over relay mTLS binding
+    M->>DB: Register/update agent
+    M-->>A: Registration response
+
+    Analyst->>UI: Create script deployment for registered agent
+    UI->>M: POST /api/v1/script/deploy
+    M->>M: Compile JOCKY source to IR (or use legacy fallback)
+    M->>DB: Save Script and pending Deploy rows
+    M-->>UI: script_id and deploy_ids
+
+    loop Poll interval with jitter
+        A->>W: POST /api/v1/agent/poll + agent_id
+        W->>W: Validate secret and apply per-agent rate limit
+        W->>M: POST /api/v1/agent/heartbeat
+        M->>DB: Update heartbeat and check pending Deploy
+        M-->>W: Idle status or deployment
+        W-->>A: Poll response
+    end
+
+    opt Deployment returned
+        A->>A: Dispatch task and produce result
+        A->>W: POST /api/v1/result/submit
+        W->>M: Forward result request
+        M->>DB: Save result and associated findings
+        A->>W: POST /api/v1/script/{script_id}/hash
+        W->>M: Forward hash update
+        M->>DB: Update script/deployment state
+        M->>S: Emit audit_event when an event is logged
+        S-->>UI: Push audit event
+    end
+```
+
+### Manager components and maturity
+
+| Component | Responsibility | Current boundary |
+|:---|:---|:---|
+| Flask API | Auth, agent, script, result, finding, report, investigation, and job routes | Some endpoints use JWT or agent-token decorators; do not assume every route is protected |
+| SQLAlchemy models | Users, agents, scripts, deployments, jobs, evidence, and related records | SQLite is the local default; `DATABASE_URL` selects the deployment database |
+| Audit logger | Appends structured, hash-linked events and emits selected events over Socket.IO | Local JSONL file; not an external immutable audit service |
+| Cloudflare Worker | Checks `X-C2-Auth`, rate-limits polls, serves KV payloads, proxies backend calls | Needs Worker secrets/bindings and backend mTLS configuration |
+| Job API | Validates IR and implements job lifecycle routes | Exists separately from the checked-in agent's legacy polling loop |
+| CI/build tools | Build and transform agent artifacts | A varying artifact hash alone is not proof of security or semantic equivalence |
 
 ---
 
@@ -104,11 +190,12 @@ flowchart TD
 
 | Module | Language | Role |
 |:---|:---:|:---|
-| `agent/` | Go 1.25 | Endpoint binary — beacons, executes, reports |
-| `cloud-relay/` | JavaScript (CF Worker) | Domain-fronted C2 bridge + payload KV store |
-| `polymorphic-engine/` | Python | Transforms agent source for unique binary per build |
-| `compiler/` | Python | Full JOCKY DSL compiler (Lex → Parse → IR → LLVM) |
-| `runtime/` | Python | Typed agent contracts, 10 forensic collectors |
+| `agent/` | Go | Windows-focused endpoint agent; current polling uses legacy routes |
+| `cloud-relay/` | JavaScript (Cloudflare Worker) | Request gate, poll adapter, backend proxy, payload KV |
+| `manager/` | Python (Flask) | REST API, SQLAlchemy persistence, Socket.IO audit events |
+| `polymorphic-engine/` | Python | Experimental source transformation and build helpers |
+| `compiler/` | Python | JOCKY lexer, parser, semantic analysis, IR and code-generation components |
+| `runtime/` | Python | Separate typed contracts, IR validation, evidence helpers, and collectors |
 | `frontend/` | TypeScript / React | Operator dashboard, real-time results |
 | `.github/workflows/` | YAML | Polymorphic CI/CD pipeline |
 
@@ -116,85 +203,32 @@ flowchart TD
 
 ## 🤖 Agent — Go Endpoint Binary
 
-Located in `agent/`. Compiled as a **Windows x64 PE** with `-trimpath -s -w -H windowsgui`. No console window, no debug symbols.
+Located in `agent/`. The checked-in agent is Windows-focused; its current
+`main.go` imports Windows registry APIs directly, so do not assume it builds
+for Linux from the platform-provider files alone.
 
-### Polymorphic Identity
+### Identity and communication
 
-Every deployed binary derives its Agent ID deterministically from the target machine:
+The agent derives an identifier from the host and account values available at
+runtime. This is a correlation identifier, not an authentication credential.
 
-```go
-func deriveAgentID() string {
-    hostname, _ := os.Hostname()
-    username    := os.Getenv("USERNAME")   // Windows
-    sum         := sha256.Sum256([]byte(hostname + "|" + username))
-    base        := "agent-" + hex.EncodeToString(sum[:8])
-    if IsElevated() { base += "-high" }
-    return base
-}
-```
+The current agent flow:
 
-The binary itself is unique per CI run (different hash, symbols, imports) but produces the same `AgentID` for the same machine — allowing the manager to correlate heartbeats reliably.
+- Registers with `POST /api/v1/agent/register` through the Worker.
+- Polls `POST /api/v1/agent/poll`; the Worker adapts this to the manager's
+  heartbeat endpoint and returns an available legacy deployment, if any.
+- Submits results to `POST /api/v1/result/submit` and a result hash to
+  `POST /api/v1/script/{script_id}/hash`.
+- Sends `X-C2-Auth` to the Worker. The agent identifier itself is not a secret.
 
-### C2 Communication (Long Poll)
+### Execution and operational caution
 
-- Polls `POST /api/v1/agent/poll` on the **Cloudflare relay** over TLS
-- Auth via `X-C2-Auth` header
-- Randomized **jitter** on each poll gap to avoid timing fingerprinting
-- Configurable: `POLL_GAP = 8s`, `HTTP_TIMEOUT = 20s`, `TASK_TIMEOUT = 60s`
-- Results submitted to `POST /api/v1/agent/result`
-- Hash of result submitted separately to `POST /api/v1/agent/hash`
-
-### JOCKY Script Execution Engine
-
-The agent contains a built-in dispatcher (`executeJOCKYContext`) that routes incoming scripts:
-
-| Script prefix / command | Action |
-|:---|:---|
-| `__exit__` / `kill` | Kill switch — removes persistence, exits cleanly |
-| `inject <method> <pid> <payload>` | DLL injection via embedded `libjockey.enc` |
-| `privesc <method>` | Privilege escalation (info / attempt) |
-| `exec(<cmd>)` | Scoped shell command with timeout |
-| `reg(<hive\path>)` | Windows Registry key dump |
-| `deploy(<url>)` | Download & execute payload from relay KV |
-| *(any other string)* | Treated as a shell command with context cancellation |
-
-### DLL Injection Bridge (`bridge.go`)
-
-- **`libjockey.enc`** — custom injection DLL embedded via Go's `//go:embed` directive
-- XOR-decrypted at runtime with a 32-byte key (never touches disk in cleartext)
-- Exposed as `InjectionConfig` struct passed to `inject()` in the DLL
-- Supports multiple injection methods (configurable via `Method` field)
-- Optional: direct syscalls, API unhooking (`UseDirectSyscalls`, `UnhookApi`)
-
-### Persistence (`persist.go`)
-
-```
-APPDATA\Microsoft\Windows\INetCache\Content.MSO\WindowsCacheStore.exe
-HKCU\Software\Microsoft\Windows\CurrentVersion\Run → WindowsCacheStore
-```
-
-- Copies itself to a camouflaged path under `APPDATA`
-- Writes a Registry `Run` key under the disguised name
-- `IsPersistenceInstalled()` / `InstallPersistence()` / `RemovePersistence()` API
-
-### Privilege Escalation (`privesc.go`)
-
-- `IsElevated()` — checks Windows token elevation
-- `IsSystem()` — detects `NT AUTHORITY\SYSTEM` context
-- Escalation attempt and status reporting via `executePrivesc()`
-
-### Sandbox Detection (`sandbox.go`)
-
-Agent checks for analysis environments at startup and silently exits if detected:
-
-| Check | Indicator |
-|:---|:---|
-| Uptime | `< 10 minutes` (freshly spawned VM) |
-| VMware | `C:\Program Files\VMware\VMware Tools` |
-| VirtualBox | `C:\Program Files\Oracle\VirtualBox Guest Additions` |
-| QEMU | `C:\Program Files\qemu-ga` |
-| Username | `sandbox`, `malware`, `analysis`, `wdagutilityaccount` |
-| Home dir | `C:\Users\sandbox`, `C:\Users\malware` |
+The agent contains a legacy task dispatcher and Windows-specific capabilities
+that go beyond read-only collection, including command execution and process,
+privilege, and persistence-related code paths. The JOCKY compiler's allowlist
+does not sandbox every path through that dispatcher. Review the code and run
+only in an isolated environment with explicit authorization; do not deploy this
+agent to production endpoints as-is.
 
 ---
 
@@ -206,11 +240,11 @@ Located in `cloud-relay/`. Deployed as a **Cloudflare Worker** using `wrangler`.
 
 | Feature | Detail |
 |:---|:---|
-| **Auth gate** | Every request must carry `X-C2-Auth` header; failures redirect to `https://www.google.com` (decoy) |
-| **Payload KV store** | Payloads uploaded to Cloudflare KV; agents fetch via `GET /payloads/<name>` — no external hosting needed |
-| **Agent poll proxy** | `POST /api/v1/agent/poll` → forwarded to manager's `/api/v1/agent/heartbeat` |
-| **Pass-through** | All other authenticated routes forwarded transparently to backend |
-| **Domain fronting** | Worker sits at edge; true backend URL is only in Worker env vars |
+| **Request gate** | Requires `X-C2-Auth`; requests with a missing or invalid value receive a redirect response |
+| **Payload lookup** | Reads `/payloads/<name>` from the configured KV namespace |
+| **Agent poll adapter** | Maps `POST /api/v1/agent/poll` to the manager's `/api/v1/agent/heartbeat` route and applies a per-agent rate limit |
+| **Backend proxy** | Forwards other authorized paths to `BACKEND_URL` after removing `X-C2-Auth` |
+| **Backend transport** | Uses the `RELAY_MTLS` binding; requests fail when the binding is absent |
 
 ### Configuration (`wrangler.toml`)
 
@@ -218,101 +252,95 @@ Located in `cloud-relay/`. Deployed as a **Cloudflare Worker** using `wrangler`.
 [vars]
 BACKEND_URL = "https://jockey-framework.onrender.com"
 
+[[mtls_certificates]]
+binding = "RELAY_MTLS"
+certificate_id = "<certificate-id-from-your-Cloudflare-account>"
+
 [[kv_namespaces]]
 binding = "PAYLOAD_KV"
-id      = "<your-kv-id>"
+id = "<your-kv-id>"
+
+[[ratelimits]]
+name = "AGENT_POLL_RATE_LIMITER"
+namespace_id = "<unique-positive-integer>"
+
+  [ratelimits.simple]
+  limit = 60
+  period = 60
 ```
 
-Secrets (like `C2_AUTH`) are set via `wrangler secret put C2_AUTH`. The relay
-checks `X-C2-Auth` at the edge and does not forward that shared secret to the
-manager. The manager does not validate `C2_AUTH`; its own user and agent routes
-use their configured authentication mechanisms, and mTLS is enforced only when
-`MTLS_REQUIRED` is enabled.
+Set the secret with `npx wrangler secret put C2_AUTH`. Configure the manager's
+`MTLS_REQUIRED`, `MTLS_SERVER_CERT`, `MTLS_SERVER_KEY`, and `MTLS_CLIENT_CA`
+settings to match the relay certificate. The Worker checks the shared secret
+and does not forward it to the manager. That shared secret is a relay gate, not
+a substitute for manager user or agent authentication.
 
 ---
 
 ## 🔄 Polymorphic Engine
 
-Located in `polymorphic-engine/src/`. A Python subsystem that transforms agent source code before every build, ensuring **no two compiled binaries are identical**.
+Located in `polymorphic-engine/src/`. This package contains experimental
+source-transformation helpers and a standalone build orchestrator. It is
+separate from the GitHub Actions build path, which currently builds the Go
+agent with `garble`; neither approach guarantees security or equivalent
+behavior.
 
-### Transformation Pipeline
+### Transformation helpers
 
-```
-agent/main.go  →  [1] Control-Flow Flattener
-               →  [2] Import-Table Obfuscator
-               →  [3] Junk Code Injector    (Python targets)
-               →  [4] Variable Encryptor    (Python targets)
-               →  [5] Hash Generator        (unique seed per run)
-               →  obfuscated_main.go
-               →  go build → agent_<random-id>.exe
-```
-
-### What Each Transformer Does
-
-| Module | Effect on Binary |
+| Module | Scope |
 |:---|:---|
-| `control_flow_flattener.py` | Wraps `if/for/while` branches in a dispatcher with opaque predicates — decompilers cannot recover original control graph |
-| `import_table_obfuscator.py` | Inserts blank imports (`_ "pkg"`) and reorders import blocks — import table differs per build |
-| `junk_code_injector.py` | Injects semantically dead Python code between real statements |
-| `variable_encryption.py` | Encrypts string literals into runtime-decoded byte arrays |
-| `hash_generator.py` | Seeds all randomness from `time.time() ^ random.randint(...)` — cryptographically distinct per millisecond |
+| `control_flow_flattener.py` | Attempts to rewrite supported control-flow constructs |
+| `import_table_obfuscator.py` | Provides import and binary transformation helpers |
+| `junk_code_injector.py` | Adds generated statements for supported Python inputs |
+| `variable_encryption.py` | Transforms supported string literals |
+| `hash_generator.py` | Generates hashes and per-run seed material |
 
-### Polymorphic Guarantee
-
-```
-Build #1  →  SHA-256: a4f9b2c1...   agent_3f8a1c2d.exe
-Build #2  →  SHA-256: 7d2e891f...   agent_a9b4f023.exe
-Build #3  →  SHA-256: 22fc0a87...   agent_11cd8fe1.exe
-```
-
-Same source code. Different binary every time.
+These names describe transformation intent, not a guarantee that every
+transformation applies to every input or that resulting artifacts are secure,
+undetectable, or behaviorally equivalent. Verify the generated artifacts and
+tests for the specific target before relying on them. The separate
+`polymorphic-engine/src/orchestrator.py` can invoke selected helpers; it is not
+the workflow used by `.github/workflows/build.yml`.
 
 ---
 
 ## 🚀 Polymorphic CI/CD Pipeline *(SIH Requirement)*
 
-Located in `.github/workflows/build.yml` + `ci_build.py`.
+Implemented in `.github/workflows/build.yml`. `ci_build.py` is a separate build
+helper and is not called by this workflow.
 
-Every push to `main` automatically:
+The workflow runs on pushes to `main` and can also be started manually:
 
 ```
 git push → GitHub Actions (ubuntu-latest)
               │
               ├─ 1. Checkout repo
-              ├─ 2. Setup Go 1.25 + Python 3.11
-              ├─ 3. Install polymorphic engine deps
-              ├─ 4. Build execution_engine as a Windows DLL with MinGW
-              ├─ 5. go mod download (GOOS=windows, cross-compile)
-              ├─ 6. python ci_build.py
-              │       ├─ Encrypt libjockey.dll with the generated XOR key
-              │       ├─ Copy all *.go from agent/
-              │       ├─ Copy real go.mod + go.sum
-              │       ├─ apply_obfuscations(main.go)
-              │       └─ go build -trimpath -s -w → build/agent_<id>.exe
-              ├─ 7. sha256sum → printed to log
-              ├─ 8. Upload artifact (30-day retention)
-              └─ 9. Build summary written to GitHub step summary
+              ├─ 2. Set up Go 1.27 and Python 3.11
+              ├─ 3. Install toolchains and project dependencies
+              ├─ 4. Build the Windows C engine and Go agent
+              ├─ 5. Attempt Python and C test suites (non-blocking in this workflow)
+              ├─ 6. Calculate and report the artifact SHA-256
+              └─ 7. Upload the generated artifact
 ```
 
-### What the Step Summary Looks Like
-
-| Field | Value |
-|:---|:---|
-| Binary | `agent_3f8a1c2d.exe` |
-| SHA-256 | `a4f9b2c1d0e8f3a7...` |
-| Size | 10,321,920 bytes |
-| Commit | `abc123def456...` |
-| Branch | `main` |
-
-The SHA-256 is **different on every run** — the polymorphic CI/CD requirement from the SIH problem statement is satisfied end-to-end with a downloadable, verifiable artifact.
-
-> **Branch protection note:** The `main` branch ruleset requires this workflow to pass before any merge is accepted. No green build, no merge.
+The workflow records an artifact hash and uploads the build output. Its Python
+and C test steps are configured as non-blocking, so a green workflow does not
+necessarily mean every test passed. A changing hash demonstrates byte-level
+variation, not that behavior is unchanged or that the artifact is safe. Review
+the [workflow definition](.github/workflows/build.yml) and generated artifact
+for each build. Branch protection requirements depend on repository settings
+and are not defined by the workflow file.
 
 ---
 
 ## ⚙️ JOCKY Compiler — Purpose-Built DSL
 
-Located in `compiler/`. Proteus includes a **full compiler pipeline** for the JOCKY forensic scripting language — a typed DSL that prevents operators from accidentally (or intentionally) issuing raw arbitrary commands.
+Located in `compiler/`. The JOCKY compiler converts supported source programs
+into an intermediate representation (IR). The manager's script deployment
+route attempts compilation; if compilation fails, the current implementation
+can retain and pass through the source as a legacy fallback. Do not interpret
+the compiler allowlist as a complete security boundary for every legacy agent
+command path.
 
 ### Compiler Pipeline
 
@@ -334,11 +362,8 @@ IR Generator (generator.py)
     ▼
 IR Validator (validator.py)
     │  Allowlist enforcement · Schema validation
-    ▼
-LLVM Code Generator (llvm_gen.py via llvmlite)
-    │
-    ▼
-Native executable / runtime dispatch
+    ├── Manager script deployment: serialize IR and queue a legacy Deploy
+    └── Separate code-generation modules: LLVM-related output where supported
 ```
 
 ### Forensic Function Registry
@@ -352,7 +377,8 @@ The semantic analyzer enforces that only **registry-approved functions** can app
 | `network` | `network.interfaces`, `network.connections`, `network.routes`, `network.dns` |
 | `filesystem` | `filesystem.metadata`, `filesystem.hash` |
 
-Any call to an unregistered function is a **compile-time error** — it never reaches the agent.
+Unknown calls are rejected by the compiler's semantic checks. The actual
+deployment behavior also depends on the manager fallback and agent dispatcher.
 
 ### Example JOCKY Script
 
@@ -367,7 +393,10 @@ let net   = network.connections()
 
 ## 🔍 Runtime & Forensic Collectors
 
-Located in `runtime/`. The Python-based runtime implements typed, validated communication between the agent (Go) and the manager, plus 10 approved forensic collection operations.
+Located in `runtime/`. This Python runtime provides contracts, IR validation,
+evidence helpers, and forensic collectors. It is a separate component: the
+checked-in Go agent implements its own polling and execution path and does not
+use the Python heartbeat client.
 
 ### Agent Communication Contracts
 
@@ -379,10 +408,12 @@ All manager ↔ agent messages are strongly typed (`contracts.py`):
 | `AgentHeartbeatRequest/Response` | Liveness + task poll, status transitions |
 | `AgentTask` | Dispatched JOCKY IR job |
 | `AgentTaskPollResponse` | Wraps pending task queue |
-| `AgentResultEnvelope` | Signed, hashed result submission |
-| `IntegrityEnvelope` | SHA-256 chain-of-custody wrapper |
+| `AgentResultEnvelope` | Structured result payload with optional integrity data |
+| `IntegrityEnvelope` | SHA-256 digest over canonicalized results |
 
-Raw code strings in tasks are **strictly rejected** at the contract layer.
+The digest supports integrity comparison; it is not a digital signature or
+proof of who produced the results. The strict IR validation in these Python
+contracts does not automatically cover the separate legacy Go dispatcher.
 
 ### Heartbeat Lifecycle
 
@@ -425,7 +456,10 @@ EvidenceItem(
 )
 ```
 
-The `data_hash` is computed over **canonical JSON** (sorted keys, no whitespace) ensuring byte-identical hashes for identical data across platforms.
+The `data_hash` is computed over **canonical JSON** (sorted keys, no whitespace)
+so identical data produces the same digest. A digest alone does not establish
+authenticity or prevent an actor with write access from replacing both data
+and digest.
 
 ### Platform Providers
 
@@ -439,55 +473,78 @@ The `data_hash` is computed over **canonical JSON** (sorted keys, no whitespace)
 
 ## 🖥 Frontend Dashboard
 
-Located in `frontend/`. Deployed live at [https://proteus-zeta.vercel.app](https://proteus-zeta.vercel.app).
+Located in `frontend/`. The browser client uses `VITE_API_BASE_URL` when set;
+otherwise it requests `/api/v1` from the same origin. Configure the frontend
+deployment's API base URL to point at the intended manager deployment.
 
-- **TypeScript + React** (43.7% of codebase)
-- Real-time task status via WebSocket / SSE
+- **TypeScript + React**
+- Real-time audit events via Socket.IO
 - Operator task creation form
 - Agent inventory table (status, OS, last seen)
 - Live result viewer
 - Evidence browser with hash verification display
-- Deployed on **Vercel** — zero-config CI/CD on frontend pushes
 
 ---
 
 ## 📡 API Reference
 
-### Manager → Operator APIs
+The manager registers these routes in Flask. The dashboard currently uses the
+script/deployment-oriented endpoints; route availability does not imply that
+every endpoint has the same authentication policy.
 
 | Method | Endpoint | Description |
 |:---|:---|:---|
-| `POST` | `/api/v1/tasks` | Create forensic collection task |
-| `GET` | `/api/v1/tasks/{task_id}` | Poll task status |
-| `GET` | `/api/v1/tasks/{task_id}/results` | Fetch collected evidence |
-| `GET` | `/api/v1/agents` | List all agents with last-seen status |
+| `POST` | `/api/v1/auth/register` | Register a user and return an access token |
+| `POST` | `/api/v1/auth/login` | Authenticate a user and return an access token |
+| `GET` | `/api/v1/agent/` | List agents |
+| `POST` | `/api/v1/script/deploy` | Compile/deploy a script through the legacy deployment model |
+| `GET` | `/api/v1/script/deployments` | List deployments |
+| `GET` | `/api/v1/result/list` | List results |
+| `GET` | `/health` | API and database health check |
 
-### Agent → Manager APIs (via relay)
-
-| Method | Endpoint | Description |
-|:---|:---|:---|
-| `POST` | `/api/v1/agent/register` | First-time agent registration |
-| `POST` | `/api/v1/agent/heartbeat` | Heartbeat + task poll |
-| `POST` | `/api/v1/agent/result` | Submit collection result |
-| `POST` | `/api/v1/agent/hash` | Submit result integrity hash |
-
-### Relay → KV APIs (internal)
+### Legacy agent → manager APIs (through Worker)
 
 | Method | Endpoint | Description |
 |:---|:---|:---|
-| `GET` | `/payloads/<name>` | Fetch payload blob from KV store |
+| `POST` | `/api/v1/agent/register` | Register/update an agent |
+| `POST` | `/api/v1/agent/poll` | Worker adapter; translated to manager `/api/v1/agent/heartbeat` |
+| `POST` | `/api/v1/result/submit` | Submit a result |
+| `POST` | `/api/v1/script/{script_id}/hash` | Submit the result hash |
+
+### Separate manager job API
+
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `POST` | `/api/v1/jobs` | Create a job after server-side IR validation |
+| `GET` | `/api/v1/jobs` | List jobs |
+| `GET` | `/api/v1/agents/{agent_id}/jobs/next` | Agent-token-protected job claim |
+| `POST` | `/api/v1/jobs/{job_id}/ack` | Agent-token-protected acknowledgement |
+| `POST` | `/api/v1/jobs/{job_id}/results` | Agent-token-protected result submission |
+
+The job API has additional get, cancel, and investigation routes. It is a
+distinct implementation path: the checked-in Go agent currently uses the
+legacy poll/deployment routes above.
+
+### Relay payload API
+
+| Method | Endpoint | Description |
+|:---|:---|:---|
+| `GET` | `/payloads/<name>` | Read a payload from the configured Worker KV namespace |
 
 ---
 
 ## 🛠 Setup & Installation
+
+Commands below are run from the repository root unless a step changes
+directories.
 
 ### Prerequisites
 
 | Tool | Version | Purpose |
 |:---|:---:|:---|
 | Go | ≥ 1.25 | Agent compilation |
-| Python | ≥ 3.11 | Engine, compiler, runtime |
-| Node.js | ≥ 18 | Frontend dev server |
+| Python | ≥ 3.11 | Manager, engine, compiler, runtime |
+| Node.js | 20.19+ or 22.12+ | Frontend dev server (Vite 8) |
 | Wrangler | ≥ 3 | Cloudflare Worker deploy |
 | Git | any | Source control |
 
@@ -498,37 +555,63 @@ git clone https://github.com/Jatin-trivedi/Proteus-.git
 cd Proteus-
 ```
 
-### 2. Python environment (engine + compiler + runtime)
+### 2. Create and activate a Python environment
 
 ```bash
 python -m venv .venv
 
-# Windows
+# Windows PowerShell
 .venv\Scripts\activate
 
 # Linux / macOS
 source .venv/bin/activate
-
-pip install -r polymorphic-engine/requirements.txt
 ```
 
-### 3. Build the agent locally
+### 3. Install and run the manager API
+
+The manager's audit logger uses the POSIX `fcntl` module for file locking.
+Run the manager and its tests on Linux, macOS, or WSL; native Windows Python
+cannot import that module.
+
+The manager uses SQLite by default for local development. To use PostgreSQL,
+set `DATABASE_URL` to a PostgreSQL connection string; the manager requirements
+include both Psycopg 3 and the legacy Psycopg 2 driver.
 
 ```bash
-# Windows (PowerShell) — full garbled build
-cd agent
-.\build.ps1
-
-# Or: build the native DLL, then create an embedded payload and agent
-cd ..\execution_engine
-cmake -S . -B build -DBUILD_SHARED=ON -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --target jockey_shared
-Copy-Item (Get-ChildItem build -Filter jockey.dll -Recurse | Select-Object -First 1).FullName ..\agent\libjockey.dll
-cd ..
-python ci_build.py --os windows --arch amd64 --output-dir build/
+python -m pip install -r manager/requirements.txt -r compiler/requirements.txt
+cd manager
+python -m flask --app app run --host 127.0.0.1 --port 5000
 ```
 
-### 4. Deploy the Cloud Relay
+Keep this terminal running. Use a second terminal, with the virtual environment
+activated and the current directory set to the repository root, for the
+remaining setup and test commands.
+
+For a deployment, set a strong `JWT_SECRET`, configure `DATABASE_URL`, and
+configure mTLS on both the Worker and manager if using the checked-in relay
+configuration. `manager/.env.example` documents manager-side mTLS settings.
+For Render, use `manager/` as the service root so its Dockerfile and
+requirements file are used.
+
+### 4. Install additional engine and test dependencies
+
+From the second terminal at the repository root:
+
+```bash
+python -m pip install -r polymorphic-engine/requirements.txt
+```
+
+### 5. Agent build
+
+The agent build is **not a portable one-command setup**. The checked-in
+PowerShell helper expects a prebuilt execution-engine DLL and contains a
+machine-specific Go SDK path. The GitHub Actions workflow is a separate
+Linux-hosted Windows build and requires repository secrets. Review the build
+scripts and workflow in an isolated, authorized environment before attempting
+to produce an agent artifact; do not put credentials or secret values in this
+README or source control.
+
+### 6. Deploy the Cloud Relay
 
 ```bash
 cd cloud-relay
@@ -540,25 +623,30 @@ wrangler kv:namespace create PAYLOADS
 wrangler deploy
 ```
 
-### 5. Frontend development server
+### 7. Frontend development server
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 # → http://localhost:3000
 ```
 
-### 6. Run tests
+### 8. Run tests
+
+Run these from the repository root with the relevant dependencies installed.
 
 ```bash
-# Python test suite
+# Full Python test suite
 python -m pytest -q
 
-# Runtime-specific tests
+# Manager tests
+python -m pytest manager/tests/ -q
+
+# Runtime-specific tests (when present)
 python -m pytest runtime/tests/ -v
 
-# Integration
+# End-to-end flow
 python -m pytest -q test_e2e_flow.py
 ```
 
@@ -574,51 +662,57 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |:---|:---:|:---|
-| `PROTEUS_SERVER_URL` | `http://localhost:5000` | Manager API base URL |
-| `JWT_SECRET` | *(set in deployment)* | Secret used to sign manager login tokens |
-| `HEARTBEAT_INTERVAL` | `30` | Seconds between agent heartbeats |
-| `POLL_INTERVAL` | `15` | Seconds between task polls |
-| `JOB_TIMEOUT` | `300` | Max seconds a job may run |
-| `HTTP_TIMEOUT` | `10` | HTTP request timeout |
-| `LOG_LEVEL` | `INFO` | `DEBUG \| INFO \| WARNING \| ERROR` |
-| `AGENT_HOSTNAME` | *(auto)* | Override detected hostname |
-| `AGENT_VERSION` | `1.0.0` | Agent version string |
+| `DATABASE_URL` | Manager-local SQLite file | SQLAlchemy database URL; use PostgreSQL for a hosted manager |
+| `JWT_SECRET` | Development fallback in code | Secret used to sign manager user tokens; set a strong value in every deployment |
+| `SECRET_KEY` | — | Backwards-compatible JWT secret fallback |
+| `CORS_ALLOWED_ORIGINS` | Local and configured frontend origins | Comma-separated manager CORS allowlist |
+| `MTLS_REQUIRED` | `false` | Require a client certificate at the manager TLS endpoint |
+| `MTLS_SERVER_CERT` | — | Manager TLS certificate path |
+| `MTLS_SERVER_KEY` | — | Manager TLS private-key path |
+| `MTLS_CLIENT_CA` | — | CA certificate used to verify relay client certificates |
+| `AUDIT_LOG_PATH` | `manager/audit.log` | Path for the manager's JSONL audit log |
+| `VITE_API_BASE_URL` | `/api/v1` | Frontend manager API base URL |
+| `C2_AUTH` | Set as a Worker secret and CI secret | Shared relay secret; do not commit it |
+| `C2_AUTH_XOR` | Set as a CI secret | Build-time value used by the workflow; do not commit it |
+| `BACKEND_URL` | Configured in `wrangler.toml` | Manager origin used by the Worker |
 
 > **Never commit `.env` or secrets.** The `.gitignore` excludes `.env` and all `.env.*` variants except `.env.example`.
 
-For the Render.com manager service, set `JWT_SECRET` to a long random value before using
-protected API routes. The manager accepts `SECRET_KEY` as a backwards-compatible local
-override, but deployments should use `JWT_SECRET` explicitly. The dashboard connects to
-the manager's Socket.IO endpoint and refreshes on `AGENT_HEARTBEAT` and `JOB_COMPLETED`
-audit events.
+The manager accepts `SECRET_KEY` as a backwards-compatible fallback, but
+deployments should set `JWT_SECRET`. The frontend listens for `audit_event`
+Socket.IO messages emitted by the manager's audit logger.
 
 ---
 
-## 🔐 Security Posture
+## 🔐 Security Posture and Limitations
 
-### Design Principles
+Proteus is a prototype, not a hardened or independently audited product. Use
+it only with explicit authorization and in a controlled test environment.
+Important implementation boundaries:
 
-- **Defensive and authorized use only** — all collection is scoped by an operator-approved task
-- **Least-privilege execution** — agent runs without elevated rights unless the target is already admin
-- **No raw code execution** — the JOCKY compiler enforces a strict allowlist at parse time; arbitrary shell strings require explicit `exec()` wrapping
-- **Encrypted transport** — TLS enforced for all agent ↔ relay ↔ manager communication
-- **Decoy on auth failure** — unauthenticated requests to the relay return a 302 to `google.com`; C2 infrastructure is not enumerable
-- **Evidence integrity** — every artifact is SHA-256 hashed in canonical form before storage
-- **Sandbox awareness** — agent detects and silently exits from automated analysis environments
+- The Worker checks `X-C2-Auth`, removes it before proxying, rate-limits the
+  poll adapter, and requires the `RELAY_MTLS` binding for backend fetches.
+  The manager only requires client certificates when `MTLS_REQUIRED` and its
+  certificate settings are configured correctly.
+- The shared relay secret does **not** authenticate a user to the manager.
+  User JWTs and agent tokens are used by selected API routes; several legacy
+  agent and script routes do not apply those decorators. Review route-level
+  authorization before exposing the manager to an untrusted network.
+- The legacy Go agent has command-execution and other Windows-specific
+  capabilities. The compiler allowlist and Python runtime validation do not
+  constrain every path through the legacy agent dispatcher.
+- The runtime computes SHA-256 digests for integrity comparison. Digests are
+  not signatures and do not prove who created a result.
+- Audit events are stored in a local JSONL file with hash links and emitted
+  over Socket.IO. This is not an external, immutable, access-controlled audit
+  service; protect and back up the file appropriately.
+- TLS, database availability, secret management, access controls, and retention
+  depend on deployment configuration. Do not treat the demo defaults as safe
+  production settings.
 
-### Hardening Checklist
-
-- [x] TLS enforced for all transport
-- [x] Auth gate on every relay endpoint
-- [x] JOCKY allowlist — no arbitrary code execution at DSL layer
-- [x] Evidence SHA-256 chain of custody
-- [x] Polymorphic binary — unique hash per deploy
-- [x] Garbled symbols via `-trimpath -s -w`
-- [ ] mTLS between manager and relay
-- [ ] KMS / Vault for secret rotation
-- [ ] Immutable audit event pipeline
-- [ ] Data retention and purge policy
-- [ ] Rate limiting on relay endpoints
+Before any deployment, review the manager routes and agent code, replace all
+development secrets, restrict network access, configure TLS/mTLS deliberately,
+and test the complete path using non-sensitive data.
 
 ---
 
@@ -626,7 +720,7 @@ audit events.
 
 | Layer | Technology | Version |
 |:---|:---|:---:|
-| Endpoint Agent | Go | 1.25 |
+| Endpoint Agent | Go | See `agent/go.mod` and CI workflow |
 | Agent OS binding | `golang.org/x/sys` | 0.47.0 |
 | C2 Relay | Cloudflare Workers | — |
 | Relay storage | Cloudflare KV | — |
@@ -639,19 +733,7 @@ audit events.
 | Frontend | TypeScript / React | — |
 | Frontend deploy | Vercel | — |
 | CI/CD | GitHub Actions | — |
-| Backend deploy | Render.com | — |
-
-**Language composition:**
-
-```
-TypeScript  ██████████████░░░░░░   43.7%
-Python      ████████░░░░░░░░░░░░   23.0%
-HTML        ███████░░░░░░░░░░░░░   20.5%
-CSS         ██░░░░░░░░░░░░░░░░░░    4.4%
-JavaScript  █░░░░░░░░░░░░░░░░░░░    3.8%
-C           █░░░░░░░░░░░░░░░░░░░    2.9%
-Other       ░░░░░░░░░░░░░░░░░░░░    1.7%
-```
+| Backend container | Docker / Gunicorn | See `manager/Dockerfile` |
 
 ---
 
@@ -663,13 +745,10 @@ Proteus-/
 │   └── workflows/
 │       └── build.yml           # Polymorphic CI/CD pipeline (SIH requirement)
 │
-├── agent/                      # Go endpoint binary
-│   ├── main.go                 # C2 beacon, JOCKY dispatcher, command router
-│   ├── bridge.go               # DLL injection bridge (libjockey.enc)
-│   ├── persist.go              # Registry Run key persistence
-│   ├── privesc.go              # Privilege escalation module
-│   ├── sandbox.go              # Sandbox / VM detection
-│   ├── libjockey.enc           # XOR-encrypted injection DLL (embedded)
+├── agent/                      # Windows-focused Go endpoint agent
+│   ├── main.go                 # Registration, polling, dispatch, result submission
+│   ├── ir_executor.go          # IR operation dispatch
+│   ├── bridge.go               # Windows execution-engine bridge
 │   ├── build.ps1               # Local Windows build + garble script
 │   ├── go.mod
 │   └── go.sum
@@ -696,7 +775,7 @@ Proteus-/
 │   ├── codegen/                # LLVM code generation
 │   └── diagnostics/            # Error reporting
 │
-├── runtime/                    # Agent communication runtime
+├── runtime/                    # Separate Python runtime and contracts
 │   ├── agent/
 │   │   ├── contracts.py        # Typed API models (register/heartbeat/result)
 │   │   ├── heartbeat_client.py # Heartbeat loop + exponential backoff
@@ -708,8 +787,8 @@ Proteus-/
 │   └── registry.py             # OperationRegistry (10 approved ops)
 │
 ├── frontend/                   # TypeScript / React dashboard
-├── ci_build.py                 # CI build wrapper (repo root)
-├── .env.example                # Environment variable template
+├── ci_build.py                 # Separate build helper (repo root)
+├── .env.example                # Repository-level environment template
 └── README.md
 ```
 
@@ -723,7 +802,7 @@ Proteus-/
 - [ ] Linux agent (`GOOS=linux`) CI target alongside Windows
 
 ### Planned
-- [ ] mTLS between manager and relay (remove shared-secret dependency)
+- [ ] Verify and document end-to-end mTLS configuration for deployed environments
 - [ ] KMS / HashiCorp Vault for secret management
 - [ ] Production deployment templates (Docker Compose / Kubernetes)
 - [ ] SIEM export (Splunk, Sentinel, ELK) via structured event pipeline
@@ -758,6 +837,6 @@ The authors and contributors of Proteus accept no liability for unauthorized, il
 
 **Built for Smart India Hackathon (SIH) 2024**
 
-[Live Demo](https://jocky-snowy.vercel.app/) · [GitHub](https://github.com/Jatin-trivedi/Proteus-)
+[GitHub](https://github.com/Jatin-trivedi/Proteus-)
 
 </div>
