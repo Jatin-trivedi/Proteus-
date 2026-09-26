@@ -34,8 +34,8 @@ function AgentsPage() {
   const [filter, setFilter] = useState("");
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
-  const [agentToDecommission, setAgentToDecommission] = useState<Agent | null>(null);
-  const [isDecommissioning, setIsDecommissioning] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadAgents = () => {
     setLoading(true);
@@ -51,38 +51,28 @@ function AgentsPage() {
 
   useEffect(() => { loadAgents(); }, []);
 
-  const handleDecommissionAgent = async () => {
-    if (!agentToDecommission) return;
-    setIsDecommissioning(true);
+  const handleDeleteAgent = async () => {
+    if (!agentToDelete) return;
+    setIsDeleting(true);
     try {
-      await apiFetch<{ status: string }>(`/agent/${agentToDecommission.agent_id}/decommission`, {
-        method: "POST",
+      await apiFetch<{ status: string }>(`/agent/${encodeURIComponent(agentToDelete.agent_id)}`, {
+        method: "DELETE",
       });
-      toast.success("Kill Switch Queued", {
-        description: `${agentToDecommission.hostname || agentToDecommission.agent_id} will stop on its next heartbeat. The audit record was retained.`,
+      toast.success("Agent deleted", {
+        description: `${agentToDelete.hostname || agentToDelete.agent_id} and its related history were removed.`,
       });
-      setAgents((prev) =>
-        prev.map((agent) =>
-          agent.agent_id === agentToDecommission.agent_id
-            ? { ...agent, status: "decommissioning" }
-            : agent,
-        ),
-      );
-      setSelected((current) =>
-        current?.agent_id === agentToDecommission.agent_id
-          ? { ...current, status: "decommissioning" }
-          : current,
-      );
-      setAgentToDecommission(null);
+      setAgents((prev) => prev.filter((agent) => agent.agent_id !== agentToDelete.agent_id));
+      setSelected((current) => current?.agent_id === agentToDelete.agent_id ? undefined : current);
+      setAgentToDelete(null);
     } catch (err: unknown) {
       const message = err instanceof Error
         ? err.message
-        : "An unexpected error occurred while decommissioning the agent.";
-      toast.error("Failed to Queue Kill Switch", {
+        : "An unexpected error occurred while deleting the agent.";
+      toast.error("Failed to delete agent", {
         description: message,
       });
     } finally {
-      setIsDecommissioning(false);
+      setIsDeleting(false);
     }
   };
 
@@ -177,9 +167,9 @@ function AgentsPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => setAgentToDecommission(a)}
+                          onClick={() => setAgentToDelete(a)}
                           className="h-8 w-8 p-0 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                          title={`Decommission ${a.hostname || a.agent_id}`}
+                          title={`Delete ${a.hostname || a.agent_id}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -227,10 +217,10 @@ function AgentsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setAgentToDecommission(selected)}
+                onClick={() => setAgentToDelete(selected)}
                 className="w-full border-red-500/30 text-red-400 hover:text-white hover:bg-red-500/20 hover:border-red-500/60 text-xs font-semibold uppercase tracking-wider h-9 transition-all flex items-center justify-center gap-2 rounded-lg"
               >
-                <Trash2 className="h-3.5 w-3.5" /> Decommission Agent
+                <Trash2 className="h-3.5 w-3.5" /> Delete Agent
               </Button>
             </div>
           )}
@@ -252,38 +242,38 @@ function AgentsPage() {
         </aside>
       </div>
 
-      {/* Decommission Confirmation Dialog */}
-      <Dialog open={!!agentToDecommission} onOpenChange={(open) => !open && setAgentToDecommission(null)}>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
         <DialogContent className="sm:max-w-md bg-panel border-border text-foreground">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-bold text-red-400">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              Decommission Forensic Agent
+              Delete Forensic Agent
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
-              Are you sure you want to stop this agent on its target and mark it as decommissioning?
+              Are you sure you want to permanently delete this agent?
             </DialogDescription>
           </DialogHeader>
 
-          {agentToDecommission && (
+          {agentToDelete && (
             <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3.5 my-2 space-y-1.5 font-mono text-xs">
               <div className="flex justify-between text-zinc-300">
                 <span className="text-muted-foreground">Hostname:</span>
-                <span className="font-semibold text-white">{agentToDecommission.hostname || "Unknown"}</span>
+                <span className="font-semibold text-white">{agentToDelete.hostname || "Unknown"}</span>
               </div>
               <div className="flex justify-between text-zinc-300">
                 <span className="text-muted-foreground">Agent ID:</span>
-                <span className="text-zinc-200">{agentToDecommission.agent_id}</span>
+                <span className="text-zinc-200">{agentToDelete.agent_id}</span>
               </div>
               <div className="flex justify-between text-zinc-300">
                 <span className="text-muted-foreground">IP Address:</span>
-                <span className="text-zinc-200">{agentToDecommission.ip}</span>
+                <span className="text-zinc-200">{agentToDelete.ip}</span>
               </div>
             </div>
           )}
 
           <p className="text-[11px] text-zinc-400">
-            The kill switch will be delivered on the target's next heartbeat. The local agent record and deployment audit entry will be retained.
+            This removes the agent and its related jobs, evidence, results, findings, and deployment history. This action cannot be undone.
           </p>
 
           <DialogFooter className="gap-2 sm:gap-0 mt-3">
@@ -291,8 +281,8 @@ function AgentsPage() {
               type="button"
               variant="outline"
               size="sm"
-              disabled={isDecommissioning}
-              onClick={() => setAgentToDecommission(null)}
+              disabled={isDeleting}
+              onClick={() => setAgentToDelete(null)}
               className="border-border text-xs"
             >
               Cancel
@@ -300,19 +290,19 @@ function AgentsPage() {
             <Button
               type="button"
               size="sm"
-              disabled={isDecommissioning}
-              onClick={handleDecommissionAgent}
+              disabled={isDeleting}
+              onClick={handleDeleteAgent}
               className="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs tracking-wider uppercase ml-2 flex items-center gap-1.5 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
             >
-              {isDecommissioning ? (
+              {isDeleting ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Queueing Kill Switch...
+                  Deleting...
                 </>
               ) : (
                 <>
                   <Trash2 className="h-3.5 w-3.5" />
-                  Queue Kill Switch
+                  Delete Agent
                 </>
               )}
             </Button>
