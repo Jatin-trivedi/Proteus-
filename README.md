@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔱 Proteus
+<img src="frontend/public/proteus-logo-transparent.png" alt="Proteus logo" width="96" />
+
+# Proteus
 
 ### Forensic Collection and Analysis Prototype
 
