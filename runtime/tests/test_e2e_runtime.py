@@ -7,12 +7,22 @@ import os
 import shutil
 import tempfile
 import unittest
+import importlib.util
 
 from compiler.compiler import Compiler
 from compiler.ir.validator import IRValidator
 from runtime.dispatcher import OperationDispatcher
 from runtime.registry import create_default_registry, APPROVED_OPERATIONS
 from runtime.errors import ErrorCode
+
+
+def _load_local_agent_module():
+    module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'local_agent.py'))
+    spec = importlib.util.spec_from_file_location('local_agent_under_test', module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec is not None and spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
 
 class TestE2ERuntime(unittest.TestCase):
@@ -147,6 +157,27 @@ class TestE2ERuntime(unittest.TestCase):
         self.assertEqual(exec_res.results[0].status, "error")
         self.assertEqual(exec_res.results[0].error.code, ErrorCode.UNKNOWN_OPERATION)
         self.assertIn("not recognized or permitted", exec_res.results[0].error.message)
+
+    def test_local_agent_executes_ir_document_payloads(self):
+        """IR JSON deployed by the manager must be treated as structured forensic work, not shell text."""
+        local_agent = _load_local_agent_module()
+        ir_document = {
+            "version": "1.0",
+            "ir_type": "jocky_forensic_ir",
+            "investigation": "Local Agent IR Test",
+            "operations": [{
+                "id": "op-001",
+                "type": "system.info",
+                "parameters": {}
+            }],
+        }
+
+        result = local_agent.execute_jocky_payload(__import__('json').dumps(ir_document))
+
+        self.assertEqual(result["type"], "ir_document")
+        self.assertIn("result", result)
+        self.assertEqual(result["result"]["investigation"], "Local Agent IR Test")
+        self.assertEqual(result["result"]["results"][0]["status"], "success")
 
 
 if __name__ == "__main__":

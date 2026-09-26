@@ -238,6 +238,31 @@ def execute_jocky_payload(code):
     code_clean = code.strip()
     result = {}
 
+    # Parsed IRDocument JSON is the canonical deployment format from the manager.
+    # It must be executed structurally, not treated as a shell command string.
+    if code_clean.startswith('{'):
+        try:
+            payload = json.loads(code_clean)
+        except json.JSONDecodeError:
+            payload = None
+
+        if isinstance(payload, dict) and payload.get('operations') is not None:
+            try:
+                from runtime.dispatcher import OperationDispatcher
+                from runtime.registry import create_default_registry
+
+                dispatcher = OperationDispatcher(create_default_registry())
+                exec_result = dispatcher.dispatch(payload)
+                return {
+                    "type": "ir_document",
+                    "result": exec_result.to_dict(),
+                }
+            except Exception as exc:  # pragma: no cover - defensive
+                return {
+                    "type": "ir_document",
+                    "error": f"IR dispatch failed: {str(exc)}",
+                }
+
     # Check for direct shell command
     if not ("agent" in code_clean and "{" in code_clean):
         return {"type": "shell_command", "output": execute_shell(code_clean)}
