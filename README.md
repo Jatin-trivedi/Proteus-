@@ -378,8 +378,10 @@ The semantic analyzer enforces that only **registry-approved functions** can app
 | `network` | `network.interfaces`, `network.connections`, `network.routes`, `network.dns` |
 | `filesystem` | `filesystem.metadata`, `filesystem.hash` |
 
-Unknown calls are rejected by the compiler's semantic checks, and the manager
-rejects scripts that fail compilation instead of dispatching their source text.
+Unknown calls are rejected by the compiler's semantic checks. The manager
+compiles scripts before dispatch; it also compiles raw JOCKY source in older
+pending deployments before agent delivery. Scripts that fail compilation are
+marked failed instead of being passed to the endpoint shell.
 
 ### Example JOCKY Script
 

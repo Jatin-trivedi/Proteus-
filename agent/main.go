@@ -93,7 +93,11 @@ func doJSON(method, path string, body []byte, timeout time.Duration) ([]byte, er
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
+		body, readErr := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		if readErr != nil {
+			return nil, fmt.Errorf("HTTP %d (could not read error response: %w)", resp.StatusCode, readErr)
+		}
+		return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 	return io.ReadAll(resp.Body)
 }
@@ -288,6 +292,11 @@ func executeJOCKYContext(ctx context.Context, script string) string {
 			fmt.Printf("[!] IR result marshal error: %v\n", jsonErr)
 		}
 		// json.Unmarshal failed → not valid IR JSON → fall through
+	}
+
+	// Raw JOCKY source must be compiled by the manager; never pass it to cmd.exe.
+	if strings.HasPrefix(strings.ToLower(script), "analysis") {
+		return "error: raw JOCKY source was not compiled by the manager; redeploy the script"
 	}
 
 	// ── 3. Legacy string dispatch (inject, privesc, exec, registry) ───────

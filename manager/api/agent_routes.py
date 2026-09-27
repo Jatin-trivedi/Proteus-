@@ -6,6 +6,7 @@ from models import db, Agent, Deploy, Script, Finding, Result, Job, Evidence
 from middleware.auth import jwt_required
 from agent_registry import AgentRegistry
 from audit_logger import log_event, AuditEvent
+from api.script_routes import _compile_legacy_jocky_if_needed
 
 agent_bp = Blueprint('agent', __name__, url_prefix='/api/v1/agent')
 
@@ -74,29 +75,35 @@ def heartbeat():
     )
 
     agent_id = data.get('agent_id')
-    # Backward compatibility: attach pending deploy if one exists
-    try:
-        pending = Deploy.query.filter_by(
-            agent_id=agent_id,
-            status='pending'
-        ).first()
+    # Backward compatibility: attach pending deploy if one exists.
+    pending = Deploy.query.filter_by(
+        agent_id=agent_id,
+        status='pending'
+    ).first()
 
-        if pending:
-            script = Script.query.get(pending.script_id)
-            if script:
-                agent = db.session.get(Agent, agent_id)
-                if agent and script.code == '__exit__':
-                    agent.status = 'decommissioning'
-                resp_data['deployment'] = {
-                    'deploy_id': pending.deploy_id,
-                    'script_id': script.script_id,
-                    'code': script.code,
-                    'hash_before': script.hash_before
-                }
-                pending.status = 'in_progress'
+    if pending:
+        script = Script.query.get(pending.script_id)
+        if script:
+            code, compile_error = _compile_legacy_jocky_if_needed(script.code)
+            if compile_error:
+                pending.status = 'failed'
                 db.session.commit()
-    except Exception:
-        pass
+                return jsonify({
+                    'error': 'JOCKY compilation failed',
+                    'details': compile_error,
+                }), 422
+
+            agent = db.session.get(Agent, agent_id)
+            if agent and script.code == '__exit__':
+                agent.status = 'decommissioning'
+            resp_data['deployment'] = {
+                'deploy_id': pending.deploy_id,
+                'script_id': script.script_id,
+                'code': code,
+                'hash_before': script.hash_before
+            }
+            pending.status = 'in_progress'
+            db.session.commit()
 
     return jsonify(resp_data), 200
 

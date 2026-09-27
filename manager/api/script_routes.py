@@ -63,6 +63,13 @@ def _compile_jocky_to_ir(source: str) -> tuple[str | None, str | None]:
         return None, f'Unexpected compiler error: {exc}'
 
 
+def _compile_legacy_jocky_if_needed(code: str) -> tuple[str | None, str | None]:
+    """Compile raw JOCKY scripts left by older deployment paths before delivery."""
+    if not code.lstrip().lower().startswith("analysis"):
+        return code, None
+    return _compile_jocky_to_ir(code)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────────────────────────────────────────
