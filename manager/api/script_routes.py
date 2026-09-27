@@ -23,10 +23,9 @@ def _compile_jocky_to_ir(source: str) -> tuple[str | None, str | None]:
         (ir_json, None)          on success
         (None,    error_message) on failure
 
-    The manager sits at  repo/manager/api/script_routes.py
-    The compiler sits at repo/compiler/
-    We add the repo root to sys.path so `from compiler.compiler import Compiler`
-    works both locally and on Vercel (where PYTHONPATH includes repo root).
+    The source package is at repo/compiler/ for local development. A runtime
+    copy under manager/compiler/ keeps it available when Vercel bundles manager/
+    as the project root.
     """
     try:
         repo_root = os.path.abspath(

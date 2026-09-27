@@ -43,11 +43,11 @@ def cmd_compile(args):
         print("\nCompilation failed.", file=sys.stderr)
         sys.exit(1)
 
-    print("✓ Lexical analysis")
-    print("✓ Parsing")
-    print("✓ AST generation")
-    print("✓ Semantic validation")
-    print("✓ IR generation")
+    print("[OK] Lexical analysis")
+    print("[OK] Parsing")
+    print("[OK] AST generation")
+    print("[OK] Semantic validation")
+    print("[OK] IR generation")
 
     ir_data = result.ir or {}
     analysis_name = ir_data.get("investigation") or ir_data.get("name", "Unknown")
@@ -103,10 +103,10 @@ def cmd_check(args):
         print("\nCheck failed with errors.", file=sys.stderr)
         sys.exit(1)
 
-    print("✓ Lexical analysis")
-    print("✓ Parsing")
-    print("✓ AST generation")
-    print("✓ Semantic validation")
+    print("[OK] Lexical analysis")
+    print("[OK] Parsing")
+    print("[OK] AST generation")
+    print("[OK] Semantic validation")
     print("\nCompilation successful.")
 
     if args.ast and result.ast:

@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import sys
 from unittest.mock import patch
 
@@ -72,3 +73,61 @@ system.users();'''
     assert compiled is None
     assert error is not None
     assert "unexpected token 'system'" in error
+
+
+def test_compiler_imports_with_manager_as_the_deployment_root():
+    source = '''analysis "Vercel Bundle Test" {
+    system.info();
+}'''
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    command = (
+        "import json; "
+        "from compiler.compiler import Compiler; "
+        f"result = Compiler().compile({source!r}); "
+        "assert result.success, result.format_diagnostics(); "
+        "print(json.dumps(result.ir))"
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-c", command],
+        cwd=MANAGER_DIR,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    ir = json.loads(result.stdout)
+    assert ir["operations"][0]["type"] == "system.info"
+
+
+def test_bundled_compiler_core_matches_the_source_package():
+    repo_compiler_dir = os.path.join(MANAGER_DIR, "..", "compiler")
+    bundled_compiler_dir = os.path.join(MANAGER_DIR, "compiler")
+    files = (
+        "__init__.py",
+        "compiler.py",
+        "diagnostics/__init__.py",
+        "diagnostics/diagnostics.py",
+        "lexer/__init__.py",
+        "lexer/tokenizer.py",
+        "lexer/tokens.py",
+        "parser/__init__.py",
+        "parser/ast.py",
+        "parser/parser.py",
+        "semantic/__init__.py",
+        "semantic/analyzer.py",
+        "semantic/registry.py",
+        "ir/__init__.py",
+        "ir/generator.py",
+        "ir/model.py",
+        "ir/validator.py",
+    )
+
+    for relative_path in files:
+        with open(os.path.join(repo_compiler_dir, relative_path), "rb") as source_file:
+            source = source_file.read()
+        with open(os.path.join(bundled_compiler_dir, relative_path), "rb") as bundled_file:
+            bundled = bundled_file.read()
+        assert bundled == source, f"Bundled compiler file is stale: {relative_path}"

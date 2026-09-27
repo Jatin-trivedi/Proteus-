@@ -7,6 +7,7 @@ Unit and Integration Tests for Network Forensic Collectors (Priority 4.4)
 """
 
 import unittest
+import platform
 from unittest.mock import patch
 
 from runtime.collectors.network import (
@@ -99,7 +100,9 @@ class TestNetworkCollectors(unittest.TestCase):
             data = collector.collect({})
             self.assertIn("interfaces", data)
             self.assertEqual(len(data["interfaces"]), 1)
-            self.assertEqual(data["interfaces"][0]["name"], "lo0")
+            expected_name = "Ethernet" if platform.system() == "Windows" else "lo0"
+            self.assertEqual(data["interfaces"][0]["name"], expected_name)
+            self.assertIn("127.0.0.1", data["interfaces"][0]["addresses"])
 
     def test_network_routes_fallback_on_failure(self):
         """Verify network.routes falls back to default localhost route if command fails."""
@@ -108,7 +111,10 @@ class TestNetworkCollectors(unittest.TestCase):
             data = collector.collect({})
             self.assertIn("routes", data)
             self.assertEqual(len(data["routes"]), 1)
-            self.assertEqual(data["routes"][0]["destination"], "default")
+            expected_destination = (
+                "0.0.0.0" if platform.system() == "Windows" else "default"
+            )
+            self.assertEqual(data["routes"][0]["destination"], expected_destination)
 
     def test_network_dns_empty_fallback_on_missing_config(self):
         """Verify network.dns handles missing config files gracefully without crashing."""

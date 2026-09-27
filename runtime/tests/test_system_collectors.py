@@ -5,6 +5,7 @@ Unit and Integration Tests for System Forensic Collectors (Priority 4.2)
 """
 
 import unittest
+import importlib.util
 import platform
 import socket
 from unittest.mock import patch
@@ -65,6 +66,10 @@ class TestSystemCollectors(unittest.TestCase):
                 self.assertTrue(len(data["users"]) >= 1)
                 self.assertEqual(data["users"][0]["type"], "local")
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("pwd") is not None,
+        "The pwd module is available only on POSIX platforms",
+    )
     def test_system_users_permission_error_handling(self):
         """Verify that permission errors during user enumeration are handled gracefully."""
         with patch("pwd.getpwall", side_effect=PermissionError("Access denied")):

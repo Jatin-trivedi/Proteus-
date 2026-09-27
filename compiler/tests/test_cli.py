@@ -6,12 +6,16 @@ import subprocess
 import json
 import tempfile
 import os
+import sys
 from pathlib import Path
+
+
+PYTHON = sys.executable
 
 
 class TestCLI(unittest.TestCase):
     def test_cli_compile_basic(self):
-        cmd = ["python3", "-m", "compiler", "compile", "examples/network.jocky"]
+        cmd = [PYTHON, "-m", "compiler", "compile", "examples/network.jocky"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("Compilation successful.", result.stdout)
@@ -27,7 +31,7 @@ class TestCLI(unittest.TestCase):
         self.assertEqual(len(data["operations"]), 4)
 
     def test_cli_compile_with_ir_flag(self):
-        cmd = ["python3", "-m", "compiler", "compile", "examples/network.jocky", "--ir"]
+        cmd = [PYTHON, "-m", "compiler", "compile", "examples/network.jocky", "--ir"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("---------------- IR -----------------", result.stdout)
@@ -38,7 +42,7 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             out_file = os.path.join(tmpdir, "custom_net.ir.json")
             cmd = [
-                "python3",
+                PYTHON,
                 "-m",
                 "compiler",
                 "compile",
@@ -57,13 +61,13 @@ class TestCLI(unittest.TestCase):
             self.assertEqual(len(data["operations"]), 4)
 
     def test_cli_check_mode(self):
-        cmd = ["python3", "-m", "compiler", "check", "examples/system.jocky"]
+        cmd = [PYTHON, "-m", "compiler", "check", "examples/system.jocky"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("Compilation successful.", result.stdout)
 
     def test_cli_complete_investigation_e2e(self):
-        cmd = ["python3", "-m", "compiler", "compile", "examples/complete_investigation.jocky"]
+        cmd = [PYTHON, "-m", "compiler", "compile", "examples/complete_investigation.jocky"]
         result = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
         self.assertIn("Analysis:\nComplete Investigation", result.stdout)
@@ -101,7 +105,7 @@ class TestCLI(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             out_file = os.path.join(tmpdir, "should_not_exist.ir.json")
             cmd = [
-                "python3",
+                PYTHON,
                 "-m",
                 "compiler",
                 "compile",
@@ -116,7 +120,7 @@ class TestCLI(unittest.TestCase):
             self.assertFalse(os.path.exists(out_file))
 
     def test_cli_determinism(self):
-        cmd = ["python3", "-m", "compiler", "compile", "examples/complete_investigation.jocky"]
+        cmd = [PYTHON, "-m", "compiler", "compile", "examples/complete_investigation.jocky"]
         res1 = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(res1.returncode, 0)
 

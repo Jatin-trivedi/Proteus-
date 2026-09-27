@@ -381,7 +381,9 @@ The semantic analyzer enforces that only **registry-approved functions** can app
 Unknown calls are rejected by the compiler's semantic checks. The manager
 compiles scripts before dispatch; it also compiles raw JOCKY source in older
 pending deployments before agent delivery. Scripts that fail compilation are
-marked failed instead of being passed to the endpoint shell.
+marked failed instead of being passed to the endpoint shell. The manager's
+Vercel project is rooted at `manager/`, so its bundled compiler core is kept in
+`manager/compiler/`; a deployment test verifies it compiles with that root alone.
 
 ### Example JOCKY Script
 
