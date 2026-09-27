@@ -149,7 +149,7 @@ sequenceDiagram
 
     Analyst->>UI: Create script deployment for registered agent
     UI->>M: POST /api/v1/script/deploy
-    M->>M: Compile JOCKY source to IR (or use legacy fallback)
+    M->>M: Compile JOCKY source to executable IR or reject it
     M->>DB: Save Script and pending Deploy rows
     M-->>UI: script_id and deploy_ids
 
@@ -339,10 +339,9 @@ and are not defined by the workflow file.
 
 Located in `compiler/`. The JOCKY compiler converts supported source programs
 into an intermediate representation (IR). The manager's script deployment
-route attempts compilation; if compilation fails, the current implementation
-can retain and pass through the source as a legacy fallback. Do not interpret
-the compiler allowlist as a complete security boundary for every legacy agent
-command path.
+route requires successful compilation and queues only the resulting IR. Scripts
+that do not compile are rejected before a deployment is created; raw JOCKY
+source is never passed through as a shell command.
 
 ### Compiler Pipeline
 
@@ -364,7 +363,7 @@ IR Generator (generator.py)
     ▼
 IR Validator (validator.py)
     │  Allowlist enforcement · Schema validation
-    ├── Manager script deployment: serialize IR and queue a legacy Deploy
+    ├── Manager script deployment: serialize validated IR and queue a Deploy
     └── Separate code-generation modules: LLVM-related output where supported
 ```
 
@@ -379,16 +378,17 @@ The semantic analyzer enforces that only **registry-approved functions** can app
 | `network` | `network.interfaces`, `network.connections`, `network.routes`, `network.dns` |
 | `filesystem` | `filesystem.metadata`, `filesystem.hash` |
 
-Unknown calls are rejected by the compiler's semantic checks. The actual
-deployment behavior also depends on the manager fallback and agent dispatcher.
+Unknown calls are rejected by the compiler's semantic checks, and the manager
+rejects scripts that fail compilation instead of dispatching their source text.
 
 ### Example JOCKY Script
 
 ```jocky
-// Collect process list and check a specific hash
-let procs = processes.list()
-let hash  = filesystem.hash("/etc/passwd")
-let net   = network.connections()
+analysis "Forensic Baseline" {
+    processes.list();
+    filesystem.hash("./evidence");
+    network.connections();
+}
 ```
 
 ---

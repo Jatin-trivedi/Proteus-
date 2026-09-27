@@ -63,11 +63,9 @@ export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
     identifier: "Jocky_Main_Exec",
     filename: "jocky_main.jky",
     description: "Fetches and packs core system information and telemetry.",
-    code: `agent jocky_main {
-    print("Fetching system information...");
-    let info = pack(get_system_info());
-    print(info);
-    return "System info retrieved";
+    code: `analysis "Jocky Main" {
+    system.info();
+    system.users();
 }`,
   },
   {
@@ -76,14 +74,9 @@ export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
     identifier: "System_Fingerprint_Collect",
     filename: "system_fingerprint.jky",
     description: "Inspects platform details and active network interfaces.",
-    code: `agent system_fingerprint {
-    let os_info = get_system_info()
-    let network_interfaces = get_processes()
-    print("Platform Info:")
-    print(os_info)
-    print("Active Interfaces:")
-    print(network_interfaces)
-    return "System Fingerprint Complete"
+    code: `analysis "System Fingerprint" {
+    system.info();
+    network.interfaces();
 }`,
   },
   {
@@ -92,24 +85,18 @@ export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
     identifier: "Process_Hunter_Sweep",
     filename: "process_hunter.jky",
     description: "Enumerates and reports all running processes on the target.",
-    code: `agent process_hunter {
-    let proc_list = get_processes()
-    print("Running processes:")
-    print(proc_list)
-    return "Process list retrieved"
+    code: `analysis "Process Hunter" {
+    processes.list();
 }`,
   },
   {
-    id: "scan_registry",
-    name: "Scan Registry",
-    identifier: "Scan_Registry_Audit",
-    filename: "scan_registry.jky",
-    description: "Collects persistence keys from HKLM Run registry hive.",
-    code: `agent scan_registry {
-    let hive = "HKLM\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run";
-    let results = collect_registry(hive);
-    print(results);
-    return "Registry scan complete";
+    id: "filesystem_audit",
+    name: "Filesystem Audit",
+    identifier: "Filesystem_Audit",
+    filename: "filesystem_audit.jky",
+    description: "Collects filesystem metadata for the agent's working directory.",
+    code: `analysis "Filesystem Audit" {
+    filesystem.metadata(".");
 }`,
   },
   {
@@ -117,11 +104,10 @@ export const PREDEFINED_SCRIPTS: ScriptPreset[] = [
     name: "Network Enum",
     identifier: "Network_Enum_Audit",
     filename: "network_enum.jky",
-    description: "Enumerates active socket connections and listening ports via netstat.",
-    code: `agent network_enum {
-    print("Listening Ports and Active Connections:");
-    run("netstat -ano");
-    return "Network enumeration complete";
+    description: "Collects network interfaces, active connections, and listening sockets.",
+    code: `analysis "Network Enumeration" {
+    network.interfaces();
+    network.connections();
 }`,
   },
 ];

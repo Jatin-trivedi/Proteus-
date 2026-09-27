@@ -50,6 +50,10 @@ def _compile_jocky_to_ir(source: str) -> tuple[str | None, str | None]:
         if not result.ir:
             return None, 'Compiler returned no IR output'
 
+        operations = result.ir.get('operations') if isinstance(result.ir, dict) else None
+        if not isinstance(operations, list) or not operations:
+            return None, 'JOCKY script must contain at least one supported forensic operation'
+
         return json.dumps(result.ir), None
 
     except ImportError as exc:
@@ -181,8 +185,6 @@ def deploy_script():
     # Special built-in commands (kill-switch etc.) bypass compilation.
     BUILTINS = {'__exit__', 'exit', 'kill', '__kill__'}
 
-    compilation_warning = None
-
     if raw_code.strip().lower() in BUILTINS:
         # Pass built-in commands through unchanged
         payload_code = raw_code
@@ -194,15 +196,10 @@ def deploy_script():
             # through executeIRDocumentJSON → typed dispatch
             payload_code = ir_json
         else:
-            # Compilation failed. Two options:
-            #   a) Reject the deployment (strict mode)
-            #   b) Store raw JOCKY so the agent's legacy fallback handles it
-            #
-            # We choose (b) so the manager never silently blocks a deploy —
-            # the agent logs a warning if it can't parse the payload as IR.
-            payload_code = raw_code
-            compilation_warning = compile_error
-            print(f'[WARN] JOCKY compilation failed for "{name}": {compile_error}')
+            return jsonify({
+                'error': 'JOCKY compilation failed',
+                'details': compile_error,
+            }), 400
 
     # ── Persist Script ────────────────────────────────────────────────────
     script = Script(
@@ -250,12 +247,10 @@ def deploy_script():
     response = {
         'script_id':  script.script_id,
         'deploy_ids': deploy_ids,
-        'compiled':   compilation_warning is None and raw_code.strip().lower() not in BUILTINS,
+        'compiled':   raw_code.strip().lower() not in BUILTINS,
     }
     if skipped_agents:
         response['skipped_agents'] = skipped_agents
-    if compilation_warning:
-        response['warning'] = compilation_warning
 
     return jsonify(response), 201
 
