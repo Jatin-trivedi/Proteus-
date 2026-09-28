@@ -395,6 +395,23 @@ analysis "Forensic Baseline" {
 }
 ```
 
+### Compile and check a script locally
+
+The compiler can be used directly from the repository root:
+
+```bash
+# Validate syntax and approved forensic operations
+python -m compiler check path/to/investigation.jocky
+
+# Generate deterministic forensic IR
+python -m compiler compile path/to/investigation.jocky
+```
+
+For the complete language reference, function table, diagnostics, and IR
+schema, see [`docs/JOCKY_LANGUAGE.md`](docs/JOCKY_LANGUAGE.md),
+[`docs/JOCKY_IR.md`](docs/JOCKY_IR.md), and
+[`compiler/README.md`](compiler/README.md).
+
 ---
 
 ## 🔍 Runtime & Forensic Collectors
