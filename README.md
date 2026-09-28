@@ -162,13 +162,12 @@ flowchart LR
     end
 ```
 
-### Deployed legacy agent request sequence
+### Agent registration, deployment, and execution sequence
 
-This sequence follows the current Go agent and Worker paths. In particular, the
-Worker maps the agent's `/agent/poll` request to the manager's `/agent/heartbeat`
-route; result and hash requests are forwarded to their corresponding manager
-routes. The diagram does **not** imply the separate `/jobs` API is used by this
-agent.
+This sequence follows the current Go agent and Worker paths. The Worker
+validates and strips `X-C2-Auth`, applies poll rate limiting, and forwards
+authorized requests to the manager over relay mTLS when configured. The
+separate `/jobs` API is not used by this agent flow.
 
 ```mermaid
 sequenceDiagram
@@ -680,17 +679,75 @@ From the second terminal at the repository root:
 python -m pip install -r polymorphic-engine/requirements.txt
 ```
 
-### 5. Agent build
+### 5. Build the execution engine
 
-The agent build is **not a portable one-command setup**. The checked-in
-PowerShell helper expects a prebuilt execution-engine DLL and contains a
-machine-specific Go SDK path. The GitHub Actions workflow is a separate
-Linux-hosted Windows build and requires repository secrets. Review the build
-scripts and workflow in an isolated, authorized environment before attempting
-to produce an agent artifact; do not put credentials or secret values in this
-README or source control.
+The Go agent uses the execution engine as a build-time dependency. On Windows,
+install CMake from an elevated PowerShell session:
 
-### 6. Deploy the Cloud Relay
+```powershell
+winget install Kitware.CMake
+```
+
+Install MinGW-w64 through [MSYS2](https://www.msys2.org/), then run:
+
+```bash
+pacman -S mingw-w64-ucrt-x86_64-gcc
+```
+
+Build the shared execution-engine library from the repository root:
+
+```bash
+cd execution_engine
+mkdir build
+cd build
+cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED=ON -DHARDEN=ON
+cmake --build . --parallel
+cd ../..
+```
+
+On Linux or WSL, use the native generator instead:
+
+```bash
+cd execution_engine
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED=ON -DHARDEN=ON
+cmake --build . --parallel
+cd ../..
+```
+
+### 6. Build the authorized Go agent
+
+The checked-in agent is Windows-focused. Use the build only in an isolated
+environment and with explicit authorization. Install the Go toolchain first:
+
+```bash
+go install golang.org/dl/go1.26.5@latest
+go1.26.5 download
+```
+
+Then build from the `agent/` directory:
+
+```powershell
+cd agent
+go clean -cache
+.\build.ps1 -Console
+```
+
+The console build is intended for local testing. To run the production build
+variant, omit `-Console`:
+
+```powershell
+.\build.ps1
+```
+
+The helper expects the execution-engine library from the previous step and may
+also require the local Go SDK path configured by the script. The GitHub Actions
+workflow is a separate Linux-hosted Windows build and requires repository
+secrets. Never put credentials or secret values in this README or source
+control.
+
+### 7. Deploy the Cloud Relay
 
 ```bash
 cd cloud-relay
@@ -702,7 +759,7 @@ wrangler kv:namespace create PAYLOADS
 wrangler deploy
 ```
 
-### 7. Frontend development server
+### 8. Frontend development server
 
 ```bash
 cd frontend
@@ -711,7 +768,7 @@ npm run dev
 # → http://localhost:3000
 ```
 
-### 8. Run tests
+### 9. Run tests
 
 Run these from the repository root with the relevant dependencies installed.
 
