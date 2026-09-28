@@ -914,7 +914,7 @@ The authors and contributors of Proteus accept no liability for unauthorized, il
 
 <div align="center">
 
-**Built for Smart India Hackathon (SIH) 2024**
+**Built for Smart India Hackathon (SIH) 2026**
 
 [GitHub](https://github.com/Jatin-trivedi/Proteus-)
 
