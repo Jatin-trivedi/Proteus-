@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/proteus-logo-transparent.png" alt="Proteus logo" width="96" />
+<img src="frontend/public/proteus-logo.png" alt="Proteus logo" width="96" />
 
 # Proteus
 
@@ -82,43 +82,83 @@ by the manager.
 
 ```mermaid
 flowchart LR
-    subgraph People["People and browser"]
-        Analyst["Authorized analyst"]
-        UI["React / TypeScript dashboard"]
+
+    subgraph People["People & Browser"]
+        Analyst["Authorized Analyst"]
+        UI["React / TypeScript Dashboard"]
         Analyst --> UI
     end
 
-    subgraph Cloud["Cloud services"]
-        Worker["Cloudflare Worker<br/>X-C2-Auth gate<br/>poll rate limiter<br/>payload KV"]
-        Manager["Flask manager API<br/>Gunicorn"]
-        DB[("SQLAlchemy database<br/>PostgreSQL in deployment<br/>SQLite local default")]
-        Audit["JSONL audit log<br/>hash-linked records"]
-        Socket["Flask-SocketIO<br/>audit_event"]
-        UI -->|"REST /api/v1<br/>Bearer token when present"| Manager
-        UI <-->|"Socket.IO audit events"| Socket
+    subgraph Cloud["Cloud Services"]
+
+        Worker["Cloudflare Worker
+        Authentication Gate
+        Poll Rate Limiter
+        Payload KV"]
+
+        Manager["Flask Manager API
+        Gunicorn"]
+
+        DB[("SQLAlchemy Database
+        PostgreSQL Deployment
+        SQLite Local")]
+
+        Audit["JSONL Audit Log
+        Hash-Linked Records"]
+
+        Socket["Flask-SocketIO
+        Audit Events"]
+
+        UI -->|"REST /api/v1
+        Bearer Token"| Manager
+
+        UI <-->|"Socket.IO
+        Audit Events"| Socket
+
         Manager --> DB
         Manager --> Audit
         Manager --> Socket
-        Worker -->|"RELAY_MTLS.fetch"| Manager
+
+        Worker -->|"Authenticated Relay
+        mTLS when required
+        X-C2-Auth stripped"| Manager
     end
 
-    subgraph Endpoint["Endpoint (outbound HTTPS)"]
-        Agent["Go agent<br/>registration and polling loop"]
-        Exec["IR/JOCKY dispatch<br/>and result generation"]
+    subgraph Endpoint["Authorized Endpoint"]
+
+        Agent["Go Forensic Agent
+        Registration & Polling"]
+
+        Exec["Validated IR Execution
+        Result Generation"]
+
         Agent --> Exec
     end
 
-    Agent -->|"HTTPS + X-C2-Auth"| Worker
-    Worker -->|"authorized payload lookup"| KV["Cloudflare KV"]
-    Exec -->|"result and hash submissions"| Worker
+    Agent <-->|"HTTPS Polling
+    X-C2-Auth"| Worker
 
-    subgraph Build["Build-time components"]
-        Compiler["JOCKY compiler<br/>source → IR"]
-        Poly["Polymorphic engine<br/>build transformations"]
-        CI["GitHub Actions workflow"]
-        Manager -. "invokes during script deploy" .-> Compiler
+    Worker -->|"Authorized Payload
+    Lookup"| KV[("Cloudflare KV")]
+
+    Exec -->|"Result + SHA-256"| Worker
+
+    subgraph Build["Build & Script Pipeline"]
+
+        Compiler["JOCKY Compiler
+        Source → IR"]
+
+        Poly["Build Transformation
+        Engine"]
+
+        CI["GitHub Actions
+        Build & Test"]
+
+        Manager -.->|"Script Deployment"| Compiler
+
         CI --> Poly
-        Poly -->|"build artifact"| Agent
+
+        Poly -->|"Build Artifact"| Agent
     end
 ```
 
@@ -133,44 +173,60 @@ agent.
 ```mermaid
 sequenceDiagram
     autonumber
+
     actor Analyst
-    participant UI as Browser dashboard
-    participant M as Flask manager
-    participant DB as SQL database
+    participant UI as Browser Dashboard
+    participant M as Flask Manager
+    participant DB as SQL Database
     participant W as Cloudflare Worker
-    participant A as Go agent
+    participant A as Go Forensic Agent
     participant S as Socket.IO
 
+    %% Agent registration
     A->>W: POST /api/v1/agent/register + X-C2-Auth
-    W->>W: Validate shared relay secret
-    W->>M: Forward authorized request over relay mTLS binding
+    W->>W: Validate X-C2-Auth
+    W->>W: Strip X-C2-Auth
+    W->>M: Forward authorized request over relay mTLS
     M->>DB: Register/update agent
-    M-->>A: Registration response
+    M-->>W: Registration response
+    W-->>A: Registration response
 
-    Analyst->>UI: Create script deployment for registered agent
+    %% Investigation / deployment
+    Analyst->>UI: Create script deployment
     UI->>M: POST /api/v1/script/deploy
-    M->>M: Compile JOCKY source to executable IR or reject it
+    M->>M: Compile JOCKY source to validated IR
     M->>DB: Save Script and pending Deploy rows
     M-->>UI: script_id and deploy_ids
 
+    %% Agent polling
     loop Poll interval with jitter
-        A->>W: POST /api/v1/agent/poll + agent_id
-        W->>W: Validate secret and apply per-agent rate limit
-        W->>M: POST /api/v1/agent/heartbeat
+        A->>W: POST /api/v1/agent/poll + X-C2-Auth
+        W->>W: Validate X-C2-Auth
+        W->>W: Strip X-C2-Auth
+        W->>W: Apply per-agent rate limit
+        W->>M: Forward heartbeat over relay mTLS
         M->>DB: Update heartbeat and check pending Deploy
         M-->>W: Idle status or deployment
         W-->>A: Poll response
     end
 
+    %% Deployment and execution
     opt Deployment returned
-        A->>A: Dispatch task and produce result
-        A->>W: POST /api/v1/result/submit
-        W->>M: Forward result request
-        M->>DB: Save result and associated findings
-        A->>W: POST /api/v1/script/{script_id}/hash
-        W->>M: Forward hash update
-        M->>DB: Update script/deployment state
-        M->>S: Emit audit_event when an event is logged
+        A->>A: Dispatch validated IR
+        A->>A: Execute authorized collection
+        A->>A: Generate result and SHA-256
+
+        A->>W: POST /api/v1/result/submit + X-C2-Auth
+        W->>W: Validate and strip X-C2-Auth
+        W->>M: Forward result over relay mTLS
+        M->>DB: Save result and findings
+
+        A->>W: POST /api/v1/script/{script_id}/hash + X-C2-Auth
+        W->>W: Validate and strip X-C2-Auth
+        W->>M: Forward hash update over relay mTLS
+        M->>DB: Update script/deployment integrity metadata
+
+        M->>S: Emit audit_event
         S-->>UI: Push audit event
     end
 ```
